@@ -5,12 +5,33 @@ plugins {
 }
 
 application {
-    mainClass.set(mainName) // Replace with your main class
+    mainClass.set(mainName)
+}
+
+repositories {
+    mavenCentral()
+    //add mvn.topobyte.de
+    maven {
+        url = uri("https://mvn.topobyte.de/")
+    }
+    maven {
+        url = uri("https://mvn.slimjars.com/")
+    }
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
-    // Add any other dependencies you need for your backend, e.g., Ktor, Exposed, etc.
+    implementation("de.topobyte:osm4j-core:1.3.0")
+    implementation("de.topobyte:osm4j-geometry:1.3.0")
+    implementation("de.topobyte:osm4j-xml:1.3.0")
+    implementation("de.topobyte:osm4j-pbf:1.3.0")
+    implementation("de.topobyte:osm4j-pbf-full-runtime:1.3.0")
+    implementation("de.topobyte:osm4j-tbo:1.3.0")
+    implementation("de.topobyte:osm4j-utils:1.3.0")
+    implementation("de.topobyte:osm4j-extra:1.3.0")
+    implementation("de.topobyte:osm4j-incubating:1.3.0")
+    implementation("de.topobyte:osm4j-replication:1.3.0")
+    implementation("de.topobyte:osm4j-testing:1.3.0")
 }
 
 tasks.register("buildBackend", GradleBuild::class) {
@@ -19,8 +40,7 @@ tasks.register("buildBackend", GradleBuild::class) {
 
 tasks.register("runBackend", JavaExec::class) {
     group = "application"
-    mainClass.set(this@Build_gradle.mainName) // Replace with your main class
+    mainClass.set(this@Build_gradle.mainName)
     classpath = sourceSets["main"].runtimeClasspath
-    // Add any other necessary configurations
 }
 
