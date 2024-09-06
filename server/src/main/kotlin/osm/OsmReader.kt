@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.server
+package dev.voroscsoki.stratopolis.server.osm
 
 import de.topobyte.osm4j.core.model.iface.OsmEntity
 import de.topobyte.osm4j.core.model.iface.OsmNode
@@ -16,11 +16,7 @@ class OsmReader {
             val fileStream = File(filename).inputStream()
 
             val osmIterator = PbfIterator(fileStream, true)
-
-            println("Total memory usage: ${Runtime.getRuntime().totalMemory() / 1024 / 1024} MB")
             val unit = OsmStorage(osmIterator)
-            //print total memory usage
-            println("Total memory usage: ${Runtime.getRuntime().totalMemory() / 1024 / 1024} MB")
         }
     }
 }
