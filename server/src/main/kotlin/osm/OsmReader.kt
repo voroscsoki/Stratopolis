@@ -7,6 +7,7 @@ import de.topobyte.osm4j.core.model.iface.OsmRelationMember
 import de.topobyte.osm4j.core.model.iface.OsmTag
 import de.topobyte.osm4j.core.model.iface.OsmWay
 import de.topobyte.osm4j.pbf.seq.PbfIterator
+import dev.voroscsoki.stratopolis.common.api.CoordPair
 import java.io.File
 
 
