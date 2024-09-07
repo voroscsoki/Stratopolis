@@ -38,6 +38,6 @@ tasks.register("buildBackend", GradleBuild::class) {
 tasks.register("runBackend", JavaExec::class) {
     group = "application"
     mainClass.set(this@Build_gradle.mainName)
-    classpath = sourceSets["main"].compileClasspath
+    classpath = sourceSets["main"].runtimeClasspath
 }
 

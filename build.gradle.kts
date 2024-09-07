@@ -29,15 +29,6 @@ subprojects {
     }
 }
 
-tasks.register("buildAll") {
-    dependsOn(":server:buildBackend", ":client:buildFrontend")
-}
-
 tasks.register("runAll") {
     dependsOn(":server:runBackend", ":client:runFrontend")
-}
-
-tasks.register("buildAndRunAll") {
-    dependsOn("buildAll")
-    dependsOn("runAll")
 }

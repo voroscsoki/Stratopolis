@@ -30,8 +30,7 @@ tasks.register("buildFrontend", GradleBuild::class) {
 
 tasks.register("runFrontend", JavaExec::class) {
     group = "application"
-    mainClass.set(mainName) // Replace with your main class
+    mainClass.set(mainName)
     classpath = sourceSets["main"].runtimeClasspath
-    // Add any other necessary configurations
 }
 
