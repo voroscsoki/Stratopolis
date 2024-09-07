@@ -9,23 +9,6 @@ application {
     mainClass.set(mainName)
 }
 
-repositories {
-    mavenCentral()
-    //add mvn.topobyte.de
-    maven {
-        url = uri("https://mvn.topobyte.de/")
-    }
-    maven {
-        url = uri("https://mvn.slimjars.com/")
-    }
-    maven {
-        url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
-    }
-    maven {
-        url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
-    }
-}
-
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("de.topobyte:osm4j-core:1.3.0")
@@ -43,6 +26,8 @@ dependencies {
     implementation("io.ktor:ktor-server-core")
     implementation("io.ktor:ktor-server-netty")
     implementation("io.ktor:ktor-server-config-yaml")
+    implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
     implementation(project(":common"))
 }
 
