@@ -1,16 +1,14 @@
 package dev.voroscsoki.stratopolis.common.api
+import api.SerializableWay
 import de.topobyte.osm4j.core.model.iface.*
+import kotlinx.serialization.*
 typealias CoordPair = Pair<Double, Double>
 
-class Building(
-    private val id: Long,
-    val tags: List<OsmTag>,
-    val metadata: OsmMetadata,
+@Serializable
+data class Building(
+    val id: Long,
+    val tags: List<SerializableTag>,
     val type: EntityType,
     val coords: CoordPair = Pair(0.0, 0.0),
-    val lines : List<OsmWay> = emptyList()
-){
-    override fun toString(): String {
-        return "Building(id=$id, tags=$tags, metadata=$metadata, type=$type, coords=$coords, lines=$lines)"
-    }
-}
+    val lines : List<SerializableWay> = emptyList()
+)
