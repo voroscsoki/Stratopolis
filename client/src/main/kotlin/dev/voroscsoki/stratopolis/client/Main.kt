@@ -2,7 +2,6 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import dev.voroscsoki.stratopolis.client.api.HttpAccessor
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 
 class Main {
@@ -15,13 +14,9 @@ class Main {
             }
         }
         private suspend fun asyncInit() {
-            println("Hello from the client!")
-            coroutineScope {
-                println("The client understands: ${HttpAccessor.testRequest()}")
-
-            }
+            HttpAccessor.waitForConnection()
             val config = Lwjgl3ApplicationConfiguration()
-            config.setTitle("Drop")
+            config.setTitle("Stratopolis")
             config.setWindowedMode(600, 480)
             config.useVsync(true)
             config.setForegroundFPS(60)

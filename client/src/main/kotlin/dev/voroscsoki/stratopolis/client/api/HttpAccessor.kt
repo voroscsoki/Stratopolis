@@ -5,15 +5,30 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 
 class HttpAccessor {
     companion object {
-        val client = HttpClient(OkHttp) {
+        private val client = HttpClient(OkHttp) {
             engine {
                 config {
                     followRedirects(true)
+                }
+            }
+        }
+
+        suspend fun waitForConnection() {
+            while (true) {
+                try {
+                    if(client.get("http://localhost:8085/health-check").status.value == 200) break
+                } catch (e: Exception) {
+                    println("Waiting for server to start...")
+                    withContext(Dispatchers.IO) {
+                        Thread.sleep(5000)
+                    }
                 }
             }
         }

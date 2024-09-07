@@ -19,12 +19,15 @@ fun Application.configureRouting() {
 
     routing {
         staticResources("static", "static")
-
         // Define a route at /test
         //send the json representation of the Building object
         get("/test") {
             val bldg = OsmStorage.buildings
             call.respond(bldg)
+        }
+
+        get("/health-check") {
+            call.respond("OK")
         }
     }
 }
