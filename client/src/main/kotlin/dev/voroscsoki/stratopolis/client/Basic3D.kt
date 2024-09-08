@@ -28,7 +28,8 @@ class Basic3D : ApplicationListener {
 
     fun addBuilding(coords: CoordPair) {
         val instance = ModelInstance(buildModel)
-        instance.transform.setTranslation(coords.first.toFloat(), 0f, coords.second.toFloat())
+        val newcoords = (coords.first - 47.5) * 10 to (coords.second - 19.1) * 10
+        instance.transform.setTranslation(newcoords.first.toFloat(), 0f, newcoords.second.toFloat())
         buildingInstances.add(instance)
     }
 
@@ -41,10 +42,11 @@ class Basic3D : ApplicationListener {
 
         //height is Y
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-        cam.position[0f, 10f] = 4f
+        cam.position[0f, 10f] = 0f
         cam.lookAt(0f, 0f, 0f)
         cam.near = 1f
         cam.far = 300f
+        cam.rotate(Vector3(0f,1f,0f), -90f)
         cam.update()
 
         modelBatch = ModelBatch()
@@ -53,7 +55,7 @@ class Basic3D : ApplicationListener {
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (Usage.Position or Usage.Normal).toLong()
         )
-        buildingInstances.add(ModelInstance(buildModel))
+        //buildingInstances.add(ModelInstance(buildModel))
 
         camController = CameraInputController(cam)
         val multiplexer = InputMultiplexer()
@@ -65,7 +67,7 @@ class Basic3D : ApplicationListener {
     }
 
     override fun render() {
-        buildingInstances.first().transform.rotate(0f, 1f, 1f, 2f)
+        //buildingInstances.first().transform.rotate(0f, 1f, 1f, 2f)
         
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT)
