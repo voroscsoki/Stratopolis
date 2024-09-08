@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 
 class HttpAccessor {
     companion object {
-        private val client = HttpClient(OkHttp) {
+        private val client: HttpClient get() = HttpClient(OkHttp) {
             engine {
                 config {
                     followRedirects(true)
@@ -33,19 +33,11 @@ class HttpAccessor {
             }
         }
 
-        suspend fun testRequest(): String {
+        suspend fun testRequest(): List<Building> {
             //add json accept header
-            val httpResponse = client.get("http://localhost:8085/test") {
-                headers {
-                    append("Accept", "application/json")
-                }
-            }
-            if (httpResponse.status.value in 200..299) {
-                println("Successful response!")
-            }
+            val httpResponse = client.get("http://localhost:8085/test")
             client.close()
-            val txt = httpResponse.body<String>()
-            return Json.decodeFromString<List<Building>>(txt).toString()
+            return Json.decodeFromString(httpResponse.body())
         }
     }
 }
