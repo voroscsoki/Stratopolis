@@ -6,6 +6,8 @@ import kotlinx.coroutines.runBlocking
 
 class Main {
     companion object {
+        val appScene = Basic3D()
+
         @JvmStatic
         fun main(args: Array<String>) {
             println("Hello from the client!")
@@ -17,10 +19,10 @@ class Main {
             HttpAccessor.waitForConnection()
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
-            config.setWindowedMode(600, 480)
-            config.useVsync(true)
+            config.setWindowedMode(1280, 720)
+            config.useVsync(false)
             config.setForegroundFPS(60)
-            Lwjgl3Application(Basic3D(), config)
+            Lwjgl3Application(appScene, config)
         }
     }
 }
