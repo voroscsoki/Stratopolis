@@ -1,44 +1,45 @@
 package dev.voroscsoki.stratopolis.server.osm
 
-import api.SerializableWay
 import de.topobyte.osm4j.core.model.iface.*
 import de.topobyte.osm4j.pbf.seq.PbfIterator
 import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.SerializableTag
-import dev.voroscsoki.stratopolis.common.api.members
+import dev.voroscsoki.stratopolis.common.api.SerializableNode
 import dev.voroscsoki.stratopolis.common.api.tags
+import java.io.File
 
 
-class OsmStorage(source: PbfIterator) {
+class OsmStorage(val source: File) {
     companion object {
+        val nodes = mutableMapOf<Long, SerializableNode>()
         val buildings = mutableListOf<Building>()
-        val ways = mutableMapOf<Long, OsmWay>()
     }
-    private val seq = source.iterator().asSequence()
+    private var iter: Iterator<EntityContainer> = PbfIterator(source.inputStream(), true).iterator()
 
     init {
-        seq.map { it.entity }.forEach { ent ->
-            when (ent) {
-                is OsmNode -> {
-                    if(ent.isBuilding()) {
-                        buildings.add(Building(ent.id, ent.tags.map { SerializableTag(it) }, EntityType.Node, Pair(ent.latitude, ent.longitude)))
-                    }
-                }
-                is OsmWay -> {
-                    ways[ent.id] = ent
-                    if(ent.isBuilding()) {
-                        buildings.add(Building(ent.id, ent.tags.map { SerializableTag(it) }, EntityType.Way, Pair(0.0,0.0), listOf(SerializableWay(ent))))
-                    }
-                }
-                is OsmRelation -> {
-                    if(!ent.isBuilding()) return@forEach
-                    val members = ent.members
-                    val borders = members.filter { it.type == EntityType.Way }
-                    buildings.add(Building(ent.id, ent.tags.map { SerializableTag(it) }, ent.type, Pair(0.0,0.0), borders.mapNotNull { ways[it.id]?.let { it1 -> SerializableWay(it1) } }))
-                }
+        processOsmEntities(iter)
+        println("Nodes: ${nodes.size}")
+    }
+
+    private fun processOsmEntities(iter: Iterator<EntityContainer>) {
+        for (entity in iter) {
+            when (val osmEntity = entity.entity) {
+                is OsmNode -> handleNode(osmEntity)
+                is OsmWay -> handleWay(osmEntity)
+                is OsmRelation -> handleRelation(osmEntity)
             }
         }
-        println("Building count: ${buildings.size}")
+    }
+
+
+    private fun handleNode(entity: OsmNode) {
+        nodes[entity.id] = SerializableNode(entity)
+    }
+
+    private fun handleWay(entity: OsmWay) {
+        //skip
+    }
+    private fun handleRelation(entity: OsmRelation) {
+        //skip
     }
 }
 
