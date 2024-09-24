@@ -5,7 +5,7 @@ import de.topobyte.osm4j.pbf.seq.PbfIterator
 import java.io.File
 
 
-class OsmReader {
+class OsmLoader {
     companion object {
         fun read(filename: String) {
             val fileStream = File(filename).inputStream()

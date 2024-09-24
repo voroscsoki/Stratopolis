@@ -1,6 +1,6 @@
 package dev.voroscsoki.stratopolis.server
 
-import dev.voroscsoki.stratopolis.server.osm.OsmReader
+import dev.voroscsoki.stratopolis.server.osm.OsmLoader
 import io.ktor.server.netty.*
 
 class Main {
@@ -8,7 +8,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             println("Hello from the server!")
-            OsmReader.read("hungary-latest.osm.pbf")
+            OsmLoader.read("hungary-latest.osm.pbf")
             EngineMain.main(args)
         }
     }
