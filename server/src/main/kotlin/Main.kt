@@ -8,7 +8,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             println("Hello from the server!")
-            OsmLoader.read("hungary-latest.osm.pbf")
+            OsmLoader.read("budapest.osm.pbf")
             EngineMain.main(args)
         }
     }

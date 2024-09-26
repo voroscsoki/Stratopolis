@@ -2,16 +2,33 @@ package dev.voroscsoki.stratopolis.server.osm
 
 import de.topobyte.osm4j.core.model.iface.*
 import de.topobyte.osm4j.pbf.seq.PbfIterator
-import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.SerializableNode
-import dev.voroscsoki.stratopolis.common.api.tags
+import dev.voroscsoki.stratopolis.common.api.*
 import java.io.File
 
 
 class OsmStorage(val source: File) {
     companion object {
-        val nodes = mutableMapOf<Long, SerializableNode>()
-        val buildings = mutableListOf<Building>()
+        val nodes = mutableMapOf<Long, OsmNode>()
+        val ways = mutableMapOf<Long, OsmWay>()
+        val relations = mutableMapOf<Long, OsmRelation>()
+        val buildings: HashSet<Building> by lazy {
+            val default = nodes.filter { it.value.isBuilding() }
+            val wayRelated = ways.filter { it.value.isBuilding() }
+            val relationRelated = relations.filter { it.value.isBuilding() }
+            val output = mutableSetOf<Building>()
+            default.forEach { node ->
+                output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Pair(node.value.latitude, node.value.longitude)))
+            }
+            wayRelated.forEach { way ->
+                output.add(Building(way.value.id, way.value.tags.map { SerializableTag(it) }, EntityType.Way, Pair(0.0,0.0), way.value.nodeIds.map { nodes[it]!! }.map { SerializableNode(it) }))
+            }
+            relationRelated.forEach { relation ->
+                output.add(Building(relation.value.id, relation.value.tags.map { SerializableTag(it) }, EntityType.Relation,
+                    Pair(0.0,0.0), relation.value.members.filter {it is OsmWay }.map { way -> (way as OsmWay).nodeIds.map { nodes[it]!! }.map { SerializableNode(it)} }.flatten()))
+            }
+
+            output.toHashSet()
+        }
     }
     private var iter: Iterator<EntityContainer> = PbfIterator(source.inputStream(), true).iterator()
 
@@ -32,14 +49,14 @@ class OsmStorage(val source: File) {
 
 
     private fun handleNode(entity: OsmNode) {
-        nodes[entity.id] = SerializableNode(entity)
+        nodes[entity.id] = entity
     }
 
     private fun handleWay(entity: OsmWay) {
-        //skip
+        ways[entity.id] = entity
     }
     private fun handleRelation(entity: OsmRelation) {
-        //skip
+        relations[entity.id] = entity
     }
 }
 
