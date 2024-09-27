@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
+import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.CoordPair
 import org.lwjgl.opengl.GL40
 
@@ -23,15 +24,37 @@ class Basic3D : ApplicationListener {
     lateinit var environment: Environment
     var buildingInstances = mutableListOf<ModelInstance>()
     lateinit var camController: CameraInputController
-    lateinit var buildModel: Model
+    lateinit var basicModel: Model
     private var position = Vector3()
+    private var BASELINE_COORD = CoordPair(47.4979, 19.0402)
 
-    fun addBuilding(coords: CoordPair) {
-        val instance = ModelInstance(buildModel)
-        val newcoords = (coords.first - 47.5) * 10 to (coords.second - 19.1) * 10
-        instance.transform.setTranslation(newcoords.first.toFloat(), 0f, newcoords.second.toFloat())
+    fun addBuilding(building: Building) {
+        val instance = //treat vertices as the base of the building, extrude upwards
+            //treat vertices as the base of the building, extrude upwards
+            if (building.points.isEmpty()) ModelInstance(basicModel)
+            else {
+                val modelBuilder = ModelBuilder()
+                modelBuilder.begin()
+                val meshBuilder =
+                    modelBuilder.part("building", GL20.GL_LINE_STRIP, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.CYAN)))
+                val box = ModelBuilder().createBox(3f,3f,3f, Material(ColorAttribute.createDiffuse((Color.CYAN))), (Usage.Position or Usage.Normal).toLong())
+                /*val vertices = building.points.map {
+                    it.coords.coordScale().let { c -> floatArrayOf(c.first.toFloat(), 0f, c.second.toFloat()) }
+                }
+                //treat vertices as the base of the building, extrude upwards
+                vertices.forEach { meshBuilder.vertex(*it) }*/
+
+
+                ModelInstance(box)
+            }
+
+        building.coords.coordScale().let {
+            instance.transform.setTranslation(it.first.toFloat(), 0f, it.second.toFloat())
+        }
         buildingInstances.add(instance)
     }
+    //treat baseline as 0,0, scale from there by 1000
+    private fun CoordPair.coordScale() = CoordPair((this.first - BASELINE_COORD.first)*10000, (this.second - BASELINE_COORD.second)*10000)
 
 
 
@@ -45,13 +68,13 @@ class Basic3D : ApplicationListener {
         cam.position[0f, 10f] = 0f
         cam.lookAt(0f, 0f, 0f)
         cam.near = 1f
-        cam.far = 300f
+        cam.far = 5000f
         cam.rotate(Vector3(0f,1f,0f), -90f)
         cam.update()
 
         modelBatch = ModelBatch()
-        buildModel = ModelBuilder().createBox(
-            5f, 5f, 5f,
+        basicModel = ModelBuilder().createBox(
+            3f,3f,3f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (Usage.Position or Usage.Normal).toLong()
         )
@@ -84,7 +107,7 @@ class Basic3D : ApplicationListener {
 
     override fun dispose() {
         modelBatch.dispose()
-        buildModel.dispose()
+        basicModel.dispose()
     }
 
     protected fun isVisible(cam: Camera, instance: ModelInstance): Boolean {

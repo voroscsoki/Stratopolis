@@ -8,7 +8,7 @@ class MyInput : InputAdapter() {
     override fun keyDown(keycode: Int): Boolean {
         println("Key down: $keycode")
         if (keycode == 131) {
-            runBlocking { HttpAccessor.testRequest().map {it.coords}.forEach { Main.appScene.addBuilding(it) } }
+            runBlocking { HttpAccessor.testRequest().forEach { Main.appScene.addBuilding(it) } }
         }
         //print app memory usage
         println("Memory usage: ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024} MB")

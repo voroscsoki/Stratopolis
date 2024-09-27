@@ -22,7 +22,7 @@ fun Application.configureRouting() {
         // Define a route at /test
         //send the json representation of the Building object
         get("/test") {
-            val bldg = OsmStorage.buildings
+            val bldg = OsmStorage.buildings.take(100000)
             call.respond(bldg)
         }
 

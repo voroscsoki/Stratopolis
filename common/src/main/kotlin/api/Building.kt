@@ -11,6 +11,5 @@ data class Building(
     val tags: List<SerializableTag>,
     val type: EntityType,
     val coords: CoordPair = Pair(0.0, 0.0),
-    val points : List<SerializableNode> = emptyList(),
-    val lines : List<SerializableWay> = emptyList()
+    val points : List<SerializableNode> = emptyList()
 )
