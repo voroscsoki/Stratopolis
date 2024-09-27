@@ -12,10 +12,12 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder
 import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.CoordPair
 import org.lwjgl.opengl.GL40
+import kotlin.random.Random
 
 
 class Basic3D : ApplicationListener {
@@ -27,6 +29,7 @@ class Basic3D : ApplicationListener {
     lateinit var basicModel: Model
     private var position = Vector3()
     private var BASELINE_COORD = CoordPair(47.4979, 19.0402)
+    val rand = Random(0)
 
     fun addBuilding(building: Building) {
         val instance = //treat vertices as the base of the building, extrude upwards
@@ -35,17 +38,22 @@ class Basic3D : ApplicationListener {
             else {
                 val modelBuilder = ModelBuilder()
                 modelBuilder.begin()
-                val meshBuilder =
-                    modelBuilder.part("building", GL20.GL_LINE_STRIP, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.CYAN)))
-                val box = ModelBuilder().createBox(3f,3f,3f, Material(ColorAttribute.createDiffuse((Color.CYAN))), (Usage.Position or Usage.Normal).toLong())
-                /*val vertices = building.points.map {
-                    it.coords.coordScale().let { c -> floatArrayOf(c.first.toFloat(), 0f, c.second.toFloat()) }
+
+                /*building.points.forEachIndexed { index, p ->
+                    run {
+                        val node = modelBuilder.node()
+                        node.id = index.toString()
+                        node.translation.set(p.coords.first.toFloat(), 0f, p.coords.second.toFloat())
+
+                        val node2 = modelBuilder.node()
+                        node2.id = index.toString() + "XD"
+                        node2.translation.set(p.coords.first.toFloat(), 3f, p.coords.second.toFloat())
+                    }
+                }*/
+                val sphere = SphereShapeBuilder()
+                ModelInstance(modelBuilder.end()).apply {
+                    this.materials.add(Material(ColorAttribute.createSpecular(Color.CORAL)))
                 }
-                //treat vertices as the base of the building, extrude upwards
-                vertices.forEach { meshBuilder.vertex(*it) }*/
-
-
-                ModelInstance(box)
             }
 
         building.coords.coordScale().let {
@@ -99,6 +107,7 @@ class Basic3D : ApplicationListener {
         modelBatch.begin(cam)
         for (instance in buildingInstances) {
             if (isVisible(cam, instance)) {
+                instance.materials.first().set(ColorAttribute.createDiffuse(Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 1f)))
                 modelBatch.render(instance, environment)
             }
         }
