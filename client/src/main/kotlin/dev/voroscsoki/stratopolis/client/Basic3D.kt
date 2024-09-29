@@ -2,18 +2,17 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.VertexAttributes.Usage
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
+import com.badlogic.gdx.graphics.g3d.model.Node
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
-import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.CoordPair
 import org.lwjgl.opengl.GL40
@@ -38,22 +37,28 @@ class Basic3D : ApplicationListener {
             else {
                 val modelBuilder = ModelBuilder()
                 modelBuilder.begin()
+                val meshBuilder = modelBuilder.part("part1", GL20.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.CORAL)))
 
-                /*building.points.forEachIndexed { index, p ->
-                    run {
-                        val node = modelBuilder.node()
-                        node.id = index.toString()
-                        node.translation.set(p.coords.first.toFloat(), 0f, p.coords.second.toFloat())
-
-                        val node2 = modelBuilder.node()
-                        node2.id = index.toString() + "XD"
-                        node2.translation.set(p.coords.first.toFloat(), 3f, p.coords.second.toFloat())
-                    }
-                }*/
-                val sphere = SphereShapeBuilder()
-                ModelInstance(modelBuilder.end()).apply {
-                    this.materials.add(Material(ColorAttribute.createSpecular(Color.CORAL)))
+                val baseVertices = mutableListOf<Vector3>()
+                val coords = building.points.map { it.coords }
+                coords.map { it.coordScale() }.forEach { (x, y) ->
+                    baseVertices.add(Vector3(x.toFloat(), y.toFloat(), 0f))  // Base vertices at height 0
+                    baseVertices.add(Vector3(x.toFloat(), y.toFloat(), 5f)) // Top vertices at the specified height
                 }
+
+                // sides
+                for (i in coords.indices) {
+                    val nextIndex = (i + 1) % coords.size
+                    val bottomLeft = i * 2
+                    val bottomRight = nextIndex * 2
+                    val topLeft = bottomLeft + 1
+                    val topRight = bottomRight + 1
+
+                    meshBuilder.rect(
+                        baseVertices[bottomLeft], baseVertices[topLeft], baseVertices[topRight], baseVertices[bottomRight], Vector3(1f,0f,1f)
+                    )
+                }
+                ModelInstance(modelBuilder.end())
             }
 
         building.coords.coordScale().let {
@@ -107,7 +112,7 @@ class Basic3D : ApplicationListener {
         modelBatch.begin(cam)
         for (instance in buildingInstances) {
             if (isVisible(cam, instance)) {
-                instance.materials.first().set(ColorAttribute.createDiffuse(Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 1f)))
+                //instance.materials.first().set(ColorAttribute.createDiffuse(Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 1f)))
                 modelBatch.render(instance, environment)
             }
         }
@@ -121,7 +126,7 @@ class Basic3D : ApplicationListener {
 
     protected fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
         instance.transform.getTranslation(position)
-        return cam.frustum.pointInFrustum(position)
+        return cam.frustum.sphereInFrustum(position, 15f)
     }
 
     override fun resume() {
