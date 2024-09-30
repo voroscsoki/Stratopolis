@@ -7,12 +7,10 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
-import com.badlogic.gdx.graphics.g3d.model.Node
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.math.collision.BoundingBox
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.CoordPair
 import org.lwjgl.opengl.GL40
@@ -31,34 +29,18 @@ class Basic3D : ApplicationListener {
     val rand = Random(0)
 
     fun addBuilding(building: Building) {
-        val instance = //treat vertices as the base of the building, extrude upwards
-            //treat vertices as the base of the building, extrude upwards
+        val instance =
             if (building.points.isEmpty()) ModelInstance(basicModel)
             else {
                 val modelBuilder = ModelBuilder()
-                modelBuilder.begin()
-                val meshBuilder = modelBuilder.part("part1", GL20.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.CORAL)))
-
                 val baseVertices = mutableListOf<Vector3>()
                 val coords = building.points.map { it.coords }
                 coords.map { it.coordScale() }.forEach { (x, y) ->
-                    baseVertices.add(Vector3(x.toFloat(), y.toFloat(), 0f))  // Base vertices at height 0
-                    baseVertices.add(Vector3(x.toFloat(), y.toFloat(), 5f)) // Top vertices at the specified height
+                    baseVertices.add(Vector3(x.toFloat(), 0f, y.toFloat()))  // Base vertices at height 0
                 }
+                val model = createBuildingModel(modelBuilder, baseVertices)
 
-                // sides
-                for (i in coords.indices) {
-                    val nextIndex = (i + 1) % coords.size
-                    val bottomLeft = i * 2
-                    val bottomRight = nextIndex * 2
-                    val topLeft = bottomLeft + 1
-                    val topRight = bottomRight + 1
-
-                    meshBuilder.rect(
-                        baseVertices[bottomLeft], baseVertices[topLeft], baseVertices[topRight], baseVertices[bottomRight], Vector3(1f,0f,1f)
-                    )
-                }
-                ModelInstance(modelBuilder.end())
+                ModelInstance(model)
             }
 
         building.coords.coordScale().let {
@@ -66,12 +48,52 @@ class Basic3D : ApplicationListener {
         }
         buildingInstances.add(instance)
     }
+
+    private fun createBuildingModel(
+        modelBuilder: ModelBuilder,
+        baseVertices: MutableList<Vector3>
+    ): Model {
+        modelBuilder.begin()
+        val vertices = baseVertices.map { VertexInfo().setPos(it).setNor(Vector3.Y) }.toTypedArray()
+        modelBuilder.part("building", GL40.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.BLUE)))
+            .apply {
+                for (i in 0 until vertices.size - 2) {
+                    triangle(vertices[0], vertices[i + 1], vertices[i + 2])
+                }
+            }
+        //extrude the base to the height
+        val height = 5f
+        val topVertices = baseVertices.map { it.cpy().add(0f, height, 0f) }
+        val topVerticesInfo = topVertices.map { VertexInfo().setPos(it).setNor(Vector3.Y) }.toTypedArray()
+        modelBuilder.part("building2", GL40.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.BLUE)))
+            .apply {
+                for (i in 0 until topVerticesInfo.size - 2) {
+                    triangle(topVerticesInfo[0], topVerticesInfo[i + 1], topVerticesInfo[i + 2])
+                }
+            }
+        //add sides
+        for (i in 0 until baseVertices.size) {
+            val next = (i + 1) % baseVertices.size
+            modelBuilder.part("building3", GL40.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.BLUE)))
+                .apply {
+                    this.rect(
+                        baseVertices[i], baseVertices[next], topVertices[next], topVertices[i],
+                        Vector3.Y
+                    )
+                }
+        }
+        return modelBuilder.end()
+    }
+
     //treat baseline as 0,0, scale from there by 1000
     private fun CoordPair.coordScale() = CoordPair((this.first - BASELINE_COORD.first)*10000, (this.second - BASELINE_COORD.second)*10000)
 
 
-
     override fun create() {
+        val renderer = Gdx.gl.glGetString(GL20.GL_RENDERER)
+        val version = Gdx.gl.glGetString(GL20.GL_VERSION)
+        val vendor = Gdx.gl.glGetString(GL20.GL_VENDOR)
+        Gdx.app.log("GPU Info", "Renderer: $renderer, Version: $version, Vendor: $vendor")
         environment = Environment()
         environment.set(ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f))
         environment.add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f))
@@ -81,7 +103,7 @@ class Basic3D : ApplicationListener {
         cam.position[0f, 10f] = 0f
         cam.lookAt(0f, 0f, 0f)
         cam.near = 1f
-        cam.far = 5000f
+        cam.far = 2500f
         cam.rotate(Vector3(0f,1f,0f), -90f)
         cam.update()
 
@@ -98,17 +120,15 @@ class Basic3D : ApplicationListener {
         multiplexer.addProcessor(camController)
         multiplexer.addProcessor(MyInput())
         Gdx.input.inputProcessor = multiplexer
-        GL40.glEnable(GL40.GL_CULL_FACE)
-        GL40.glCullFace(GL40.GL_BACK)
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST)  // Enable depth test
+        Gdx.gl.glEnable(GL20.GL_CULL_FACE)   // Enable face culling
+        Gdx.gl.glCullFace(GL20.GL_BACK)      // Cull back faces
     }
 
     override fun render() {
-        //buildingInstances.first().transform.rotate(0f, 1f, 1f, 2f)
-        
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT)
         camController.update()
-
         modelBatch.begin(cam)
         for (instance in buildingInstances) {
             if (isVisible(cam, instance)) {
@@ -124,7 +144,7 @@ class Basic3D : ApplicationListener {
         basicModel.dispose()
     }
 
-    protected fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
+    private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
         instance.transform.getTranslation(position)
         return cam.frustum.sphereInFrustum(position, 15f)
     }
@@ -138,3 +158,4 @@ class Basic3D : ApplicationListener {
     override fun pause() {
     }
 }
+private fun Vector3.flatten() = floatArrayOf(this.x, this.y, this.z)
