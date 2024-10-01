@@ -131,10 +131,9 @@ class Basic3D : ApplicationListener {
         camController.update()
         modelBatch.begin(cam)
         for (instance in buildingInstances) {
-            if (isVisible(cam, instance)) {
-                //instance.materials.first().set(ColorAttribute.createDiffuse(Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 1f)))
-                modelBatch.render(instance, environment)
-            }
+            if (!isVisible(cam, instance)) continue
+            modelBatch.render(instance, environment)
+
         }
         modelBatch.end()
     }
