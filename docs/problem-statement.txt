@@ -1,0 +1,3 @@
+A forgalomirányításban és közlekedési tervezésben ma használt megoldások túlnyomó többsége elavult monolit alkalmazásokból áll. Az akár évtizedek távlatából fenntartott kódbázisok nehezítik, de legalábbis nem könnyítik meg a városi közlekedési stratégia iteratív tervezését és tesztelését.
+
+Szakdolgozatom célkitűzése egy olyan forgalomszimulációs program készítése, ami a mai általános állapottal szemben modernnek és rétegesnek mondható. Modern, mert a felhasznált nyelvek, technológiák, könyvtárak terén az elmúlt évek fejlesztéseit szeretném kihasználni. Réteges, mert a felhasználó által megtekinthető nézetek és a nagyon komplexitású számítások elkülönülnek egymástól, így lehetővé téve egy kiszolgáló - kliens együttműködést.
