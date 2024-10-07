@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
+import dev.voroscsoki.stratopolis.client.util.VertexSorter
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.CoordPair
 import org.lwjgl.opengl.GL40
@@ -21,7 +22,7 @@ class Basic3D : ApplicationListener {
     lateinit var cam: PerspectiveCamera
     lateinit var modelBatch: ModelBatch
     lateinit var environment: Environment
-    var buildingInstances = mutableListOf<ModelInstance>()
+    var instances = mutableListOf<ModelInstance>()
     lateinit var camController: CameraInputController
     lateinit var basicModel: Model
     private var position = Vector3()
@@ -46,7 +47,7 @@ class Basic3D : ApplicationListener {
         building.coords.coordScale().let {
             instance.transform.setTranslation(it.first.toFloat(), 0f, it.second.toFloat())
         }
-        buildingInstances.add(instance)
+        instances.add(instance)
     }
 
     private fun createBuildingModel(
@@ -54,7 +55,8 @@ class Basic3D : ApplicationListener {
         baseVertices: MutableList<Vector3>
     ): Model {
         modelBuilder.begin()
-        val vertices = baseVertices.map { VertexInfo().setPos(it).setNor(Vector3.Y) }.toTypedArray()
+        val sortedVertices = VertexSorter.sort(baseVertices, Vector3(0f,1f,0f))
+        val vertices = sortedVertices.map { VertexInfo().setPos(it).setNor(Vector3.Y) }.toTypedArray()
         modelBuilder.part("building", GL40.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.BLUE)))
             .apply {
                 for (i in 0 until vertices.size - 2) {
@@ -62,8 +64,8 @@ class Basic3D : ApplicationListener {
                 }
             }
         //extrude the base to the height
-        val height = 5f
-        val topVertices = baseVertices.map { it.cpy().add(0f, height, 0f) }
+        val height = 6f
+        val topVertices = sortedVertices.map { it.cpy().add(0f, height, 0f) }
         val topVerticesInfo = topVertices.map { VertexInfo().setPos(it).setNor(Vector3.Y) }.toTypedArray()
         modelBuilder.part("building2", GL40.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.BLUE)))
             .apply {
@@ -72,12 +74,12 @@ class Basic3D : ApplicationListener {
                 }
             }
         //add sides
-        for (i in 0 until baseVertices.size) {
-            val next = (i + 1) % baseVertices.size
+        for (i in sortedVertices.indices) {
+            val prev = (i - 1 + sortedVertices.size) % sortedVertices.size
             modelBuilder.part("building3", GL40.GL_TRIANGLES, (Usage.Position or Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.BLUE)))
                 .apply {
                     this.rect(
-                        baseVertices[i], baseVertices[next], topVertices[next], topVertices[i],
+                        sortedVertices[i], topVertices[i], topVertices[prev], sortedVertices[prev],
                         Vector3.Y
                     )
                 }
@@ -86,7 +88,7 @@ class Basic3D : ApplicationListener {
     }
 
     //treat baseline as 0,0, scale from there by 1000
-    private fun CoordPair.coordScale() = CoordPair((this.first - BASELINE_COORD.first)*10000, (this.second - BASELINE_COORD.second)*10000)
+    private fun CoordPair.coordScale() = CoordPair((this.first - BASELINE_COORD.first)*2000, (this.second - BASELINE_COORD.second)*2000)
 
 
     override fun create() {
@@ -100,7 +102,7 @@ class Basic3D : ApplicationListener {
 
         //height is Y
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-        cam.position[0f, 10f] = 0f
+        cam.position[0f, 100f] = 0f
         cam.lookAt(0f, 0f, 0f)
         cam.near = 1f
         cam.far = 2500f
@@ -121,8 +123,9 @@ class Basic3D : ApplicationListener {
         multiplexer.addProcessor(MyInput())
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST)  // Enable depth test
-        Gdx.gl.glEnable(GL20.GL_CULL_FACE)   // Enable face culling
-        Gdx.gl.glCullFace(GL20.GL_BACK)      // Cull back faces
+        Gdx.gl.glDisable(GL20.GL_CULL_FACE)   // Enable face culling
+        //Gdx.gl.glCullFace(GL20.GL_BACK)      // Cull back faces
+
     }
 
     override fun render() {
@@ -130,7 +133,7 @@ class Basic3D : ApplicationListener {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT)
         camController.update()
         modelBatch.begin(cam)
-        for (instance in buildingInstances) {
+        for (instance in instances) {
             if (!isVisible(cam, instance)) continue
             modelBatch.render(instance, environment)
 
@@ -145,7 +148,7 @@ class Basic3D : ApplicationListener {
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
         instance.transform.getTranslation(position)
-        return cam.frustum.sphereInFrustum(position, 15f)
+        return cam.frustum.sphereInFrustum(position, 1.5f)
     }
 
     override fun resume() {
