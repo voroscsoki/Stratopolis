@@ -1,6 +1,6 @@
 ktor:
   application:
     modules:
-      - dev.voroscsoki.stratopolis.server.RoutingKt.configureRouting
+      - dev.voroscsoki.stratopolis.server.NetworkCommsKt.configureRouting
   deployment:
     port: 8085

@@ -27,6 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty")
     implementation("io.ktor:ktor-server-config-yaml")
     implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-server-websockets")
     implementation("io.ktor:ktor-serialization-kotlinx-json")
     implementation(project(":common"))
 }
