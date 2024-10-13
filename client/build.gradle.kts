@@ -19,9 +19,11 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx-platform:1.10.0:natives-desktop")
 
     implementation("io.ktor:ktor-client-core")
-    implementation("io.ktor:ktor-client-okhttp-jvm:2.3.12")
-    implementation("io.ktor:ktor-server-websockets")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+    implementation("io.ktor:ktor-client-okhttp-jvm")
+    implementation("io.ktor:ktor-client-websockets")
+    implementation("io.ktor:ktor-client-serialization")
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
     implementation(project(":common"))
 }
 

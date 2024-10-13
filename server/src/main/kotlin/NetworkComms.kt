@@ -1,6 +1,7 @@
 package dev.voroscsoki.stratopolis.server
 
-import dev.voroscsoki.stratopolis.common.api.StringMessage
+import dev.voroscsoki.stratopolis.common.api.ControlMessage
+import dev.voroscsoki.stratopolis.common.api.controlMessageModule
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -10,13 +11,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.serialization.json.Json
 
 fun Application.configureRouting() {
     install(ContentNegotiation) {
         json(Json {
+            serializersModule = controlMessageModule
+            classDiscriminator = "type"
             prettyPrint = true
-            isLenient = true
         })
     }
     install(WebSockets)
@@ -47,7 +50,12 @@ fun Application.configureRouting() {
             }
         }
         webSocket("/transfertest") {
-            send(StringMessage("hi!").toString())
+            incoming.consumeEach { frame ->
+                if (frame is Frame.Text) {
+                    val response = receiveDeserialized<ControlMessage>()
+                    println("Received response: $response")
+                }
+            }
         }
     }
 }
