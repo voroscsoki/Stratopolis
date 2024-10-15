@@ -5,9 +5,7 @@ import dev.voroscsoki.stratopolis.common.api.EchoReq
 import dev.voroscsoki.stratopolis.common.api.EchoResp
 import dev.voroscsoki.stratopolis.common.api.sendSerialized
 import io.ktor.serialization.kotlinx.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
@@ -23,13 +21,6 @@ fun Application.configureRouting() {
         maxFrameSize = Long.MAX_VALUE
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(Json)
-    }
-
-    install(ContentNegotiation) {
-        json(Json {
-            classDiscriminator = "type"
-            prettyPrint = true
-        })
     }
 
     routing {
