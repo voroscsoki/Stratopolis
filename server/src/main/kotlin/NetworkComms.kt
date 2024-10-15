@@ -6,6 +6,7 @@ import dev.voroscsoki.stratopolis.common.api.EchoResp
 import dev.voroscsoki.stratopolis.common.api.sendSerialized
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
@@ -24,6 +25,10 @@ fun Application.configureRouting() {
     }
 
     routing {
+        get("/health-check") {
+            call.respond("OK")
+        }
+
         webSocket("/echo") {
             for (frame in incoming) {
                 if (frame is Frame.Text) {
