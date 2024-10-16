@@ -3,3 +3,16 @@
 /.gradle/
 /gradle/
 /gradlew*
+/*/bin/
+
+#latex
+*.aux
+*.lua
+*.bst
+*.ldf
+*.bbl
+*.blg
+/docs/*/*.log
+*.out
+*.thm
+*.toc
