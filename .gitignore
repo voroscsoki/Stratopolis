@@ -4,3 +4,15 @@
 /gradle/
 /gradlew*
 *.log
+/*/bin/
+
+#latex
+*.aux
+*.lua
+*.bst
+*.ldf
+*.bbl
+*.blg
+*.out
+*.thm
+*.toc
