@@ -1,8 +1,0 @@
-A forgalomirányításban és közlekedési tervezésben ma használt megoldások túlnyomó többsége elavult monolit alkalmazásokból áll. Az akár évtizedek távlatából fenntartott kódbázisok nehezítik, de legalábbis nem könnyítik meg a városi közlekedési stratégia iteratív tervezését és tesztelését.
-
-Szakdolgozatom célkitűzése egy olyan forgalomszimulációs program készítése, ami a mai általános állapottal szemben modernnek és rétegesnek mondható. Modern, mert a felhasznált nyelvek, technológiák, könyvtárak terén az elmúlt évek fejlesztéseit szeretném kihasználni - ezt a Kotlin programozási nyelven keresztül teszem. Réteges, mert a felhasználó által megtekinthető nézetek és a nagyobb komplexitású számítások elkülönülnek egymástól, így lehetővé téve egy kiszolgáló - kliens együttműködést.
-A program két alprojekt együttműködéséből épül fel. Az akár külön szerveren is futtatható szimuláció hálózati kapcsolaton keresztül kommunikál a kifejezetten ábrázolásra készülő felülettel.
-
-A dolgozat első része számon veszi a grafikai és adatkezelési lehetőségeket, az elképzelt szoftverstruktúrát, a való életbeli használati lehetőségeket. A munka másik fele elsősorban a lakosság közlekedési szokásainak megjósolásáról, statisztikán alapuló megbecsléséről, valamint annak vizualizációjáról szól.
-
-Célomnak tekintem a Java Virtual Machine platform által biztosított, az alapképzésen ritkán vagy egyáltalán nem megjelenő eszközök bemutatását. Emellett szeretném a párhuzamosítható és funkcionális programozás előnyeit is ismertetni valós példákon keresztül.
