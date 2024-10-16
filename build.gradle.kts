@@ -5,6 +5,19 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
+        //add mvn.topobyte.de
+        maven {
+            url = uri("https://mvn.topobyte.de/")
+        }
+        maven {
+            url = uri("https://mvn.slimjars.com/")
+        }
+        maven {
+            url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
+        }
+        maven {
+            url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+        }
     }
 }
 
@@ -16,15 +29,6 @@ subprojects {
     }
 }
 
-tasks.register("buildAll") {
-    dependsOn(":server:buildBackend", ":client:buildFrontend")
-}
-
 tasks.register("runAll") {
     dependsOn(":server:runBackend", ":client:runFrontend")
-}
-
-tasks.register("buildAndRunAll") {
-    dependsOn("buildAll")
-    dependsOn("runAll")
 }

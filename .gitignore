@@ -3,6 +3,7 @@
 /.gradle/
 /gradle/
 /gradlew*
+*.log
 /*/bin/
 
 #latex
@@ -12,7 +13,6 @@
 *.ldf
 *.bbl
 *.blg
-/docs/*/*.log
 *.out
 *.thm
 *.toc
