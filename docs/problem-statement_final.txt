@@ -1,0 +1,29 @@
+A forgalomirányításban és közlekedési tervezésben ma használt megoldások túlnyomó
+többsége elavult, monolit alkalmazásokból áll. Az akár évtizedek távlatából fenntartott
+kódbázisok nehezítik, megkötik a városi közlekedési stratégia iteratív tervezését és tesztelését.
+
+A Szakdolgozat célkitűzése egy olyan forgalomszimulációs program készítése, ami a mai
+általános iparági állapottal szemben modern technológiára, réteges architektúrára épül.
+Modern, mert a felhasznált nyelvek, technológiák, könyvtárak terén az elmúlt évek
+fejlesztéseit jeleníti meg a Kotlin programozási nyelven keresztül. Réteges, mert a felhasználó
+által megtekinthető nézetek és a nagyobb komplexitású számítások elkülönülnek egymástól,
+így lehetővé téve egy kiszolgáló - kliens együttműködést.
+
+Az elkészítendő alkalmazás két alrendszer együttműködéséből épül fel. A külön szerveren
+futó szimuláció hálózati kapcsolaton keresztül kommunikál a kifejezetten ábrázolásra készülő
+felülettel.
+
+A hallgató feladata, hogy megvizsgálja, megtervezi a célszerűen használható grafikai és
+adatkezelési lehetőségeket, az elképzelt szoftverstruktúrát, a való életbeli használati
+lehetőségeket. A végső megvalósítás mutassa be a szimuláció eredményét elsősorban a
+lakossági közlekedési szokások megjósolásán, statisztikán alapuló megbecslésén, valamint
+annak vizualizációján keresztül.
+
+A feladat része továbbá, hogy bemutassa az alapképzésen csak érintőlegesen tárgyalt Java
+Virtual Machine platform által biztosított eszközöket, lehetőségeket a feladat szempontjából.
+A hallgató konkrét feladatai:
+• valós térképadatok alapján egy szimulációs célú város felépítése,
+• adatbázis és szimulációs struktúra elkészítése,
+• grafikai felület segítségével adatvizualizáció(k) készítése,
+• a kész szoftver konténerizációja,
+• a rendszer tesztelése.
