@@ -7,11 +7,13 @@ import kotlinx.coroutines.runBlocking
 class Main {
     companion object {
         val appScene = Basic3D()
+        val socket = SocketClient()
 
         @JvmStatic
         fun main(args: Array<String>) {
             println("Hello from the client!")
             runBlocking {
+                socket.testEcho()
                 asyncInit()
             }
         }

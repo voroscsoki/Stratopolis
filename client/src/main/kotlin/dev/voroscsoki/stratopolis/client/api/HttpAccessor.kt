@@ -7,6 +7,7 @@ import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 
@@ -27,7 +28,7 @@ class HttpAccessor {
                 } catch (e: Exception) {
                     println("Waiting for server to start...")
                     withContext(Dispatchers.IO) {
-                        Thread.sleep(5000)
+                        Thread.sleep(2000)
                     }
                 }
             }
