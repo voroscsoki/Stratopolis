@@ -2,7 +2,10 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.VertexAttributes.Usage
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
@@ -13,7 +16,7 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.client.util.VertexSorter
 import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.CoordPair
+import dev.voroscsoki.stratopolis.common.api.Vec3
 import org.lwjgl.opengl.GL40
 import kotlin.random.Random
 
@@ -26,7 +29,7 @@ class Basic3D : ApplicationListener {
     lateinit var camController: CameraInputController
     lateinit var basicModel: Model
     private var position = Vector3()
-    private var BASELINE_COORD = CoordPair(47.4979, 19.0402)
+    private var BASELINE_COORD = Vec3(47.4979, 0.0, 19.0402)
     val rand = Random(0)
 
     fun addBuilding(building: Building) {
@@ -45,7 +48,7 @@ class Basic3D : ApplicationListener {
             }
 
         building.coords.coordScale().let {
-            instance.transform.setTranslation(it.first.toFloat(), 0f, it.second.toFloat())
+            instance.transform.setTranslation(it.x.toFloat(), 0f, it.z.toFloat())
         }
         instances.add(instance)
     }
@@ -88,7 +91,7 @@ class Basic3D : ApplicationListener {
     }
 
     //treat baseline as 0,0, scale from there by 1000
-    private fun CoordPair.coordScale() = CoordPair((this.first - BASELINE_COORD.first)*2000, (this.second - BASELINE_COORD.second)*2000)
+    private fun Vec3.coordScale() = Vec3((this.x - BASELINE_COORD.x)*2000, 0.0, (this.z - BASELINE_COORD.z)*2000)
 
 
     override fun create() {
