@@ -28,7 +28,7 @@ class OsmStorage(
         val output = mutableSetOf<Building>()
         val rand = Random()
         default.forEach { node ->
-            output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Pair(node.value.latitude, node.value.longitude)))
+            output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Vec3(node.value.latitude, 0.0, node.value.longitude)))
         }
         wayRelated.forEach { way ->
             output.add(Building(way.value.id, way.value.tags.map { SerializableTag(it) }, EntityType.Way, way.value.nodeIds.map { nodes[it]!! }
@@ -38,7 +38,7 @@ class OsmStorage(
             output.add(
                 Building(
                     relation.value.id, relation.value.tags.map { SerializableTag(it) }, EntityType.Relation,
-                    Pair(0.0, 0.0),
+                    Vec3(0.0, 0.0, 0.0),
                     relation.value.members.filter { it is OsmWay }
                         .map { way -> (way as OsmWay).nodeIds.map { nodes[it]!! }.map { SerializableNode(it) } }
                         .flatten()

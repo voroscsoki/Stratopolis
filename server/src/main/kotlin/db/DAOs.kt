@@ -9,8 +9,8 @@ import org.jetbrains.exposed.dao.id.EntityID
 
 class NodeDAO(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<NodeDAO>(Nodes)
-
     var coords by Nodes.coords
+    var way by Nodes.way
 
     fun toNode() = SerializableNode(
         id = id.value,
@@ -22,7 +22,7 @@ class NodeDAO(id: EntityID<Long>) : LongEntity(id) {
 class WayDAO(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<WayDAO>(Ways)
 
-    val nodes by NodeDAO referrersOn Nodes.id
+    val nodes by NodeDAO optionalReferrersOn Nodes.way
 
     fun toWay() = SerializableWay(
         id = id.value,
