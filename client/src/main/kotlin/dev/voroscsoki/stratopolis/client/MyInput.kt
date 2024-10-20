@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 class MyInput : InputAdapter() {
     override fun keyDown(keycode: Int): Boolean {
         println("Key down: $keycode")
+        //F1
         if (keycode == 131) {
             runBlocking { HttpAccessor.testRequest().forEach { Main.appScene.addBuilding(it) } }
         }

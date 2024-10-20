@@ -4,7 +4,6 @@ import de.topobyte.osm4j.core.model.iface.*
 import de.topobyte.osm4j.pbf.seq.PbfIterator
 import dev.voroscsoki.stratopolis.common.api.*
 import java.io.File
-import java.util.*
 
 
 class OsmStorage(
@@ -26,7 +25,6 @@ class OsmStorage(
         val wayRelated = ways.filter { it.value.isBuilding() }
         val relationRelated = relations.filter { it.value.isBuilding() }
         val output = mutableSetOf<Building>()
-        val rand = Random()
         default.forEach { node ->
             output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Vec3(node.value.latitude, 0.0, node.value.longitude)))
         }

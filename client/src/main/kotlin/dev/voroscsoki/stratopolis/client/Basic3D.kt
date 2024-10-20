@@ -18,7 +18,6 @@ import dev.voroscsoki.stratopolis.client.util.VertexSorter
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.Vec3
 import org.lwjgl.opengl.GL40
-import kotlin.random.Random
 
 
 class Basic3D : ApplicationListener {
@@ -30,7 +29,6 @@ class Basic3D : ApplicationListener {
     lateinit var basicModel: Model
     private var position = Vector3()
     private var BASELINE_COORD = Vec3(47.4979, 0.0, 19.0402)
-    val rand = Random(0)
 
     fun addBuilding(building: Building) {
         val instance =
@@ -163,4 +161,3 @@ class Basic3D : ApplicationListener {
     override fun pause() {
     }
 }
-private fun Vector3.flatten() = floatArrayOf(this.x, this.y, this.z)

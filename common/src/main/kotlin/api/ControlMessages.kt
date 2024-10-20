@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 sealed class ControlMessage
 
 @Serializable
-class EchoReq(val msg: String) : ControlMessage()
+class OsmLoadRequest(val path: String) : ControlMessage()
 
 @Serializable
-class EchoResp(val msg: String) : ControlMessage()
+class HttpResponse(val code: Int, val message: String) : ControlMessage()

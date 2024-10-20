@@ -1,15 +1,14 @@
 package dev.voroscsoki.stratopolis.server
 
 import dev.voroscsoki.stratopolis.common.api.ControlMessage
-import dev.voroscsoki.stratopolis.common.api.EchoReq
-import dev.voroscsoki.stratopolis.common.api.EchoResp
-import dev.voroscsoki.stratopolis.common.api.sendSerialized
+import dev.voroscsoki.stratopolis.common.api.HttpResponse
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -29,13 +28,12 @@ fun Application.configureRouting() {
             call.respond("OK")
         }
 
-        webSocket("/echo") {
+
+        webSocket("/control") {
             for (frame in incoming) {
                 if (frame is Frame.Text) {
-                    val msg = Json.decodeFromString<ControlMessage>(frame.readText())
-                    if(msg is EchoReq) {
-                        sendSerialized(EchoResp("Echoing back: ${msg.msg}"))
-                    }
+                    val msg = try { Json.decodeFromString<ControlMessage>(frame.readText()) } catch (e: SerializationException) { null }
+                    msg?.let { sendSerialized(HttpResponse(200, "OK")) }
                 }
             }
         }
