@@ -2,7 +2,6 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import dev.voroscsoki.stratopolis.client.api.HttpAccessor
-import dev.voroscsoki.stratopolis.common.api.OsmLoadRequest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -17,8 +16,6 @@ class Main {
             println("Hello from the client!")
             runBlocking {
                 launch { socket.listenOnSocket() }
-                Thread.sleep(500)
-                launch { socket.sendSocketMessage(OsmLoadRequest("budapest.osm.pbf")) }
                 asyncInit()
             }
         }

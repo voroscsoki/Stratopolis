@@ -33,6 +33,7 @@ fun Application.configureRouting() {
             for (frame in incoming) {
                 if (frame is Frame.Text) {
                     val msg = try { Json.decodeFromString<ControlMessage>(frame.readText()) } catch (e: SerializationException) { null }
+                    println(msg)
                     msg?.let { sendSerialized(HttpResponse(200, "OK")) }
                 }
             }
