@@ -15,7 +15,7 @@ class Main {
         fun main(args: Array<String>) {
             println("Hello from the client!")
             runBlocking {
-                launch { socket.listenOnSocket() }
+                launch { socket.activateSocket() }
                 asyncInit()
             }
         }

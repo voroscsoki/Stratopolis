@@ -2,6 +2,7 @@ package dev.voroscsoki.stratopolis.server
 
 import dev.voroscsoki.stratopolis.common.api.ControlMessage
 import dev.voroscsoki.stratopolis.common.api.HttpResponse
+import dev.voroscsoki.stratopolis.common.api.sendSerialized
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -20,7 +21,10 @@ fun Application.configureRouting() {
         timeout = 15.seconds.toJavaDuration()
         maxFrameSize = Long.MAX_VALUE
         masking = false
-        contentConverter = KotlinxWebsocketSerializationConverter(Json)
+        contentConverter = KotlinxWebsocketSerializationConverter(Json {
+            ignoreUnknownKeys = true
+            classDiscriminator = "type"
+        })
     }
 
     routing {
