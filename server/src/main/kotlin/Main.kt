@@ -6,6 +6,8 @@ import java.io.File
 
 class Main {
     companion object {
+        val socketServer = SocketServer()
+
         @JvmStatic
         fun main(args: Array<String>) {
             val storage = OsmStorage(File("budapest.osm.pbf"))

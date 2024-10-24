@@ -1,8 +1,6 @@
 package dev.voroscsoki.stratopolis.server
 
 import dev.voroscsoki.stratopolis.common.api.ControlMessage
-import dev.voroscsoki.stratopolis.common.api.HttpResponse
-import dev.voroscsoki.stratopolis.common.api.sendSerialized
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -34,12 +32,17 @@ fun Application.configureRouting() {
 
 
         webSocket("/control") {
-            for (frame in incoming) {
-                if (frame is Frame.Text) {
-                    val msg = try { Json.decodeFromString<ControlMessage>(frame.readText()) } catch (e: SerializationException) { null }
-                    println(msg)
-                    msg?.let { sendSerialized(HttpResponse(200, "OK")) }
+            Main.socketServer.connections += this
+            try {
+                for (frame in incoming) {
+                    if (frame is Frame.Text) {
+                        val msg = try { Json.decodeFromString<ControlMessage>(frame.readText()) } catch (e: SerializationException) { null }
+                        msg?.let { Main.socketServer.handleIncomingMessage(it) }
+                    }
                 }
+            }
+            finally {
+                Main.socketServer.connections -= this
             }
         }
     }

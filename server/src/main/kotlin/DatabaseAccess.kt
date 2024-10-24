@@ -2,17 +2,15 @@ package dev.voroscsoki.stratopolis.server
 
 import api.SerializableWay
 import dev.voroscsoki.stratopolis.common.api.SerializableNode
+import dev.voroscsoki.stratopolis.common.api.Vec3
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Nodes
 import dev.voroscsoki.stratopolis.server.db.Ways
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.batchUpsert
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import java.io.File
 import java.sql.Connection
 
@@ -59,6 +57,25 @@ class DatabaseAccess {
                 }
             }
         }
-    }
 
+        fun getNodes(baseCoord: Vec3? = null): List<SerializableNode> {
+            return transaction {
+                val inter = Nodes.selectAll()
+                    .mapNotNull {
+                        val buildingCoords = it[Nodes.coords]
+                        baseCoord ?: return@mapNotNull it[Nodes.id]
+                        val distance = buildingCoords - baseCoord
+                        if (distance <= 0.005) { it[Nodes.id] } else { null }
+                    }
+                println(inter.count())
+                return@transaction Nodes.selectAll().where { Nodes.id inList inter }.map {
+                    SerializableNode(
+                        it[Nodes.id].value,
+                        emptyList(),
+                        it[Nodes.coords]
+                    )
+                }
+            }
+        }
+    }
 }

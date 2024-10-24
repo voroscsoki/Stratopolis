@@ -1,4 +1,5 @@
 package dev.voroscsoki.stratopolis.client
+import SocketClient
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import dev.voroscsoki.stratopolis.client.api.HttpAccessor
@@ -9,13 +10,13 @@ class Main {
     companion object {
         val appScene = Basic3D()
         val instanceData = InstanceData()
-        val socket = SocketClient()
+        val socket = SocketClient(instanceData::handleIncomingMessage, "ws://localhost:8085/control")
 
         @JvmStatic
         fun main(args: Array<String>) {
             println("Hello from the client!")
             runBlocking {
-                launch { socket.activateSocket() }
+                launch { socket.initializeWebSocket() }
                 asyncInit()
             }
         }
