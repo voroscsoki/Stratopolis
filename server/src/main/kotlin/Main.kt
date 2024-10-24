@@ -10,10 +10,13 @@ class Main {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val storage = OsmStorage(File("budapest.osm.pbf"))
+            var storage: OsmStorage? = OsmStorage(File("budapest.osm.pbf"))
             DatabaseAccess.connect()
-            println(storage.nodes.size)
+            println(storage?.nodes?.size)
             println("Hello from the server!")
+            //HACK
+            storage = null
+            System.gc()
             EngineMain.main(args)
         }
     }
