@@ -12,10 +12,18 @@ class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } }
     )
+    private val scope = CoroutineScope(Dispatchers.Default)
 
-    private suspend fun handleNodeRequest(msg: NodeRequest) {
-        val res = DatabaseAccess.getNodes(msg.baseCoord)
-        sendSocketMessage(NodeResponse(ControlResult.OK, res.toList()))
+    private fun handleNodeRequest(msg: NodeRequest) {
+        scope.launch {
+            DatabaseAccess.getNodes(msg.baseCoord)
+                .chunked(1000)
+                .forEach { chunk ->
+                    launch {
+                        sendSocketMessage(NodeResponse(ControlResult.OK, chunk))
+                    }
+                }
+        }
     }
 
 

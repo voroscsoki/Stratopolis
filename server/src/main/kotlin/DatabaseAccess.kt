@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.sql.Connection
+import kotlin.sequences.Sequence
 
 class DatabaseAccess {
     companion object {
@@ -58,23 +59,23 @@ class DatabaseAccess {
             }
         }
 
-        fun getNodes(baseCoord: Vec3? = null): List<SerializableNode> {
-            return transaction {
-                val inter = Nodes.selectAll()
-                    .mapNotNull {
-                        val buildingCoords = it[Nodes.coords]
-                        baseCoord ?: return@mapNotNull it[Nodes.id]
-                        val distance = buildingCoords - baseCoord
-                        if (distance <= 0.005) { it[Nodes.id] } else { null }
-                    }
-                println(inter.count())
-                return@transaction Nodes.selectAll().where { Nodes.id inList inter }.map {
+
+        fun getNodes(baseCoord: Vec3? = null): Sequence<SerializableNode> {
+            val resultRows = transaction {
+                Nodes.selectAll().iterator().asSequence()
+            }
+
+            return resultRows.mapNotNull { row ->
+                val buildingCoords = row[Nodes.coords]
+                val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
+
+                if (distance <= 0.005) {
                     SerializableNode(
-                        it[Nodes.id].value,
+                        row[Nodes.id].value,
                         emptyList(),
-                        it[Nodes.coords]
+                        row[Nodes.coords]
                     )
-                }
+                } else null
             }
         }
     }

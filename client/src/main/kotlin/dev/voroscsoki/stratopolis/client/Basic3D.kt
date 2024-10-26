@@ -10,17 +10,23 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import dev.voroscsoki.stratopolis.common.api.SerializableNode
+import okhttp3.internal.toHexString
 import org.lwjgl.opengl.GL40
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
 
 
 class Basic3D : ApplicationListener {
     private var cam: PerspectiveCamera? = null
     private var modelBatch: ModelBatch? = null
     private var model: Model? = null
-    private var instance: ModelInstance? = null
+    private var instances = ConcurrentHashMap<Long, ModelInstance>()
     private var environment: Environment? = null
     private var camController: CameraInputController? = null
+    private val rand = Random(0)
 
+    //TODO: coord scale (GPS -> 3D)
     override fun create() {
         environment = Environment()
         environment!!.set(ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f))
@@ -36,11 +42,11 @@ class Basic3D : ApplicationListener {
 
         val modelBuilder = ModelBuilder()
         model = modelBuilder.createBox(
-            5f, 5f, 5f,
+            0.4f, 0.4f, 0.4f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (Usage.Position or Usage.Normal).toLong()
         )
-        instance = ModelInstance(model)
+        instances[1] = ModelInstance(model)
 
         val multiplexer = InputMultiplexer()
         camController = CameraInputController(cam)
@@ -54,7 +60,7 @@ class Basic3D : ApplicationListener {
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
         modelBatch!!.begin(cam)
-        modelBatch!!.render(instance, environment)
+        modelBatch!!.render(instances.values, environment)
         modelBatch!!.end()
     }
 
@@ -70,5 +76,13 @@ class Basic3D : ApplicationListener {
     }
 
     override fun pause() {
+    }
+
+    fun upsertInstance(data: SerializableNode) {
+        val inst = ModelInstance(model)
+        //move instance to place indicated by data.coords
+        inst.transform.setTranslation(rand.nextFloat() * 10, rand.nextFloat() * 10, rand.nextFloat() * 10)
+        inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
+        instances[data.id] = inst
     }
 }
