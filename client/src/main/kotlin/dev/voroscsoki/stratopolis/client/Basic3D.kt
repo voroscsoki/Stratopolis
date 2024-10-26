@@ -10,7 +10,9 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.common.api.SerializableNode
+import dev.voroscsoki.stratopolis.common.api.Vec3
 import okhttp3.internal.toHexString
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
@@ -25,8 +27,15 @@ class Basic3D : ApplicationListener {
     private var environment: Environment? = null
     private var camController: CameraInputController? = null
     private val rand = Random(0)
+    private val baselineCoord = Vec3(47.4981399, 0.0,19.0409544)
 
-    //TODO: coord scale (GPS -> 3D)
+    fun Vec3.coordConvert() : Vec3 {
+        val x = (this.x - baselineCoord.x) * 100000
+        val y = (this.y - baselineCoord.y) * 100000
+        val z = (this.z - baselineCoord.z) * 100000
+        return Vec3(x, y, z)
+    }
+
     override fun create() {
         environment = Environment()
         environment!!.set(ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f))
@@ -37,12 +46,12 @@ class Basic3D : ApplicationListener {
         cam!!.position[10f, 10f] = 10f
         cam!!.lookAt(0f, 0f, 0f)
         cam!!.near = 1f
-        cam!!.far = 300f
+        cam!!.far = 600f
         cam!!.update()
 
         val modelBuilder = ModelBuilder()
         model = modelBuilder.createBox(
-            0.4f, 0.4f, 0.4f,
+            0.8f, 0.8f, 0.8f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (Usage.Position or Usage.Normal).toLong()
         )
@@ -60,7 +69,11 @@ class Basic3D : ApplicationListener {
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
         modelBatch!!.begin(cam)
-        modelBatch!!.render(instances.values, environment)
+        instances.values.forEach {
+            if(cam!!.frustum.pointInFrustum(it.transform.getTranslation(Vector3()))) {
+                modelBatch!!.render(it, environment)
+            }
+        }
         modelBatch!!.end()
     }
 
@@ -78,10 +91,16 @@ class Basic3D : ApplicationListener {
     override fun pause() {
     }
 
+    fun isInFrustum(spot: Vector3) : Boolean {
+        return cam!!.frustum.pointInFrustum(spot)
+    }
+
     fun upsertInstance(data: SerializableNode) {
         val inst = ModelInstance(model)
         //move instance to place indicated by data.coords
-        inst.transform.setTranslation(rand.nextFloat() * 10, rand.nextFloat() * 10, rand.nextFloat() * 10)
+        val convertedCoords = data.coords.coordConvert()
+        val validVec = Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
+        inst.transform.setTranslation(validVec)
         inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
         instances[data.id] = inst
     }
