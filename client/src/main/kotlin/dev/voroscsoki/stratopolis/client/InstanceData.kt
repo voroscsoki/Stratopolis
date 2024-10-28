@@ -11,7 +11,7 @@ class InstanceData {
     init {
         nodes.listeners.add { change ->
             when (change) {
-                is MapChange.Put -> Main.appScene.upsertInstance(change.newVal)
+                is MapChange.Put -> Main.appScene.upsertNode(change.newVal)
                 else -> {}
             }
         }

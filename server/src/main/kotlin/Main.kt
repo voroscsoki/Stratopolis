@@ -12,7 +12,7 @@ class Main {
         fun main(args: Array<String>) {
             var storage: OsmStorage? = OsmStorage(File("budapest.osm.pbf"))
             DatabaseAccess.connect()
-            //DatabaseAccess.seedFromOsm(storage!!)
+            DatabaseAccess.seedFromOsm(storage!!)
             println(storage?.nodes?.size)
             println("Hello from the server!")
             //HACK

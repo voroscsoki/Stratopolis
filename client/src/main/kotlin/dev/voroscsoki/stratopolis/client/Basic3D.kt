@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
+import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.SerializableNode
 import dev.voroscsoki.stratopolis.common.api.Vec3
 import okhttp3.internal.toHexString
@@ -95,7 +96,7 @@ class Basic3D : ApplicationListener {
         return cam!!.frustum.pointInFrustum(spot)
     }
 
-    fun upsertInstance(data: SerializableNode) {
+    fun upsertNode(data: SerializableNode) {
         val inst = ModelInstance(model)
         //move instance to place indicated by data.coords
         val convertedCoords = data.coords.coordConvert()
@@ -103,5 +104,10 @@ class Basic3D : ApplicationListener {
         inst.transform.setTranslation(validVec)
         inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
         instances[data.id] = inst
+    }
+
+    fun upsertBuilding(data: Building) {
+        val pts = data.points.map { it.coords.coordConvert() }
+
     }
 }

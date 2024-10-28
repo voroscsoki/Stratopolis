@@ -14,11 +14,14 @@ object Nodes : IdTable<Long>("nodes") {
 
     val coords = customVec3("coords").default(Vec3(0.0, 0.0, 0.0))
     val way = reference("wayId", Ways).nullable()
+    val tags = text("tags")
 }
 
 object Ways : IdTable<Long>("ways") {
     override val id: Column<EntityID<Long>> = long("osm_id").entityId()
     override val primaryKey = PrimaryKey(id)
+
+    val tags = text("tags")
 }
 
 object Buildings : IdTable<Long>("buildings") {

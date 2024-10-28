@@ -40,6 +40,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
 
     implementation("org.xerial:sqlite-jdbc:3.44.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
 
     implementation(project(":common"))
 }
