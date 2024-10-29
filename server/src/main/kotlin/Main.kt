@@ -10,15 +10,15 @@ class Main {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            var storage: OsmStorage? = OsmStorage(File("budapest.osm.pbf"))
             DatabaseAccess.connect()
-            DatabaseAccess.seedFromOsm(storage!!)
-            println(storage?.nodes?.size)
             println("Hello from the server!")
-            //HACK
-            storage = null
-            System.gc()
             EngineMain.main(args)
+        }
+
+        @JvmStatic
+        fun reinitalizeDB() {
+            val storage = OsmStorage(File("budapest.osm.pbf"))
+            DatabaseAccess.seedFromOsm(storage)
         }
     }
 }

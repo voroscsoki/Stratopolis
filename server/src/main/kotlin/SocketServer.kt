@@ -10,7 +10,8 @@ import kotlinx.coroutines.runBlocking
 
 class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
-        NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } }
+        NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } },
+        BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } }
     )
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -21,6 +22,18 @@ class SocketServer {
                 .forEach { chunk ->
                     launch {
                         sendSocketMessage(NodeResponse(ControlResult.OK, chunk))
+                    }
+                }
+        }
+    }
+
+    private fun handleBuildingRequest(msg: BuildingRequest) {
+        scope.launch {
+            DatabaseAccess.getBuildings(msg.baseCoord)
+                .chunked(1000)
+                .forEach { chunk ->
+                    launch {
+                        sendSocketMessage(BuildingResponse(ControlResult.OK, chunk))
                     }
                 }
         }

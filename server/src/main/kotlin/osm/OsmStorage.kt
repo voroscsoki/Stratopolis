@@ -36,7 +36,7 @@ class OsmStorage(
             output.add(
                 Building(
                     relation.value.id, relation.value.tags.map { SerializableTag(it) }, EntityType.Relation,
-                    Vec3(0.0, 0.0, 0.0),
+                    relation.value.members.filter { it.type == EntityType.Way }.flatMap { w -> ways[w.id]!!.nodeIds.mapNotNull { nodes[it] } }.nodeAverage(),
                     relation.value.members.filter { it is OsmWay }
                         .map { way -> (way as OsmWay).nodeIds.map { nodes[it]!! }.map { SerializableNode(it) } }
                         .flatten()

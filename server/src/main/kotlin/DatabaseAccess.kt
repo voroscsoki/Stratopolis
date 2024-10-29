@@ -1,7 +1,9 @@
 package dev.voroscsoki.stratopolis.server
 
 import api.SerializableWay
+import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.SerializableNode
+import dev.voroscsoki.stratopolis.common.api.SerializableTag
 import dev.voroscsoki.stratopolis.common.api.Vec3
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Nodes
@@ -57,35 +59,56 @@ class DatabaseAccess {
                     }
                 }
 
-                /*println("Seeding buildings")
+                println("Seeding buildings")
                 Buildings.batchUpsert(storage.buildings, Buildings.id) { building ->
                     this[Buildings.id] = building.id
                     this[Buildings.coords] = building.coords
                     this[Buildings.occupancy] = 0
                     this[Buildings.type] = building.type
+                    this[Buildings.tags] = Json.encodeToString(building.tags)
                 }
-            }*/
             }
         }
 
+        fun getNodes(baseCoord: Vec3? = null, rangeDegrees: Float? = null): Sequence<SerializableNode> {
+            val resultRows = transaction {
+                Nodes.selectAll().iterator().asSequence()
+            }
 
-            fun getNodes(baseCoord: Vec3? = null): Sequence<SerializableNode> {
-                val resultRows = transaction {
-                    Nodes.selectAll().iterator().asSequence()
-                }
+            return resultRows.mapNotNull { row ->
+                val buildingCoords = row[Nodes.coords]
+                val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
 
-                return resultRows.mapNotNull { row ->
-                    val buildingCoords = row[Nodes.coords]
-                    val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
+                if (rangeDegrees == null || distance <= rangeDegrees) {
+                    SerializableNode(
+                        row[Nodes.id].value,
+                        emptyList(),
+                        row[Nodes.coords]
+                    )
+                } else null
+            }
+        }
 
-                    if (distance <= 0.005) {
-                        SerializableNode(
-                            row[Nodes.id].value,
-                            emptyList(),
-                            row[Nodes.coords]
-                        )
-                    } else null
-                }
+        fun getBuildings(baseCoord: Vec3? = null, rangeDegrees: Float? = null): Sequence<Building> {
+            val resultRows = transaction {
+                Buildings.selectAll().iterator().asSequence()
+            }
+
+            return resultRows.mapNotNull { row ->
+                val buildingCoords = row[Buildings.coords]
+                val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
+
+                if (rangeDegrees == null || distance <= rangeDegrees) {
+                    Building(
+                        row[Buildings.id].value,
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        type = row[Buildings.type],
+                        coords = buildingCoords,
+                        points = emptyList(),
+                        occupancy = row[Buildings.occupancy]
+                    )
+                } else null
             }
         }
     }
+}
