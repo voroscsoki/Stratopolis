@@ -24,9 +24,9 @@ class Main {
             HttpAccessor.waitForConnection()
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
-            config.setWindowedMode(1280, 720)
+            config.setWindowedMode(1600,900)
             config.useVsync(false)
-            config.setForegroundFPS(60)
+            config.setForegroundFPS(120)
             Lwjgl3Application(appScene, config)
         }
     }

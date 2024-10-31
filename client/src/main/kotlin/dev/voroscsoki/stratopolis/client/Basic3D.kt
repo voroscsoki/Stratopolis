@@ -3,6 +3,7 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.VertexAttributes
@@ -12,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
+import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.common.api.Building
@@ -26,13 +28,14 @@ class Basic3D : ApplicationListener {
     private lateinit var modelBatch: ModelBatch
     private lateinit var model: Model
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, ModelInstance>>()
-    private val visibleChunks = mutableSetOf("0:0:0")
-    private val CHUNK_SIZE = 50f
+    private val visibleChunks = mutableSetOf<String>()
+    private val CHUNK_SIZE = 500
     private lateinit var environment: Environment
     private lateinit var camController: CameraInputController
     private val rand = Random(0)
     private val baselineCoord = Vec3(47.4981399, 0.0, 19.0409544)
     private var renderCounter = 0
+    private val position = Vector3()
 
     // FPS counter variables
     private lateinit var spriteBatch: SpriteBatch
@@ -51,12 +54,12 @@ class Basic3D : ApplicationListener {
             add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f))
         }
 
-        modelBatch = ModelBatch()
+        modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
             position.set(10f, 10f, 10f)
             lookAt(0f, 0f, 0f)
             near = 1f
-            far = 600f
+            far = 2000f
             update()
         }
 
@@ -92,11 +95,17 @@ class Basic3D : ApplicationListener {
         }
 
         modelBatch.begin(cam)
-        chunks.filter { it.key in visibleChunks }.forEach {
-            it.value.values.forEach { modelBatch.render(it, environment) }
+        chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
+            try {
+                chunk.value.forEach { (id, instance) ->
+                    if(isVisible(cam, instance)) modelBatch.render(instance, environment)
+                }
+            } catch (e: Exception) {
+                println("Error rendering chunk: ${chunk.key}")
+                e.printStackTrace()
+            }
         }
         modelBatch.end()
-
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
@@ -118,28 +127,24 @@ class Basic3D : ApplicationListener {
 
 
     private fun getChunkKey(vec3: Vec3): String {
-        val x = (vec3.x / CHUNK_SIZE).toInt()
-        val y = (vec3.y / CHUNK_SIZE).toInt()
-        val z = (vec3.z / CHUNK_SIZE).toInt()
-        return "$x:$y:$z"
+        //floor to nearest multiple of CHUNK_SIZE
+        val x = Math.floorDiv(vec3.x.toInt(), CHUNK_SIZE) * CHUNK_SIZE
+        val z = Math.floorDiv(vec3.z.toInt(), CHUNK_SIZE) * CHUNK_SIZE
+        return "$x:$z"
     }
 
     private fun updateVisibleChunks() {
-        val res = nearbyChunks(cam.position, 1)
-        visibleChunks.clear()
+        val res = nearbyChunks(cam.position, 6)
         visibleChunks.addAll(res)
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
-        val baseX = (position.x / CHUNK_SIZE).toInt()
-        val baseY = (position.y / CHUNK_SIZE).toInt()
-        val baseZ = (position.z / CHUNK_SIZE).toInt()
+        val baseX = Math.floorDiv(position.x.toInt(), CHUNK_SIZE) * CHUNK_SIZE
+        val baseZ = Math.floorDiv(position.z.toInt(), CHUNK_SIZE) * CHUNK_SIZE
         return buildList {
             for(x in -radius..radius) {
-                for (y in -radius..radius) {
-                    for (z in -radius..radius) {
-                        add("${baseX+x}:${baseY+y}:${baseZ+z}")
-                    }
+                for (z in -radius..radius) {
+                    add("${baseX+x*CHUNK_SIZE}:${baseZ+z*CHUNK_SIZE}")
                 }
             }
         }
@@ -170,5 +175,10 @@ class Basic3D : ApplicationListener {
             }
         ))
         chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+    }
+
+    private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
+        instance.transform.getTranslation(position)
+        return cam.frustum.sphereInFrustum(position, 1.5f)
     }
 }
