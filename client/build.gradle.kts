@@ -1,4 +1,7 @@
 val mainName = "dev.voroscsoki.stratopolis.client.Main"
+val kotlinVersion = "2.3.12"
+val gdxVersion = "1.13.0"
+val ashleyVersion= "1.7.4"
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization") version "2.0.20"
@@ -7,16 +10,17 @@ plugins {
 }
 
 application {
-    mainClass.set(mainName) // Replace with your frontend launcher class
+    mainClass = mainName
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
 
     // LibGDX dependencies
-    implementation("com.badlogicgames.gdx:gdx:1.12.1")
-    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:1.10.0")
-    implementation("com.badlogicgames.gdx:gdx-platform:1.10.0:natives-desktop")
+    implementation("com.badlogicgames.ashley:ashley:$ashleyVersion")
+    implementation("com.badlogicgames.gdx:gdx:$gdxVersion")
+    implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion")
+    implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
 
     implementation("io.ktor:ktor-client-core")
     implementation("io.ktor:ktor-client-okhttp-jvm")

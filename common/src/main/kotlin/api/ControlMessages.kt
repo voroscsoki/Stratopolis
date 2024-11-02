@@ -1,11 +1,26 @@
 package dev.voroscsoki.stratopolis.common.api
 import kotlinx.serialization.Serializable
 
+enum class ControlResult {
+    OK,
+    WARN,
+    ERROR
+}
+
 @Serializable
 sealed class ControlMessage
 
 @Serializable
-class EchoReq(val msg: String) : ControlMessage()
+class OsmLoadRequest(val path: String) : ControlMessage()
 
 @Serializable
-class EchoResp(val msg: String) : ControlMessage()
+class NodeRequest(val baseCoord: Vec3?) : ControlMessage()
+
+@Serializable
+class NodeResponse(val res: ControlResult, val nodes: List<SerializableNode> = emptyList()) : ControlMessage()
+
+@Serializable
+class BuildingRequest(val baseCoord: Vec3?, val radius: Vec3? = null) : ControlMessage()
+
+@Serializable
+class BuildingResponse(val res: ControlResult, val buildings: List<Building> = emptyList()) : ControlMessage()

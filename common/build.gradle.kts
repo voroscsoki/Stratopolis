@@ -5,20 +5,24 @@ plugins {
     id("io.ktor.plugin") version "2.3.12"
 }
 
+application {
+    mainClass = mainName
+}
 
+val osm4jVersion = "1.3.0"
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("de.topobyte:osm4j-core:1.3.0")
-    implementation("de.topobyte:osm4j-geometry:1.3.0")
-    implementation("de.topobyte:osm4j-xml:1.3.0")
-    implementation("de.topobyte:osm4j-pbf:1.3.0")
-    implementation("de.topobyte:osm4j-pbf-full-runtime:1.3.0")
-    implementation("de.topobyte:osm4j-tbo:1.3.0")
-    implementation("de.topobyte:osm4j-utils:1.3.0")
-    implementation("de.topobyte:osm4j-extra:1.3.0")
-    implementation("de.topobyte:osm4j-incubating:1.3.0")
-    implementation("de.topobyte:osm4j-replication:1.3.0")
-    implementation("de.topobyte:osm4j-testing:1.3.0")
+    implementation("de.topobyte:osm4j-core:$osm4jVersion")
+    implementation("de.topobyte:osm4j-geometry:$osm4jVersion")
+    implementation("de.topobyte:osm4j-xml:$osm4jVersion")
+    implementation("de.topobyte:osm4j-pbf:$osm4jVersion")
+    implementation("de.topobyte:osm4j-pbf-full-runtime:$osm4jVersion")
+    implementation("de.topobyte:osm4j-tbo:$osm4jVersion")
+    implementation("de.topobyte:osm4j-utils:$osm4jVersion")
+    implementation("de.topobyte:osm4j-extra:$osm4jVersion")
+    implementation("de.topobyte:osm4j-incubating:$osm4jVersion")
+    implementation("de.topobyte:osm4j-replication:$osm4jVersion")
+    implementation("de.topobyte:osm4j-testing:$osm4jVersion")
 
     implementation("io.ktor:ktor-client-websockets")
     implementation("io.ktor:ktor-server-core")
