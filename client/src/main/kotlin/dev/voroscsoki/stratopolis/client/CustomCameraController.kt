@@ -2,33 +2,15 @@ package dev.voroscsoki.stratopolis.client
 
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.math.Vector3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.math.absoluteValue
 
 class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
     var shiftModifier = false
-
-    private suspend fun debouncedZoom(target: Float, debouncingFactor: Float = 0.08f) {
-        var zoomTarget = target
-        val tempVec = Vector3()
-        withContext(Dispatchers.IO) {
-            while (zoomTarget.absoluteValue > 0) {
-                val zoomStep = if(zoomTarget.absoluteValue > 0.005f) zoomTarget * debouncingFactor else zoomTarget
-                cam.translate(tempVec.set(cam.direction).scl(zoomStep))
-                println("Scrolling $zoomStep")
-                zoomTarget -= zoomStep
-                cam.update()
-                Thread.sleep(8)
-            }
-        }
-        println(cam.position)
-    }
+    val zoomHandler = ZoomHandler(cam)
 
     override fun keyDown(p0: Int): Boolean {
         if(p0 == 129) {
@@ -70,10 +52,9 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
 
     override fun scrolled(amountX: Float, amountY: Float): Boolean {
         CoroutineScope(Dispatchers.IO).launch {
-            debouncedZoom(amountY * 5f
+            zoomHandler.requestZoom(amountY * 5f
                     * if (invertedZoom) 1f else -1f
-                    * if (ctrlModifier) 0.1f else 1f
-            , if(shiftModifier) 1f else 0.08f)
+                    * if (ctrlModifier) 0.1f else 1f)
         }
         return super.scrolled(amountX, amountY)
     }
