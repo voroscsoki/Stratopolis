@@ -72,9 +72,8 @@ class Basic3D : ApplicationListener {
         chunks.getOrPut(getChunkKey(Vec3(0.0, 0.0,0.0))) { ConcurrentHashMap() }[0] = ModelInstance(model)
 
         val multiplexer = InputMultiplexer().apply {
-            camController = CameraInputController(cam)
-            addProcessor(camController)
-            addProcessor(MyInput())
+            addProcessor(CustomCameraController(cam))
+            addProcessor(UtilInput())
         }
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
