@@ -12,12 +12,12 @@ class InstanceData {
     private val buildings = ObservableMap<Long, Building>()
 
     init {
-        nodes.listeners.add { change ->
+        /*nodes.listeners.add { change ->
             when (change) {
                 is MapChange.Put -> Main.appScene.upsertNode(change.newVal)
                 else -> {}
             }
-        }
+        }*/
 
         buildings.listeners.add { change ->
             when (change) {

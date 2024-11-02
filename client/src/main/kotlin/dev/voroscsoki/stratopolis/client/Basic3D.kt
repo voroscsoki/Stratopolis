@@ -9,7 +9,10 @@ import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.g3d.*
+import com.badlogic.gdx.graphics.g3d.Environment
+import com.badlogic.gdx.graphics.g3d.Material
+import com.badlogic.gdx.graphics.g3d.ModelBatch
+import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
@@ -17,16 +20,21 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.SerializableNode
 import dev.voroscsoki.stratopolis.common.api.Vec3
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
+
 
 class Basic3D : ApplicationListener {
     private lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
-    private lateinit var model: Model
+    private lateinit var modelBuilder: ModelBuilder
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, ModelInstance>>()
     private val visibleChunks = mutableSetOf<String>()
     private val CHUNK_SIZE = 500
@@ -63,13 +71,13 @@ class Basic3D : ApplicationListener {
             update()
         }
 
-        val modelBuilder = ModelBuilder()
-        model = modelBuilder.createBox(
+        modelBuilder = ModelBuilder()
+        val model = modelBuilder.createBox(
             0.8f, 0.8f, 0.8f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
-        chunks.getOrPut(getChunkKey(Vec3(0.0, 0.0,0.0))) { ConcurrentHashMap() }[0] = ModelInstance(model)
+        chunks.getOrPut(getChunkKey(Vec3(0.0, 0.0, 0.0))) { ConcurrentHashMap() }[0] = ModelInstance(model)
 
         val multiplexer = InputMultiplexer().apply {
             camController = CameraInputController(cam)
@@ -89,7 +97,7 @@ class Basic3D : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
-        if(renderCounter++ == 20) {
+        if (renderCounter++ == 20) {
             renderCounter = 0
             updateVisibleChunks()
         }
@@ -98,7 +106,7 @@ class Basic3D : ApplicationListener {
         chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
             try {
                 chunk.value.forEach { (id, instance) ->
-                    if(isVisible(cam, instance)) modelBatch.render(instance, environment)
+                    if (isVisible(cam, instance)) modelBatch.render(instance, environment)
                 }
             } catch (e: Exception) {
                 println("Error rendering chunk: ${chunk.key}")
@@ -114,7 +122,6 @@ class Basic3D : ApplicationListener {
 
     override fun dispose() {
         modelBatch.dispose()
-        model.dispose()
         spriteBatch.dispose()
         font.dispose()
     }
@@ -142,15 +149,15 @@ class Basic3D : ApplicationListener {
         val baseX = Math.floorDiv(position.x.toInt(), CHUNK_SIZE) * CHUNK_SIZE
         val baseZ = Math.floorDiv(position.z.toInt(), CHUNK_SIZE) * CHUNK_SIZE
         return buildList {
-            for(x in -radius..radius) {
+            for (x in -radius..radius) {
                 for (z in -radius..radius) {
-                    add("${baseX+x*CHUNK_SIZE}:${baseZ+z*CHUNK_SIZE}")
+                    add("${baseX + x * CHUNK_SIZE}:${baseZ + z * CHUNK_SIZE}")
                 }
             }
         }
     }
-
-    @OptIn(ExperimentalStdlibApi::class)
+    //TODO: rework
+    /*@OptIn(ExperimentalStdlibApi::class)
     fun upsertNode(data: SerializableNode) {
         val inst = ModelInstance(model)
         val convertedCoords = data.coords.coordConvert()
@@ -158,23 +165,45 @@ class Basic3D : ApplicationListener {
         inst.transform.setTranslation(validVec)
         inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
         chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
-    }
+    }*/
 
     fun upsertBuilding(data: Building) {
-        val inst = ModelInstance(model)
-        inst.transform.scale(2.0f, 2.0f, 2.0f)
-        val convertedCoords = data.coords.coordConvert()
-        val validVec = Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
-        inst.transform.setTranslation(validVec)
-        inst.materials[0].set(ColorAttribute.createDiffuse(
-            when (data.tags.find { it.key == "building" }?.value) {
-                "commercial" -> Color.CYAN
-                "house" -> Color.GREEN
-                "industrial" -> Color.YELLOW
-                else -> Color.RED
+        CoroutineScope(Dispatchers.IO).launch {
+            val model = runOnMainThread {
+                modelBuilder.createBox(
+                    0.8f, 0.8f, 0.8f,
+                    Material(ColorAttribute.createDiffuse(Color.GREEN)),
+                    (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+                )
             }
-        ))
-        chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+            val inst = ModelInstance(model)
+            inst.transform.scale(2.0f, 2.0f, 2.0f)
+            val convertedCoords = data.coords.coordConvert()
+            val validVec =
+                Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
+            inst.transform.setTranslation(validVec)
+            inst.materials[0].set(
+                ColorAttribute.createDiffuse(
+                    when (data.tags.find { it.key == "building" }?.value) {
+                        "commercial" -> Color.CYAN
+                        "house" -> Color.GREEN
+                        "industrial" -> Color.YELLOW
+                        else -> Color.RED
+                    }
+                )
+            )
+            runOnMainThread {
+                chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+            }
+        }
+    }
+
+    private suspend fun <T> runOnMainThread(block: () -> T): T {
+        return suspendCoroutine { continuation ->
+            Gdx.app.postRunnable {
+                continuation.resume(block())
+            }
+        }
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {

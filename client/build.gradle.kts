@@ -28,6 +28,8 @@ dependencies {
     implementation("io.ktor:ktor-client-serialization")
     implementation("io.ktor:ktor-client-content-negotiation")
     implementation("io.ktor:ktor-serialization-kotlinx-json")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation(project(":common"))
 }
 
