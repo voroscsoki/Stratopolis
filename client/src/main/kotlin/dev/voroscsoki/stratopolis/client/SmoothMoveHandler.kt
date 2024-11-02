@@ -17,11 +17,11 @@ class SmoothMoveHandler(val camera: PerspectiveCamera, private val translateFun:
     private var moveJob: Job? = null
 
     fun requestMove(amount: Float, debouncingFactor: Float = 0.04f) {
-        val currentState = _state.value
+        if(_state.value.remainingAmount > 100) _state.value = MoveState()
         val newDirection = amount.sign.toInt()
-        if (currentState.isMoving && currentState.direction == newDirection) {
-            _state.value = currentState.copy(
-                remainingAmount = currentState.remainingAmount + amount
+        if (_state.value.isMoving && _state.value.direction == newDirection) {
+            _state.value = _state.value.copy(
+                remainingAmount = _state.value.remainingAmount + amount
             )
             return
         }

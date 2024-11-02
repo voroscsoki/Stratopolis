@@ -3,9 +3,7 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.Vector3
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -13,9 +11,11 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
     var shiftModifier = false
-    val scope = CoroutineScope(Dispatchers.IO)
+
+    private val scope = CoroutineScope(Dispatchers.IO)
     private val mutex = Mutex()
-    val zoomHandler = SmoothMoveHandler(cam) { cam, amount ->
+
+    private val zoomHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.translate(cam.direction.cpy().nor().scl(amount))
@@ -23,7 +23,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    val rotateHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val rotateHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.rotateAround(Vector3(0f, 0f, 0f), Vector3(0f, 1f, 0f), amount)
@@ -31,6 +31,22 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
+    var rotationJob: Job? = null
+
+    private fun continuousRotation(amount: Float) {
+        rotationJob?.cancel()
+        rotationJob = scope.launch {
+            while(isActive) {
+                rotateHandler.requestMove(amount)
+                delay(16)
+            }
+        }
+    }
+    private fun cancelRotation() {
+        rotationJob?.cancel()
+        rotationJob = null
+    }
+
     //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
@@ -39,11 +55,11 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
         }
         //E: rotate right
         if(p0 == 33) {
-            rotateHandler.requestMove(10f)
+            continuousRotation(5f)
         }
         //Q: rotate left
         if(p0 == 45) {
-            rotateHandler.requestMove(-10f)
+            continuousRotation(-5f)
         }
         return super.keyDown(p0)
     }
@@ -52,6 +68,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
         if(p0 == 129) {
             ctrlModifier = false
         }
+        if(p0 == 33 || p0 == 45) cancelRotation()
         return super.keyUp(p0)
     }
 
