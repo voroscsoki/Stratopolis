@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.g3d.Environment
-import com.badlogic.gdx.graphics.g3d.Material
-import com.badlogic.gdx.graphics.g3d.ModelBatch
-import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
@@ -169,14 +166,7 @@ class Basic3D : ApplicationListener {
 
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
-            val model = runOnMainThread {
-                modelBuilder.createBox(
-                    0.8f, 0.8f, 0.8f,
-                    Material(ColorAttribute.createDiffuse(Color.GREEN)),
-                    (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-                )
-            }
-            val inst = ModelInstance(model)
+            val inst = ModelInstance(data.toModel())
             inst.transform.scale(2.0f, 2.0f, 2.0f)
             val convertedCoords = data.coords.coordConvert()
             val validVec =
@@ -203,6 +193,16 @@ class Basic3D : ApplicationListener {
             Gdx.app.postRunnable {
                 continuation.resume(block())
             }
+        }
+    }
+
+    private suspend fun Building.toModel() : Model {
+        return runOnMainThread {
+            modelBuilder.createBox(
+                0.8f, 0.8f, 0.8f,
+                Material(ColorAttribute.createDiffuse(Color.GREEN)),
+                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+            )
         }
     }
 
