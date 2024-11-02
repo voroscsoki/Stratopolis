@@ -57,7 +57,7 @@ class Basic3D : ApplicationListener {
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
             position.set(10f, 10f, 10f)
-            lookAt(0f, 0f, 0f)
+            lookAt(0.4f, 0.4f, 0.4f)
             near = 1f
             far = 2000f
             update()

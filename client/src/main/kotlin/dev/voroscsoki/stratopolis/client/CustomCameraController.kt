@@ -2,19 +2,48 @@ package dev.voroscsoki.stratopolis.client
 
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.math.Vector3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
     var shiftModifier = false
-    val zoomHandler = ZoomHandler(cam)
+    val scope = CoroutineScope(Dispatchers.IO)
+    private val mutex = Mutex()
+    val zoomHandler = SmoothMoveHandler(cam) { cam, amount ->
+        scope.launch {
+            mutex.withLock {
+                cam.translate(cam.direction.cpy().nor().scl(amount))
+                cam.update()
+            }
+        }
+    }
+    val rotateHandler = SmoothMoveHandler(cam) { cam, amount ->
+        scope.launch {
+            mutex.withLock {
+                cam.rotateAround(Vector3(0f, 0f, 0f), Vector3(0f, 1f, 0f), amount)
+                cam.update()
+            }
+        }
+    }
+    //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
         if(p0 == 129) {
             ctrlModifier = true
+        }
+        //E: rotate right
+        if(p0 == 33) {
+            rotateHandler.requestMove(10f)
+        }
+        //Q: rotate left
+        if(p0 == 45) {
+            rotateHandler.requestMove(-10f)
         }
         return super.keyDown(p0)
     }
@@ -52,7 +81,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
 
     override fun scrolled(amountX: Float, amountY: Float): Boolean {
         CoroutineScope(Dispatchers.IO).launch {
-            zoomHandler.requestZoom(amountY * 5f
+            zoomHandler.requestMove(amountY * 5f
                     * if (invertedZoom) 1f else -1f
                     * if (ctrlModifier) 0.1f else 1f)
         }
