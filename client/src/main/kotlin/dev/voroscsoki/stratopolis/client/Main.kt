@@ -16,12 +16,13 @@ class Main {
         fun main(args: Array<String>) {
             println("Hello from the client!")
             runBlocking {
+                HttpAccessor.waitForConnection()
                 launch { socket.initializeWebSocket() }
                 asyncInit()
             }
         }
         private suspend fun asyncInit() {
-            HttpAccessor.waitForConnection()
+
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
             config.setWindowedMode(1600,900)

@@ -11,6 +11,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             DatabaseAccess.connect()
+            //reinitalizeDB()
             println("Hello from the server!")
             EngineMain.main(args)
         }

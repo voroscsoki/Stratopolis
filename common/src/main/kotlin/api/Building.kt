@@ -8,6 +8,6 @@ data class Building(
     val tags: List<SerializableTag>,
     val type: EntityType,
     val coords: Vec3 = Vec3(0.0,0.0,0.0),
-    val points : List<SerializableNode> = emptyList(),
+    val points : List<SerializableNode>,
     var occupancy: Int = 0,
 )

@@ -3,10 +3,7 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.graphics.VertexAttributes
+import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.*
@@ -14,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.common.api.Building
@@ -46,7 +44,7 @@ class Basic3D : ApplicationListener {
     private lateinit var spriteBatch: SpriteBatch
     private lateinit var font: BitmapFont
 
-    fun Vec3.coordConvert(): Vec3 {
+    private fun Vec3.coordConvert(): Vec3 {
         val x = (this.x - baselineCoord.x) * 100000
         val y = (this.y - baselineCoord.y) * 100000
         val z = (this.z - baselineCoord.z) * 100000
@@ -102,7 +100,7 @@ class Basic3D : ApplicationListener {
         modelBatch.begin(cam)
         chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
             try {
-                chunk.value.forEach { (id, instance) ->
+                chunk.value.forEach { (_, instance) ->
                     if (isVisible(cam, instance)) modelBatch.render(instance, environment)
                 }
             } catch (e: Exception) {
@@ -172,23 +170,21 @@ class Basic3D : ApplicationListener {
             val validVec =
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
             inst.transform.setTranslation(validVec)
-            inst.materials[0].set(
-                ColorAttribute.createDiffuse(
+            inst.materials.forEach { material ->
+                material.set(ColorAttribute.createDiffuse(
                     when (data.tags.find { it.key == "building" }?.value) {
-                        "commercial" -> Color.CYAN
+                        "commercial" -> Color.BLUE
                         "house" -> Color.GREEN
                         "industrial" -> Color.YELLOW
-                        else -> Color.RED
+                        else -> Color.CYAN
                     }
-                )
-            )
-            runOnMainThread {
-                chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+                ))
             }
+            chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
         }
     }
 
-    private suspend fun <T> runOnMainThread(block: () -> T): T {
+    private suspend fun <T> runOnRenderThread(block: () -> T): T {
         return suspendCoroutine { continuation ->
             Gdx.app.postRunnable {
                 continuation.resume(block())
@@ -197,12 +193,30 @@ class Basic3D : ApplicationListener {
     }
 
     private suspend fun Building.toModel() : Model {
-        return runOnMainThread {
-            modelBuilder.createBox(
-                0.8f, 0.8f, 0.8f,
-                Material(ColorAttribute.createDiffuse(Color.GREEN)),
-                (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-            )
+        val bldg = this
+        val baseNodes = bldg.points.map { it.coords.coordConvert() }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toIntOrNull()
+            ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toIntOrNull()
+            ?: 2
+        val topNodes = baseNodes.map { it.cpy().set(it.x, it.y + height, it.z) }
+
+        return runOnRenderThread {
+            val modelBuilder = ModelBuilder()
+            modelBuilder.begin()
+            var builder: MeshPartBuilder =
+                modelBuilder.part("customShape1", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            for (i in 0..baseNodes.lastIndex-2) {
+                builder.triangle(
+                    baseNodes[i], baseNodes[i + 1], baseNodes[i + 2]
+                )
+            }
+            builder = modelBuilder.part("customShape2", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            for (i in 0..topNodes.lastIndex-2) {
+                builder.triangle(
+                    topNodes[i], topNodes[i + 1], topNodes[i + 2]
+                )
+            }
+            modelBuilder.end()
         }
     }
 

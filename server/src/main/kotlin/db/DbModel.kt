@@ -32,6 +32,7 @@ object Buildings : IdTable<Long>("buildings") {
     val occupancy = integer("occupancy")
     val type = enumeration<EntityType>("type").default(EntityType.Node)
     val tags = Buildings.text("tags")
+    val points = Buildings.text("points")
 }
 
 fun Table.customVec3(name: String): Column<Vec3> {

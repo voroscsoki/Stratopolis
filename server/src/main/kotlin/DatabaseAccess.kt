@@ -66,6 +66,7 @@ class DatabaseAccess {
                     this[Buildings.occupancy] = 0
                     this[Buildings.type] = building.type
                     this[Buildings.tags] = Json.encodeToString(building.tags)
+                    this[Buildings.points] = Json.encodeToString(building.points)
                 }
             }
         }
@@ -99,12 +100,14 @@ class DatabaseAccess {
                 val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
 
                 if (rangeDegrees == null || distance <= rangeDegrees) {
+                    val pt = Json.decodeFromString<List<SerializableNode>>(row[Buildings.points])
+                    //TODO: use .toBuilding() (issue is the transaction scope)
                     Building(
                         row[Buildings.id].value,
                         Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         type = row[Buildings.type],
                         coords = buildingCoords,
-                        points = emptyList(),
+                        points = Json.decodeFromString<List<SerializableNode>>(row[Buildings.points]),
                         occupancy = row[Buildings.occupancy]
                     )
                 } else null
