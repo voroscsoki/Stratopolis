@@ -1,6 +1,5 @@
 package dev.voroscsoki.stratopolis.client
 
-import api.SerializableWay
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -24,6 +23,7 @@ import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.atan2
 import kotlin.random.Random
 
 
@@ -45,7 +45,13 @@ class Basic3D : ApplicationListener {
     private lateinit var spriteBatch: SpriteBatch
     private lateinit var font: BitmapFont
 
-    private fun Vec3.coordConvert(): Vec3 {
+    private fun Vec3.coordConvert(scaleOnly: Boolean = false): Vec3 {
+        if(scaleOnly) {
+            val x = this.x * 100000
+            val y = this.y * 100000
+            val z = this.z * 100000
+            return Vec3(x, y, z)
+        }
         val x = (this.x - baselineCoord.x) * 100000
         val y = (this.y - baselineCoord.y) * 100000
         val z = (this.z - baselineCoord.z) * 100000
@@ -166,7 +172,6 @@ class Basic3D : ApplicationListener {
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
             val inst = ModelInstance(data.toModel())
-            inst.transform.scale(2.0f, 2.0f, 2.0f)
             val convertedCoords = data.coords.coordConvert()
             val validVec =
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
@@ -185,10 +190,6 @@ class Basic3D : ApplicationListener {
         }
     }
 
-    fun drawRoads(data: List<SerializableWay>) {
-
-    }
-
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
         return suspendCoroutine { continuation ->
             Gdx.app.postRunnable {
@@ -198,44 +199,68 @@ class Basic3D : ApplicationListener {
     }
 
     private suspend fun Building.toModel() : Model {
-        val baseNodes = this.points.map { it.coords.coordConvert() - this.coords.coordConvert() }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        var baseNodes = this.ways.map { way ->
+            way.nodes.map {
+                node -> val x = node.coords - this.coords
+                x.coordConvert(true)
+            }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }/*.sortClockwise()*/}
+        val center = baseNodes.flatten().reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.flatten().size)
+        baseNodes.forEach { nodeList -> nodeList.forEach { it.sub(center) } }
+        baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
         val height = this.tags.firstOrNull { it.key == "height" }?.value?.toIntOrNull()
             ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toIntOrNull()
             ?: 2
-        val topNodes = baseNodes.map { it.cpy().set(it.x, it.y + height, it.z) }
+        val topNodes = baseNodes.map { way -> way.map { it.cpy().add(0f, height.toFloat(), 0f) } }
 
         return runOnRenderThread {
             val modelBuilder = ModelBuilder()
             modelBuilder.begin()
             var builder: MeshPartBuilder =
                 modelBuilder.part("bottom", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            for (i in 0..baseNodes.lastIndex-2) {
-                builder.triangle(
-                    baseNodes[i], baseNodes[i + 1], baseNodes[i + 2]
-                )
+            baseNodes.forEach { nodeList ->
+                for (i in 0..nodeList.lastIndex-2) {
+                    builder.triangle(
+                        nodeList[i], nodeList[i + 1], nodeList[i + 2]
+                    )
+                }
             }
             builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            for (i in 0..topNodes.lastIndex-2) {
-                builder.triangle(
-                    topNodes[i], topNodes[i + 1], topNodes[topNodes.lastIndex]
-                )
+            topNodes.forEach { nodeList ->
+                for (i in 0..nodeList.lastIndex - 2) {
+                    builder.triangle(
+                        nodeList[i], nodeList[i + 1], nodeList[nodeList.lastIndex],
+                    )
+                }
             }
             builder = modelBuilder.part("sides", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            for (i in 0..<baseNodes.lastIndex) {
-                builder.triangle(
-                    baseNodes[i], baseNodes[i + 1], topNodes[i + 1]
-                )
-                builder.triangle(
-                    baseNodes[i], topNodes[i + 1], topNodes[i]
-                )
+            topNodes.indices.forEach { index ->
+                for (j in 0..<topNodes[index].lastIndex) {
+                    builder.triangle(
+                        baseNodes[index][j], baseNodes[index][j + 1], topNodes[index][j + 1]
+                    )
+                    builder.triangle(
+                        baseNodes[index][j], topNodes[index][j + 1], topNodes[index][j]
+                    )
+                }
             }
             modelBuilder.end()
         }
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
-        return true
-        //instance.transform.getTranslation(position)
-        //return cam.frustum.sphereInFrustum(position, 1.5f)
+        //return true
+        instance.transform.getTranslation(position)
+        return cam.frustum.sphereInFrustum(position, 1.5f)
+    }
+
+    private fun List<Vector3>.sortClockwise(): List<Vector3> {
+        // Calculate the center point of the vectors
+        val centerX = this.sumOf { it.x.toDouble() } / this.size
+        val centerZ = this.sumOf { it.z.toDouble() } / this.size
+
+        // Sort the vectors based on their angle relative to the center point
+        return this.sortedBy { vector ->
+            atan2(vector.z - centerZ, vector.x - centerX)
+        }
     }
 }

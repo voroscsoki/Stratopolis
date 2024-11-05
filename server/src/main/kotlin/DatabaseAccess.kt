@@ -1,10 +1,7 @@
 package dev.voroscsoki.stratopolis.server
 
 import api.SerializableWay
-import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.SerializableNode
-import dev.voroscsoki.stratopolis.common.api.SerializableTag
-import dev.voroscsoki.stratopolis.common.api.Vec3
+import dev.voroscsoki.stratopolis.common.api.*
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Nodes
 import dev.voroscsoki.stratopolis.server.db.Ways
@@ -45,13 +42,12 @@ class DatabaseAccess {
             }
             println("Seeding ways")
             transaction {
-                val allWays = storage.ways.map { SerializableWay(it.value) }
-                Ways.batchUpsert(allWays, Ways.id) { way ->
+                Ways.batchUpsert(storage.ways.values, Ways.id) { way ->
                     this[Ways.id] = EntityID(way.id, Ways)
-                    this[Ways.tags] = Json.encodeToString(way.tags)
+                    this[Ways.tags] = Json.encodeToString(way.tags.map { SerializableTag(it) })
                 }
-                allWays.forEach { way ->
-                    way.nodes.forEach { node ->
+                storage.ways.values.forEach { way ->
+                    way.nodeIds.forEach { node ->
                         Nodes.update({ Nodes.id eq node }) {
                             //update the way column
                             it[Nodes.way] = EntityID(way.id, Ways)
@@ -66,7 +62,7 @@ class DatabaseAccess {
                     this[Buildings.occupancy] = 0
                     this[Buildings.type] = building.type
                     this[Buildings.tags] = Json.encodeToString(building.tags)
-                    this[Buildings.points] = Json.encodeToString(building.points)
+                    this[Buildings.ways] = Json.encodeToString(building.ways)
                 }
             }
         }
@@ -100,14 +96,13 @@ class DatabaseAccess {
                 val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
 
                 if (rangeDegrees == null || distance <= rangeDegrees) {
-                    val pt = Json.decodeFromString<List<SerializableNode>>(row[Buildings.points])
                     //TODO: use .toBuilding() (issue is the transaction scope)
                     Building(
                         row[Buildings.id].value,
                         Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         type = row[Buildings.type],
                         coords = buildingCoords,
-                        points = Json.decodeFromString<List<SerializableNode>>(row[Buildings.points]),
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
                         occupancy = row[Buildings.occupancy]
                     )
                 } else null

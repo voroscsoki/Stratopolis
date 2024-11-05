@@ -39,14 +39,15 @@ class BuildingDAO(id: EntityID<Long>) : LongEntity(id) {
     var coords by Buildings.coords
     var occupancy by Buildings.occupancy
     var type by Buildings.type
-    var points by Buildings.points
+    var tags by Buildings.tags
+    var ways by Buildings.ways
 
     fun toBuilding() = Building(
         id = id.value,
         coords = coords,
         occupancy = occupancy,
-        tags = Json.decodeFromString<List<SerializableTag>>(points),
-        points = Json.decodeFromString<List<SerializableNode>>(points),
+        tags = Json.decodeFromString<List<SerializableTag>>(tags),
+        ways = Json.decodeFromString<List<SerializableWay>>(ways),
         type = type
     )
 }
