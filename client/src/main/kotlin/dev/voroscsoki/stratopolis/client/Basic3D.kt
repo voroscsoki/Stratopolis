@@ -199,11 +199,12 @@ class Basic3D : ApplicationListener {
     }
 
     private suspend fun Building.toModel() : Model {
+        if(this.ways.isEmpty()) return runOnRenderThread { modelBuilder.createBox(1f, 1f, 1f, Material(ColorAttribute.createDiffuse(Color.GREEN)), (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()) }
         var baseNodes = this.ways.map { way ->
             way.nodes.map {
                 node -> val x = node.coords - this.coords
                 x.coordConvert(true)
-            }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }/*.sortClockwise()*/}
+            }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }}
         val center = baseNodes.flatten().reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.flatten().size)
         baseNodes.forEach { nodeList -> nodeList.forEach { it.sub(center) } }
         baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
