@@ -17,7 +17,10 @@ data class Vec3(val x: Double, val y: Double, val z: Double) {
         return "$x,$y,$z"
     }
 
-    infix operator fun minus(other: Vec3): Double {
+    infix fun dist(other: Vec3): Double {
         return sqrt((other.x - this.x).pow(2.0) + (other.y - this.y).pow(2.0) + (other.z - this.z).pow(2.0))
+    }
+    infix operator fun minus(other: Vec3): Vec3 {
+        return Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
     }
 }

@@ -22,6 +22,7 @@ object Ways : IdTable<Long>("ways") {
     override val primaryKey = PrimaryKey(id)
 
     val tags = text("tags")
+    //val nodes by NodeDAO referrersOn Nodes.way
 }
 
 object Buildings : IdTable<Long>("buildings") {

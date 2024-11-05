@@ -78,7 +78,7 @@ class DatabaseAccess {
 
             return resultRows.mapNotNull { row ->
                 val buildingCoords = row[Nodes.coords]
-                val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
+                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
 
                 if (rangeDegrees == null || distance <= rangeDegrees) {
                     SerializableNode(
@@ -97,7 +97,7 @@ class DatabaseAccess {
 
             return resultRows.mapNotNull { row ->
                 val buildingCoords = row[Buildings.coords]
-                val distance = baseCoord?.let { c -> buildingCoords - c } ?: 0.0
+                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
 
                 if (rangeDegrees == null || distance <= rangeDegrees) {
                     val pt = Json.decodeFromString<List<SerializableNode>>(row[Buildings.points])

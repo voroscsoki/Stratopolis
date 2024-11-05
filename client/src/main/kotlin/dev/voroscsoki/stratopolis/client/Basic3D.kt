@@ -1,5 +1,6 @@
 package dev.voroscsoki.stratopolis.client
 
+import api.SerializableWay
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -184,6 +185,10 @@ class Basic3D : ApplicationListener {
         }
     }
 
+    fun drawRoads(data: List<SerializableWay>) {
+
+    }
+
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
         return suspendCoroutine { continuation ->
             Gdx.app.postRunnable {
@@ -193,8 +198,7 @@ class Basic3D : ApplicationListener {
     }
 
     private suspend fun Building.toModel() : Model {
-        val bldg = this
-        val baseNodes = bldg.points.map { it.coords.coordConvert() }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        val baseNodes = this.points.map { it.coords.coordConvert() - this.coords.coordConvert() }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
         val height = this.tags.firstOrNull { it.key == "height" }?.value?.toIntOrNull()
             ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toIntOrNull()
             ?: 2
@@ -204,16 +208,25 @@ class Basic3D : ApplicationListener {
             val modelBuilder = ModelBuilder()
             modelBuilder.begin()
             var builder: MeshPartBuilder =
-                modelBuilder.part("customShape1", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+                modelBuilder.part("bottom", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             for (i in 0..baseNodes.lastIndex-2) {
                 builder.triangle(
                     baseNodes[i], baseNodes[i + 1], baseNodes[i + 2]
                 )
             }
-            builder = modelBuilder.part("customShape2", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             for (i in 0..topNodes.lastIndex-2) {
                 builder.triangle(
                     topNodes[i], topNodes[i + 1], topNodes[i + 2]
+                )
+            }
+            builder = modelBuilder.part("sides", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            for (i in 0..<baseNodes.lastIndex) {
+                builder.triangle(
+                    baseNodes[i], baseNodes[i + 1], topNodes[i + 1]
+                )
+                builder.triangle(
+                    baseNodes[i], topNodes[i + 1], topNodes[i]
                 )
             }
             modelBuilder.end()
@@ -221,7 +234,8 @@ class Basic3D : ApplicationListener {
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
-        instance.transform.getTranslation(position)
-        return cam.frustum.sphereInFrustum(position, 1.5f)
+        return true
+        //instance.transform.getTranslation(position)
+        //return cam.frustum.sphereInFrustum(position, 1.5f)
     }
 }
