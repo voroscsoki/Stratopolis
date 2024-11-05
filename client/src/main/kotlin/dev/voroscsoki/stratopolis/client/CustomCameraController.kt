@@ -1,5 +1,6 @@
 package dev.voroscsoki.stratopolis.client
 
+import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.Vector3
@@ -31,44 +32,80 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    var rotationJob: Job? = null
+    private val linearHandler = SmoothMoveHandler(cam) { cam, amount ->
+        scope.launch {
+            mutex.withLock {
+                cam.translate(cam.direction.cpy().nor().scl(amount))
+                cam.update()
+            }
+        }
+    }
+    private val sidewaysHandler = SmoothMoveHandler(cam) { cam, amount ->
+        scope.launch {
+            mutex.withLock {
+                cam.translate(cam.direction.cpy().nor().crs(cam.up).scl(amount))
+                cam.update()
+            }
+        }
+    }
+    var jobs = mutableMapOf<String, Job?>(
+        "linear" to null,
+        "rotate" to null,
+        "sideways" to null
+    )
 
-    private fun continuousRotation(amount: Float) {
-        rotationJob?.cancel()
-        rotationJob = scope.launch {
+    private fun continuousMove(amount: Float, jobType: String) {
+        jobs[jobType]?.cancel()
+        jobs[jobType] = scope.launch {
             while(isActive) {
-                rotateHandler.requestMove(amount)
+                when(jobType) {
+                    "linear" -> linearHandler.requestMove(amount)
+                    "rotate" -> rotateHandler.requestMove(amount)
+                    "sideways" -> sidewaysHandler.requestMove(amount)
+                }
                 delay(16)
             }
         }
     }
-    private fun cancelRotation() {
-        rotationJob?.cancel()
-        rotationJob = null
+    private fun cancelMove(jobType: String) {
+        jobs[jobType]?.cancel()
+        jobs[jobType] = null
     }
 
     //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
-        if(p0 == 129) {
+        if(p0 == Keys.CONTROL_LEFT) {
             ctrlModifier = true
         }
-        //E: rotate right
-        if(p0 == 33) {
-            continuousRotation(5f)
+        if(p0 == Keys.E) {
+            continuousMove(5f, "rotate")
         }
-        //Q: rotate left
-        if(p0 == 45) {
-            continuousRotation(-5f)
+        if(p0 == Keys.Q) {
+            continuousMove(-5f, "rotate")
+        }
+        if(p0 == Keys.SPACE) {
+            continuousMove(0.5f, "linear")
+        }
+        if(p0 == Keys.ALT_LEFT) {
+            continuousMove(-0.5f, "linear")
+        }
+        if(p0 == Keys.A) {
+            continuousMove(-0.5f, "sideways")
+        }
+        if(p0 == Keys.D) {
+            continuousMove(0.5f, "sideways")
         }
         return super.keyDown(p0)
     }
 
     override fun keyUp(p0: Int): Boolean {
-        if(p0 == 129) {
+        if(p0 == Keys.CONTROL_LEFT) {
             ctrlModifier = false
         }
-        if(p0 == 33 || p0 == 45) cancelRotation()
+        if(p0 == Keys.Q || p0 == Keys.E) cancelMove("rotate")
+        if(p0 == Keys.SPACE || p0 == Keys.ALT_LEFT) cancelMove("linear")
+        if(p0 == Keys.A || p0 == Keys.D) cancelMove("sideways")
         return super.keyUp(p0)
     }
 

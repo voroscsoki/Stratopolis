@@ -17,7 +17,8 @@ class SmoothMoveHandler(val camera: PerspectiveCamera, private val translateFun:
     private var moveJob: Job? = null
 
     fun requestMove(amount: Float, debouncingFactor: Float = 0.04f) {
-        if(_state.value.remainingAmount > 100) _state.value = MoveState()
+        //clear stuck job
+        if(_state.value.isMoving && moveJob?.isActive == false) cancel()
         val newDirection = amount.sign.toInt()
         if (_state.value.isMoving && _state.value.direction == newDirection) {
             _state.value = _state.value.copy(
@@ -26,7 +27,6 @@ class SmoothMoveHandler(val camera: PerspectiveCamera, private val translateFun:
             return
         }
 
-        moveJob?.cancel()
         moveJob = CoroutineScope(Dispatchers.IO).launch {
             _state.value = MoveState(
                 isMoving = true,
