@@ -217,7 +217,7 @@ class Basic3D : ApplicationListener {
             builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             for (i in 0..topNodes.lastIndex-2) {
                 builder.triangle(
-                    topNodes[i], topNodes[i + 1], topNodes[i + 2]
+                    topNodes[i], topNodes[i + 1], topNodes[topNodes.lastIndex]
                 )
             }
             builder = modelBuilder.part("sides", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
