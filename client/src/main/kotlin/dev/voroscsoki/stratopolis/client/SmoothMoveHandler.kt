@@ -27,6 +27,7 @@ class SmoothMoveHandler(val camera: PerspectiveCamera, private val translateFun:
             return
         }
 
+        cancel()
         moveJob = CoroutineScope(Dispatchers.IO).launch {
             _state.value = MoveState(
                 isMoving = true,

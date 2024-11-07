@@ -35,7 +35,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     private val linearHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
-                cam.translate(cam.direction.cpy().nor().scl(amount))
+                cam.translate(Vector3(0f, 0f, amount))
                 cam.update()
             }
         }
@@ -43,7 +43,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     private val sidewaysHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
-                cam.translate(cam.direction.cpy().nor().crs(cam.up).scl(amount))
+                cam.translate(Vector3(amount, 0f, 0f))
                 cam.update()
             }
         }
@@ -84,17 +84,17 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
         if(p0 == Keys.Q) {
             continuousMove(-5f, "rotate")
         }
-        if(p0 == Keys.SPACE) {
-            continuousMove(0.5f, "linear")
-        }
-        if(p0 == Keys.ALT_LEFT) {
-            continuousMove(-0.5f, "linear")
-        }
         if(p0 == Keys.A) {
             continuousMove(-0.5f, "sideways")
         }
         if(p0 == Keys.D) {
             continuousMove(0.5f, "sideways")
+        }
+        if (p0 == Keys.W) {
+            continuousMove(-0.5f, "linear")
+        }
+        if (p0 == Keys.S) {
+            continuousMove(0.5f, "linear")
         }
         return super.keyDown(p0)
     }
@@ -104,7 +104,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
             ctrlModifier = false
         }
         if(p0 == Keys.Q || p0 == Keys.E) cancelMove("rotate")
-        if(p0 == Keys.SPACE || p0 == Keys.ALT_LEFT) cancelMove("linear")
+        if(p0 == Keys.W || p0 == Keys.S) cancelMove("linear")
         if(p0 == Keys.A || p0 == Keys.D) cancelMove("sideways")
         return super.keyUp(p0)
     }
@@ -137,7 +137,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
         CoroutineScope(Dispatchers.IO).launch {
             zoomHandler.requestMove(amountY * 5f
                     * if (invertedZoom) 1f else -1f
-                    * if (ctrlModifier) 0.1f else 1f)
+                    * if (ctrlModifier) 4f else 1f)
         }
         return super.scrolled(amountX, amountY)
     }
