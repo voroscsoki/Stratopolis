@@ -1,0 +1,28 @@
+%----------------------------------------------------------------------------
+\chapter{Felhasznált eszközök}
+\label{sec:LatexTools}
+
+Munkámat a JVM-ökoszisztéma eszközeivel végeztem, szem előtt tartva a kiírásban kulcsfontosságú elemként rögzített modernitást, a kompatibilitást és a hordozhatóságot.
+%----------------------------------------------------------------------------
+\section{Kotlin \raisebox{-1ex}{\includegraphics[width=8mm, keepaspectratio]{images/kotlin_logo.png}}}
+
+%----------------------------------------------------------------------------
+A Kotlin multiplatform, statikusan típusos, több paradigmát támogató programozási nyelv. Specifikációját a JetBrains rendszeresen frissített, publikus, bárki által megtekinthető formában teszi közzé.~\cite{KotlinSpec} Az első prototípus verzió 2011-ben került kiadásra, és mindössze egy évvel később nyílt forráskódú projektté alakult. Az első éles kiadását 2016-ban érte el a nyelv, 2017-től hivatalosan támogatott az Android mobil operációs rendszerre írt alkalmazások terén, 2019 óta pedig az Android elsődleges nyelve.~\cite{KotlinPast}
+
+Népszerűségét elsősorban az intuitív szintaxisának és a JVM-mel\footnote{JVM: \@Java Virtual Machine, jelenleg az Oracle tulajdonában lévő, szabvánnyal specifikált futtatómotor, elsősorban a Java nyelven írt programok futtatásához } való már-már tökéletes kompatibilitásának köszönheti. Bármilyen Java-ban írt kódrészlet felhasználható külső referenciaként egy Kotlin programban, a programozó közösség által készített számtalan Java könyvtár így kiaknázható marad.  Egy projekten belül nincs korlátozás a két nyelv forrásfájljainak megoszlására; érdemes viszont megjegyezni, hogy a kompatibilitás egyirányú. Java kódból nem lehet visszahívni Kotlin kódba.
+
+A megírt programok fordítási és optimalizálási fázisokon mennek keresztül, mielőtt futtatható állományok vagy eszköztárak készülnek belőlük. A Kotlin fordítómotorjával készített binárisok közel azonos teljesítményűek hagyományos JVM megfelelőikhez képest.
+
+A JVM-en kívül más fordítási célok is léteznek:
+\begin{itemize}
+    \item Kotlin/Native (2023 óta stabil, számos operációs rendszerre biztosít natív, virtuális gépet nem igénylő megoldást)
+    \item Kotlin/JS
+    \item WASM
+    \item 
+\end{itemize}
+
+TODO FUNKCIONÁLIS
+
+A nyelv alapvetően egyszerű, jól értelmezhető és gyorsan írható. Emellett a frusztráló, sok esetben hátráltató szintaktikai és programtechnikai elemek közül sokat elhagytak a fejlesztők -- erre a későbbiekben számos példát fogok mutatni kódrészleteken keresztül.
+
+Szakdolgozatom elkészítéséhez a legfrissebb, 2.0.21-es verziót használtam a JetBrains saját, IntelliJ Idea néven futó programján keresztül.
