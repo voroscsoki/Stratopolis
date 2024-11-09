@@ -21,12 +21,23 @@ A nyelv alapvetően egyszerű kódstruktúrájú, jól értelmezhető és gyorsa
 
 Szakdolgozatom elkészítéséhez a legfrissebb, 2.0.21-es verziót használtam a JetBrains saját, IntelliJ Idea néven futó programján keresztül. A felhasznált JVM változat a legújabb stabilnak tekinthető 23-as főverzió Oracle OpenJDK implementációja; a szakdolgozat során elkészült program által garantált abszolút minimális verzió a 2023 szeptemberében kiadott 21-es LTS\footnote{Long Term Support, a szoftverfejlesztés körében a kiadó által az adott verzióval kapcsolatban vállalt hosszabb idejű, több éves támogatást jelent} változat, ennek a főágú támogatása 2028-ban ér véget.~\cite{JavaRoadmap}
 
-\section{OpenGL \raisebox{-1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/opengl-logo.png}}}
+\section{OpenGL \raisebox{-1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/opengl_logo.png}}}
 
 Népszerű alacsony szintű grafikus könyvtár, amivel akár pixel szinten címezhető az éppen aktuális futtató felület. Első publikációja 1992-re tehető, a legújabb 4.6-os változat 2017-es dátumával ez a keretrendszer az egyetlen kivétel a modernitási törekvéseim alól.~\cite{OpenglHistory} Robosztussága és széles körű támogatottsága erős fegyvertény, hiszen szinte bármilyen nyelven és operációs rendszeren elérhetőek a kívánt grafikus függvények. Az OpenGL szabványnak megfelelő alkalmazásoknak ablakkezelő rendszertől függetlenül kiszámítható megjelenést kölcsönöz a szoftver.
 
-\section{libGDX \raisebox{-0.1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/libgdx_logo.png}}}
+\section{libGDX \raisebox{-0.1ex}{\hspace{1cm}\includegraphics[height=6mm, keepaspectratio]{images/libgdx_logo.png}}}
 
 A libGDX nevét szerteágazó felhasználási lehetőségeiből kapta: "game development" és "effects" könyvtár Java alapú projektekhez. Segítségével az alacsony szintű OpenGL műveletek a JVM-környezetekre jellemző módon hívhatók meg, így meglepően jól illeszkedhet a grafikus felület kódja az alkalmazás többi részéhez.
 
 Elődje kifejezetten Android alkalmazások megjelenítését segítette elő, 2010 óta közösségi támogatású, nyílt forráskódú eszközként fejlesztik.~\cite{LibgdxHistory} A projekt jelenlegi verziószáma 1.13.0; asztali környezetekben (Windows, macOS, Linux), mobil operációs rendszereken (Android, iOS) és webböngészőkben egyaránt prezentálhatóak az elkészült játékok.
+
+\section{Exposed {\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/exposed_logo.png}}}
+
+Az adatbázisok, azon belül az SQL\footnote{Structured Query Language, relációs adatbázisok kezeléséhez használt szakterület-specifikus nyelv} világa régi alapokon fekszik. Bár az elmúlt évtized is bővelkedik az újításokban - elsősorban fejlesztőbarátabb eszközök létrejöttével - a szabvány közel 40 éves története erősen kihat a mai felhasználásra.
+
+A nyelv egyes dialektusai tulajdonképpen lingvisztikai tájszólásokhoz hasonlóak; az egyik típus "beszélője" a másikat is érteni fogja, de nem biztos, hogy "megszólalni" is helyesen tud. Ezeket az apró eltéréseket számos ORM\footnote{Object Relational Mapping, az adatbázisok és memóriában tárolt objektumok közötti átalakítás technikája} könyvtár kísérelte már meg áthidalni. Talán a legismertebb példák a Hibernate (Java), EntityFramework (.NET/\texttt{C\#}) és az Active Record (Ruby on Rails). A Kotlint fejlesztő JetBrains preferált megoldása a JDBC\footnote{Java Database Connectivity, kifejezetten a Java-hoz írt interfész réteg, célja minél több adatbázis formátum támogatása}-re épülő Exposed, ami tükrözi a Kotlin nagy szabadságot adó viselkedését. Hagyományos objektumorientált módon, avagy a nyers SQL-re nagyban hasonlító szabályokat használó, egyedi nyelvvel érhetjük el a tárolt adatokat.~\cite{ExposedDocs}
+
+Nagy előny a hordozhatóság szempontjából az adatbázissal szembeni függetlenség: a támogatott motorok közötti váltás csupán egy konfigurációs érték módosítását igényli, így a mobilon jellemző SQLite-tól kezdve a szervereken átívelő redundáns Oracle Database implementációkig bármilyen környezetre alkalmas végterméket tudunk kiadni.
+
+% TODO
+\section{Ktor {\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/ktor_logo.png}}}
