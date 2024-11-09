@@ -49,7 +49,7 @@ class SmoothMoveHandler(val camera: PerspectiveCamera, private val translateFun:
         }
     }
 
-    fun cancel() {
+    private fun cancel() {
         moveJob?.cancel()
         moveJob = null
         _state.value = MoveState()
