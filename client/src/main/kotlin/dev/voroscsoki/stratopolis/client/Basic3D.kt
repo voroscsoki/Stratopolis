@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
@@ -29,9 +28,8 @@ class Basic3D : ApplicationListener {
     private lateinit var model: Model
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, ModelInstance>>()
     private val visibleChunks = mutableSetOf<String>()
-    private val CHUNK_SIZE = 500
+    private val CHUNKSIZE = 500
     private lateinit var environment: Environment
-    private lateinit var camController: CameraInputController
     private val rand = Random(0)
     private val baselineCoord = Vec3(47.4981399, 0.0, 19.0409544)
     private var renderCounter = 0
@@ -56,8 +54,8 @@ class Basic3D : ApplicationListener {
 
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
-            position.set(10f, 10f, 10f)
-            lookAt(0f, 0f, 0f)
+            position.set(0f, 10f, 0f)
+            lookAt(0f,0f,0f)
             near = 1f
             far = 2000f
             update()
@@ -65,16 +63,17 @@ class Basic3D : ApplicationListener {
 
         val modelBuilder = ModelBuilder()
         model = modelBuilder.createBox(
-            0.8f, 0.8f, 0.8f,
+            1.6f, 0.8f, 1.6f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
-        chunks.getOrPut(getChunkKey(Vec3(0.0, 0.0,0.0))) { ConcurrentHashMap() }[0] = ModelInstance(model)
+        val inst = ModelInstance(model)
+        //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
+        chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = inst
 
         val multiplexer = InputMultiplexer().apply {
-            camController = CameraInputController(cam)
-            addProcessor(camController)
-            addProcessor(MyInput())
+            addProcessor(CustomCameraController(cam))
+            addProcessor(UtilInput())
         }
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
@@ -126,10 +125,10 @@ class Basic3D : ApplicationListener {
     override fun pause() {}
 
 
-    private fun getChunkKey(vec3: Vec3): String {
+    private fun getChunkKey(xCoord: Float, zCoord: Float): String {
         //floor to nearest multiple of CHUNK_SIZE
-        val x = Math.floorDiv(vec3.x.toInt(), CHUNK_SIZE) * CHUNK_SIZE
-        val z = Math.floorDiv(vec3.z.toInt(), CHUNK_SIZE) * CHUNK_SIZE
+        val x = Math.floorDiv(xCoord.toInt(), CHUNKSIZE) * CHUNKSIZE
+        val z = Math.floorDiv(zCoord.toInt(), CHUNKSIZE) * CHUNKSIZE
         return "$x:$z"
     }
 
@@ -139,12 +138,12 @@ class Basic3D : ApplicationListener {
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
-        val baseX = Math.floorDiv(position.x.toInt(), CHUNK_SIZE) * CHUNK_SIZE
-        val baseZ = Math.floorDiv(position.z.toInt(), CHUNK_SIZE) * CHUNK_SIZE
+        val baseX = Math.floorDiv(position.x.toInt(), CHUNKSIZE) * CHUNKSIZE
+        val baseZ = Math.floorDiv(position.z.toInt(), CHUNKSIZE) * CHUNKSIZE
         return buildList {
             for(x in -radius..radius) {
                 for (z in -radius..radius) {
-                    add("${baseX+x*CHUNK_SIZE}:${baseZ+z*CHUNK_SIZE}")
+                    add("${baseX+x*CHUNKSIZE}:${baseZ+z*CHUNKSIZE}")
                 }
             }
         }
@@ -157,7 +156,7 @@ class Basic3D : ApplicationListener {
         val validVec = Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
         inst.transform.setTranslation(validVec)
         inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
-        chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+        chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
     }
 
     fun upsertBuilding(data: Building) {
@@ -174,7 +173,7 @@ class Basic3D : ApplicationListener {
                 else -> Color.RED
             }
         ))
-        chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+        chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
