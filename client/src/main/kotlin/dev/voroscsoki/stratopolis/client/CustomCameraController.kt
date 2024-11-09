@@ -27,7 +27,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     private val rotateHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
-                cam.rotateAround(Vector3(0f, 0f, 0f), Vector3(0f, 1f, 0f), amount)
+                cam.rotateAround(cam.position, Vector3(0f, 1f, 0f), amount)
                 cam.update()
             }
         }
@@ -35,7 +35,9 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     private val linearHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
-                cam.translate(Vector3(0f, 0f, amount))
+                // positive amount should reasonably move the camera up
+                // inversion necessary due to how translations work
+                cam.translate(Vector3(cam.up.cpy().scl(-amount)))
                 cam.update()
             }
         }
@@ -43,7 +45,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     private val sidewaysHandler = SmoothMoveHandler(cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
-                cam.translate(Vector3(amount, 0f, 0f))
+                cam.translate(Vector3(cam.up.cpy().rotate(Vector3(0f,1f,0f), 90f).scl(-amount)))
                 cam.update()
             }
         }
@@ -85,16 +87,16 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
             continuousMove(-5f, "rotate")
         }
         if(p0 == Keys.A) {
-            continuousMove(-0.5f, "sideways")
+            continuousMove(-5f, "sideways")
         }
         if(p0 == Keys.D) {
-            continuousMove(0.5f, "sideways")
+            continuousMove(5f, "sideways")
         }
         if (p0 == Keys.W) {
-            continuousMove(-0.5f, "linear")
+            continuousMove(-5f, "linear")
         }
         if (p0 == Keys.S) {
-            continuousMove(0.5f, "linear")
+            continuousMove(5f, "linear")
         }
         return super.keyDown(p0)
     }
