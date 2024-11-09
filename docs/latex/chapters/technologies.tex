@@ -3,10 +3,10 @@
 \label{sec:LatexTools}
 
 Munkámat a JVM-ökoszisztéma eszközeivel végeztem, szem előtt tartva a kiírásban kulcsfontosságú elemként rögzített modernitást, a kompatibilitást és a hordozhatóságot. Ennek megfelelően ahol lehetséges, kerültem a jövőbeli eltávolításra kijelölt programelemek használatát, illetve az instabil verzióktól függést.
-%----------------------------------------------------------------------------
-\section{Kotlin \raisebox{-1ex}{\includegraphics[width=8mm, keepaspectratio]{images/kotlin_logo.png}}}
 
-%----------------------------------------------------------------------------
+
+\section{Kotlin \raisebox{-1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/kotlin_logo.png}}}
+
 A Kotlin multiplatform, statikusan típusos, több paradigmát támogató programozási nyelv. Specifikációját a JetBrains rendszeresen frissített, publikus, bárki által megtekinthető formában teszi közzé.~\cite{KotlinSpec} Az első prototípus verzió 2011-ben került kiadásra, és mindössze egy évvel később nyílt forráskódú projektté alakult. Az első éles kiadását 2016-ban érte el a nyelv, 2017-től hivatalosan támogatott az Android mobil operációs rendszerre írt alkalmazások terén, 2019 óta pedig az Android elsődleges nyelve.~\cite{KotlinPast}
 
 Népszerűségét elsősorban az intuitív szintaxisának és a JVM-mel\footnote{JVM: \@Java Virtual Machine, jelenleg az Oracle tulajdonában lévő, szabvánnyal specifikált futtatómotor, elsősorban a Java nyelven írt programok futtatásához } való már-már tökéletes kompatibilitásának köszönheti. Bármilyen Java-ban írt kódrészlet felhasználható külső referenciaként egy Kotlin programban, a programozó közösség által készített számtalan Java könyvtár így kiaknázható marad.  Egy projekten belül nincs korlátozás a két nyelv forrásfájljainak megoszlására; érdemes viszont megjegyezni, hogy a kompatibilitás egyirányú. Java kódból nem lehet visszahívni Kotlin kódba.
@@ -19,4 +19,14 @@ A megírt programok fordítási és optimalizálási fázisokon mennek keresztü
 
 A nyelv alapvetően egyszerű kódstruktúrájú, jól értelmezhető és gyorsan írható. Emellett a frusztráló, sok esetben hátráltató szintaktikai és programtechnikai elemek közül sokat elhagytak a fejlesztők -- erre és a funkcionális paradigma által nyújtott lehetőségekre a későbbiekben számos példát fogok mutatni kódrészleteken keresztül.
 
-Szakdolgozatom elkészítéséhez a legfrissebb, 2.0.21-es verziót használtam a JetBrains saját, IntelliJ Idea néven futó programján keresztül. A felhasznált JVM változat a legújabb stabilnak tekinthető 23-as főverzió Oracle OpenJDK implementációja; a program által garantált abszolút minimális verzió a 2023 szeptemberében kiadott 21-es LTS\footnote{Long Term Support, a szoftverfejlesztés körében a kiadó által az adott verzióval kapcsolatban vállalt hosszabb idejű, több éves támogatást jelent} változat, ennek a főágú támogatása 2028-ban ér véget.~\cite{JavaRoadmap}
+Szakdolgozatom elkészítéséhez a legfrissebb, 2.0.21-es verziót használtam a JetBrains saját, IntelliJ Idea néven futó programján keresztül. A felhasznált JVM változat a legújabb stabilnak tekinthető 23-as főverzió Oracle OpenJDK implementációja; a szakdolgozat során elkészült program által garantált abszolút minimális verzió a 2023 szeptemberében kiadott 21-es LTS\footnote{Long Term Support, a szoftverfejlesztés körében a kiadó által az adott verzióval kapcsolatban vállalt hosszabb idejű, több éves támogatást jelent} változat, ennek a főágú támogatása 2028-ban ér véget.~\cite{JavaRoadmap}
+
+\section{OpenGL \raisebox{-1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/opengl-logo.png}}}
+
+Népszerű alacsony szintű grafikus könyvtár, amivel akár pixel szinten címezhető az éppen aktuális futtató felület. Első publikációja 1992-re tehető, a legújabb 4.6-os változat 2017-es dátumával ez a keretrendszer az egyetlen kivétel a modernitási törekvéseim alól.~\cite{OpenglHistory} Robosztussága és széles körű támogatottsága erős fegyvertény, hiszen szinte bármilyen nyelven és operációs rendszeren elérhetőek a kívánt grafikus függvények. Az OpenGL szabványnak megfelelő alkalmazásoknak ablakkezelő rendszertől függetlenül kiszámítható megjelenést kölcsönöz a szoftver.
+
+\section{libGDX \raisebox{-0.1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/libgdx_logo.png}}}
+
+A libGDX nevét szerteágazó felhasználási lehetőségeiből kapta: "game development" és "effects" könyvtár Java alapú projektekhez. Segítségével az alacsony szintű OpenGL műveletek a JVM-környezetekre jellemző módon hívhatók meg, így meglepően jól illeszkedhet a grafikus felület kódja az alkalmazás többi részéhez.
+
+Elődje kifejezetten Android alkalmazások megjelenítését segítette elő, 2010 óta közösségi támogatású, nyílt forráskódú eszközként fejlesztik.~\cite{LibgdxHistory} A projekt jelenlegi verziószáma 1.13.0; asztali környezetekben (Windows, macOS, Linux), mobil operációs rendszereken (Android, iOS) és webböngészőkben egyaránt prezentálhatóak az elkészült játékok.
