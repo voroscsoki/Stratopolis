@@ -2,7 +2,7 @@
 \chapter{Felhasznált eszközök}
 \label{sec:LatexTools}
 
-Munkámat a JVM-ökoszisztéma eszközeivel végeztem, szem előtt tartva a kiírásban kulcsfontosságú elemként rögzített modernitást, a kompatibilitást és a hordozhatóságot.
+Munkámat a JVM-ökoszisztéma eszközeivel végeztem, szem előtt tartva a kiírásban kulcsfontosságú elemként rögzített modernitást, a kompatibilitást és a hordozhatóságot. Ennek megfelelően ahol lehetséges, kerültem a jövőbeli eltávolításra kijelölt programelemek használatát, illetve az instabil verzióktól függést.
 %----------------------------------------------------------------------------
 \section{Kotlin \raisebox{-1ex}{\includegraphics[width=8mm, keepaspectratio]{images/kotlin_logo.png}}}
 
@@ -11,18 +11,12 @@ A Kotlin multiplatform, statikusan típusos, több paradigmát támogató progra
 
 Népszerűségét elsősorban az intuitív szintaxisának és a JVM-mel\footnote{JVM: \@Java Virtual Machine, jelenleg az Oracle tulajdonában lévő, szabvánnyal specifikált futtatómotor, elsősorban a Java nyelven írt programok futtatásához } való már-már tökéletes kompatibilitásának köszönheti. Bármilyen Java-ban írt kódrészlet felhasználható külső referenciaként egy Kotlin programban, a programozó közösség által készített számtalan Java könyvtár így kiaknázható marad.  Egy projekten belül nincs korlátozás a két nyelv forrásfájljainak megoszlására; érdemes viszont megjegyezni, hogy a kompatibilitás egyirányú. Java kódból nem lehet visszahívni Kotlin kódba.
 
-A megírt programok fordítási és optimalizálási fázisokon mennek keresztül, mielőtt futtatható állományok vagy eszköztárak készülnek belőlük. A Kotlin fordítómotorjával készített binárisok közel azonos teljesítményűek hagyományos JVM megfelelőikhez képest.
-
-A JVM-en kívül más fordítási célok is léteznek:
+A megírt programok fordítási és optimalizálási fázisokon mennek keresztül, mielőtt futtatható állományok vagy eszköztárak készülnek belőlük. A Kotlin fordítómotorjával készített binárisok közel azonos teljesítményűek hagyományos JVM megfelelőikhez képest. A JVM-en kívül más fordítási célok is léteznek:
 \begin{itemize}
-    \item Kotlin/Native (2023 óta stabil, számos operációs rendszerre biztosít natív, virtuális gépet nem igénylő megoldást)
-    \item Kotlin/JS
-    \item WASM
-    \item 
+    \item Kotlin/Native (2023 óta stabil, számos operációs rendszerre biztosít natív, futtató virtuális gépet nem igénylő megoldást)
+    \item Kotlin/JS (a megírt kódot JavaScript-re fordítjuk, így egy fordítást igénylő nyelvből interpretált kódot készíthetünk; webböngészőhöz ideális)
 \end{itemize}
 
-TODO FUNKCIONÁLIS
+A nyelv alapvetően egyszerű kódstruktúrájú, jól értelmezhető és gyorsan írható. Emellett a frusztráló, sok esetben hátráltató szintaktikai és programtechnikai elemek közül sokat elhagytak a fejlesztők -- erre és a funkcionális paradigma által nyújtott lehetőségekre a későbbiekben számos példát fogok mutatni kódrészleteken keresztül.
 
-A nyelv alapvetően egyszerű, jól értelmezhető és gyorsan írható. Emellett a frusztráló, sok esetben hátráltató szintaktikai és programtechnikai elemek közül sokat elhagytak a fejlesztők -- erre a későbbiekben számos példát fogok mutatni kódrészleteken keresztül.
-
-Szakdolgozatom elkészítéséhez a legfrissebb, 2.0.21-es verziót használtam a JetBrains saját, IntelliJ Idea néven futó programján keresztül.
+Szakdolgozatom elkészítéséhez a legfrissebb, 2.0.21-es verziót használtam a JetBrains saját, IntelliJ Idea néven futó programján keresztül. A felhasznált JVM változat a legújabb stabilnak tekinthető 23-as főverzió Oracle OpenJDK implementációja; a program által garantált abszolút minimális verzió a 2023 szeptemberében kiadott 21-es LTS\footnote{Long Term Support, a szoftverfejlesztés körében a kiadó által az adott verzióval kapcsolatban vállalt hosszabb idejű, több éves támogatást jelent} változat, ennek a főágú támogatása 2028-ban ér véget.~\cite{JavaRoadmap}
