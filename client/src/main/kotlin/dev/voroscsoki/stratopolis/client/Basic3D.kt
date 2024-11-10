@@ -25,12 +25,14 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.math.atan2
 import kotlin.random.Random
 
+data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
 
 class Basic3D : ApplicationListener {
     private lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
-    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, ModelInstance>>()
+    private lateinit var defaultBoxModel: Model
+    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
     private val visibleChunks = mutableSetOf<String>()
     private val CHUNKSIZE = 500
     private lateinit var environment: Environment
@@ -66,19 +68,21 @@ class Basic3D : ApplicationListener {
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
             position.set(0f, 10f, 0f)
             lookAt(0f,0f,0f)
+            up.set(1f,0f,0f)
             near = 1f
             far = 2000f
             update()
         }
         
         modelBuilder = ModelBuilder()
-        val inst = ModelInstance(modelBuilder.createBox(
+        defaultBoxModel = modelBuilder.createBox(
             1.6f, 0.8f, 1.6f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        ))
+        )
+        val inst = ModelInstance(defaultBoxModel)
         //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
-        chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = inst
+        chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(cam))
@@ -102,18 +106,18 @@ class Basic3D : ApplicationListener {
             updateVisibleChunks()
         }
 
-        modelBatch.begin(cam)
         chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
+            modelBatch.begin(cam)
             try {
-                chunk.value.forEach { (_, instance) ->
-                    if (isVisible(cam, instance)) modelBatch.render(instance, environment)
+                chunk.value.forEach { (_, element) ->
+                    if (isVisible(cam, element.instance)) modelBatch.render(element.instance, environment)
                 }
             } catch (e: Exception) {
                 println("Error rendering chunk: ${chunk.key}")
                 e.printStackTrace()
             }
+            modelBatch.end()
         }
-        modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
@@ -141,8 +145,9 @@ class Basic3D : ApplicationListener {
     }
 
     private fun updateVisibleChunks() {
-        val res = nearbyChunks(cam.position, 6)
+        val res = nearbyChunks(cam.position, 5)
         visibleChunks.addAll(res)
+        visibleChunks.removeIf { !res.contains(it) }
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
@@ -169,7 +174,8 @@ class Basic3D : ApplicationListener {
 
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
-            val inst = ModelInstance(data.toModel())
+            val model = data.toModel() ?: defaultBoxModel
+            val inst = ModelInstance(model)
             val convertedCoords = data.coords.coordConvert()
             val validVec =
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
@@ -184,7 +190,9 @@ class Basic3D : ApplicationListener {
                     }
                 ))
             }
-            chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
+            chunks.getOrPut(
+                getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat()))
+                    { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
         }
     }
 
@@ -196,8 +204,8 @@ class Basic3D : ApplicationListener {
         }
     }
 
-    private suspend fun Building.toModel() : Model {
-        if(this.ways.isEmpty()) return runOnRenderThread { modelBuilder.createBox(1f, 1f, 1f, Material(ColorAttribute.createDiffuse(Color.GREEN)), (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()) }
+    private suspend fun Building.toModel() : Model? {
+        if(this.ways.isEmpty()) return null
         var baseNodes = this.ways.map { way ->
             way.nodes.map {
                 node -> val x = node.coords - this.coords
