@@ -3,29 +3,33 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.graphics.VertexAttributes
+import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.*
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.Vector3
 import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.SerializableNode
 import dev.voroscsoki.stratopolis.common.api.Vec3
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlin.math.atan2
 import kotlin.random.Random
+
 
 class Basic3D : ApplicationListener {
     private lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
-    private lateinit var model: Model
+    private lateinit var modelBuilder: ModelBuilder
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, ModelInstance>>()
     private val visibleChunks = mutableSetOf<String>()
     private val CHUNKSIZE = 500
@@ -39,7 +43,13 @@ class Basic3D : ApplicationListener {
     private lateinit var spriteBatch: SpriteBatch
     private lateinit var font: BitmapFont
 
-    fun Vec3.coordConvert(): Vec3 {
+    private fun Vec3.coordConvert(scaleOnly: Boolean = false): Vec3 {
+        if(scaleOnly) {
+            val x = this.x * 100000
+            val y = this.y * 100000
+            val z = this.z * 100000
+            return Vec3(x, y, z)
+        }
         val x = (this.x - baselineCoord.x) * 100000
         val y = (this.y - baselineCoord.y) * 100000
         val z = (this.z - baselineCoord.z) * 100000
@@ -60,7 +70,7 @@ class Basic3D : ApplicationListener {
             far = 2000f
             update()
         }
-
+        
         val modelBuilder = ModelBuilder()
         model = modelBuilder.createBox(
             1.6f, 0.8f, 1.6f,
@@ -88,7 +98,7 @@ class Basic3D : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
-        if(renderCounter++ == 20) {
+        if (renderCounter++ == 20) {
             renderCounter = 0
             updateVisibleChunks()
         }
@@ -96,8 +106,8 @@ class Basic3D : ApplicationListener {
         modelBatch.begin(cam)
         chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
             try {
-                chunk.value.forEach { (id, instance) ->
-                    if(isVisible(cam, instance)) modelBatch.render(instance, environment)
+                chunk.value.forEach { (_, instance) ->
+                    if (isVisible(cam, instance)) modelBatch.render(instance, environment)
                 }
             } catch (e: Exception) {
                 println("Error rendering chunk: ${chunk.key}")
@@ -113,7 +123,6 @@ class Basic3D : ApplicationListener {
 
     override fun dispose() {
         modelBatch.dispose()
-        model.dispose()
         spriteBatch.dispose()
         font.dispose()
     }
@@ -141,15 +150,15 @@ class Basic3D : ApplicationListener {
         val baseX = Math.floorDiv(position.x.toInt(), CHUNKSIZE) * CHUNKSIZE
         val baseZ = Math.floorDiv(position.z.toInt(), CHUNKSIZE) * CHUNKSIZE
         return buildList {
-            for(x in -radius..radius) {
+            for (x in -radius..radius) {
                 for (z in -radius..radius) {
-                    add("${baseX+x*CHUNKSIZE}:${baseZ+z*CHUNKSIZE}")
+                    add("${baseX + x * CHUNK_SIZE}:${baseZ + z * CHUNK_SIZE}")
                 }
             }
         }
     }
-
-    @OptIn(ExperimentalStdlibApi::class)
+    //TODO: rework
+    /*@OptIn(ExperimentalStdlibApi::class)
     fun upsertNode(data: SerializableNode) {
         val inst = ModelInstance(model)
         val convertedCoords = data.coords.coordConvert()
@@ -157,27 +166,102 @@ class Basic3D : ApplicationListener {
         inst.transform.setTranslation(validVec)
         inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
         chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
-    }
+    }*/
 
     fun upsertBuilding(data: Building) {
-        val inst = ModelInstance(model)
-        inst.transform.scale(2.0f, 2.0f, 2.0f)
-        val convertedCoords = data.coords.coordConvert()
-        val validVec = Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
-        inst.transform.setTranslation(validVec)
-        inst.materials[0].set(ColorAttribute.createDiffuse(
-            when (data.tags.find { it.key == "building" }?.value) {
-                "commercial" -> Color.CYAN
-                "house" -> Color.GREEN
-                "industrial" -> Color.YELLOW
-                else -> Color.RED
+        CoroutineScope(Dispatchers.IO).launch {
+            val inst = ModelInstance(data.toModel())
+            val convertedCoords = data.coords.coordConvert()
+            val validVec =
+                Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
+            inst.transform.setTranslation(validVec)
+            inst.materials.forEach { material ->
+                material.set(ColorAttribute.createDiffuse(
+                    when (data.tags.find { it.key == "building" }?.value) {
+                        "commercial" -> Color.BLUE
+                        "house" -> Color.GREEN
+                        "industrial" -> Color.YELLOW
+                        else -> Color.CYAN
+                    }
+                ))
             }
+            chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+        }
+    }
+
+    private suspend fun <T> runOnRenderThread(block: () -> T): T {
+        return suspendCoroutine { continuation ->
+            Gdx.app.postRunnable {
+                continuation.resume(block())
+            }
+        }
+    }
+
+    private suspend fun Building.toModel() : Model {
+        if(this.ways.isEmpty()) return runOnRenderThread { modelBuilder.createBox(1f, 1f, 1f, Material(ColorAttribute.createDiffuse(Color.GREEN)), (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()) }
+        var baseNodes = this.ways.map { way ->
+            way.nodes.map {
+                node -> val x = node.coords - this.coords
+                x.coordConvert(true)
+            }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }}
+        val center = baseNodes.flatten().reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.flatten().size)
+        baseNodes.forEach { nodeList -> nodeList.forEach { it.sub(center) } }
+        baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
+        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toIntOrNull()
+            ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toIntOrNull()
+            ?: 2
+        val topNodes = baseNodes.map { way -> way.map { it.cpy().add(0f, height.toFloat(), 0f) } }
+
+        return runOnRenderThread {
+            val modelBuilder = ModelBuilder()
+            modelBuilder.begin()
+            var builder: MeshPartBuilder =
+                modelBuilder.part("bottom", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            baseNodes.forEach { nodeList ->
+                for (i in 0..nodeList.lastIndex-2) {
+                    builder.triangle(
+                        nodeList[i], nodeList[i + 1], nodeList[i + 2]
+                    )
+                }
+            }
+            builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            topNodes.forEach { nodeList ->
+                for (i in 0..nodeList.lastIndex - 2) {
+                    builder.triangle(
+                        nodeList[i], nodeList[i + 1], nodeList[nodeList.lastIndex],
+                    )
+                }
+            }
+            builder = modelBuilder.part("sides", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            topNodes.indices.forEach { index ->
+                for (j in 0..<topNodes[index].lastIndex) {
+                    builder.triangle(
+                        baseNodes[index][j], baseNodes[index][j + 1], topNodes[index][j + 1]
+                    )
+                    builder.triangle(
+                        baseNodes[index][j], topNodes[index][j + 1], topNodes[index][j]
+                    )
+                }
+            }
+            modelBuilder.end()
+        }
         ))
-        chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
+        //return true
         instance.transform.getTranslation(position)
         return cam.frustum.sphereInFrustum(position, 1.5f)
+    }
+
+    private fun List<Vector3>.sortClockwise(): List<Vector3> {
+        // Calculate the center point of the vectors
+        val centerX = this.sumOf { it.x.toDouble() } / this.size
+        val centerZ = this.sumOf { it.z.toDouble() } / this.size
+
+        // Sort the vectors based on their angle relative to the center point
+        return this.sortedBy { vector ->
+            atan2(vector.z - centerZ, vector.x - centerX)
+        }
     }
 }

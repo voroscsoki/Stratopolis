@@ -1,5 +1,6 @@
 package dev.voroscsoki.stratopolis.server.osm
 
+import api.SerializableWay
 import de.topobyte.osm4j.core.model.iface.*
 import de.topobyte.osm4j.pbf.seq.PbfIterator
 import dev.voroscsoki.stratopolis.common.api.*
@@ -26,11 +27,11 @@ class OsmStorage(
         val relationRelated = relations.filter { it.value.isBuilding() }
         val output = mutableSetOf<Building>()
         default.forEach { node ->
-            output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Vec3(node.value.latitude, 0.0, node.value.longitude)))
+            output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Vec3(node.value.latitude, 0.0, node.value.longitude), emptyList()))
         }
         wayRelated.forEach { way ->
             output.add(Building(way.value.id, way.value.tags.map { SerializableTag(it) }, EntityType.Way, way.value.nodeIds.map { nodes[it]!! }
-                .nodeAverage(), way.value.nodeIds.map { nodes[it]!! }.map { SerializableNode(it) }))
+                .nodeAverage(), listOf(SerializableWay(way.value, way.value.nodeIds.map { nodes[it]!! }))))
         }
         relationRelated.forEach { relation ->
             output.add(
@@ -38,8 +39,7 @@ class OsmStorage(
                     relation.value.id, relation.value.tags.map { SerializableTag(it) }, EntityType.Relation,
                     relation.value.members.filter { it.type == EntityType.Way }.flatMap { w -> ways[w.id]!!.nodeIds.mapNotNull { nodes[it] } }.nodeAverage(),
                     relation.value.members.filter { it is OsmWay }
-                        .map { way -> (way as OsmWay).nodeIds.map { nodes[it]!! }.map { SerializableNode(it) } }
-                        .flatten()
+                        .map { way -> SerializableWay((way as OsmWay), (way as OsmWay).nodeIds.map { nodes[it]!! }) }
                 )
             )
         }

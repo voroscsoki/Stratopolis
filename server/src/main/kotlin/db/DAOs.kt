@@ -3,6 +3,8 @@ package dev.voroscsoki.stratopolis.server.db
 import api.SerializableWay
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.SerializableNode
+import dev.voroscsoki.stratopolis.common.api.SerializableTag
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -37,12 +39,15 @@ class BuildingDAO(id: EntityID<Long>) : LongEntity(id) {
     var coords by Buildings.coords
     var occupancy by Buildings.occupancy
     var type by Buildings.type
+    var tags by Buildings.tags
+    var ways by Buildings.ways
 
     fun toBuilding() = Building(
         id = id.value,
         coords = coords,
         occupancy = occupancy,
-        tags = emptyList(),
+        tags = Json.decodeFromString<List<SerializableTag>>(tags),
+        ways = Json.decodeFromString<List<SerializableWay>>(ways),
         type = type
     )
 }

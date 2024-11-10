@@ -22,6 +22,7 @@ object Ways : IdTable<Long>("ways") {
     override val primaryKey = PrimaryKey(id)
 
     val tags = text("tags")
+    //val nodes by NodeDAO referrersOn Nodes.way
 }
 
 object Buildings : IdTable<Long>("buildings") {
@@ -32,6 +33,7 @@ object Buildings : IdTable<Long>("buildings") {
     val occupancy = integer("occupancy")
     val type = enumeration<EntityType>("type").default(EntityType.Node)
     val tags = Buildings.text("tags")
+    val ways = Buildings.text("ways")
 }
 
 fun Table.customVec3(name: String): Column<Vec3> {
