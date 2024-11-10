@@ -17,3 +17,7 @@
 *.thm
 *.toc
 *.pdf
+
+#database
+*.db
+*.pbf
