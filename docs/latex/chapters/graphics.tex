@@ -1,0 +1,31 @@
+%----------------------------------------------------------------------------
+\chapter{Grafikai megvalósítás}
+
+\section{Háromszögelés}
+
+A backendről származó adatokból a címkézés szerinti színezésen, kategorizáláson kívül a legfontosabb természetesen az entitások pontos pozíciója, formája. A grafikus felület egyszerűsített, domborzatot figyelmen kívül hagyó módon ábrázolja az egyes épületeket, de a másik két dimenzió így is rejt kihívásokat. Egy komplexum, de akár az azt határoló vonalak által leírt poligon is lehet konkáv, így annak lefedése gépközeli OpenGL hívásokkal kihívást jelent; legjobb opciónak a minél pontosabb háromszögekre bontás bizonyult.
+
+\subsection{Fülvágó algoritmus}
+
+Az egyik legegyszerűbb háromszögelési eljárás a fülvágó algoritmus (ear-clipping algorithm). Fül alatt olyan háromszöget értünk, amit egy poligon egymást követő három csúcspontja alkot, melyek közül a középső konvex -- tehát az adott pontban a sokszög belső szöge kisebb 180 foknál ($\pi$ radián).\cite{TriangulationByEarClipping} Az ilyen hármasok által határolt terület garantáltan kivonható a poligonból, mivel definíció szerint nem lehet lyuk vagy kihagyás benne, így nem kell kompenzálni az üres térért. Az eljárás a megmaradt területre megismételhető, és minden lépés egy újabb háromszög alakú részletet fog eredményezni; így a célunkat el is értük.
+
+Az algoritmus célja tehát a fent leírt módszerrel kiszámítani, hogy egy tetszőleges sokszög lefedéséhez milyen módon kell háromszögekké összekötni a kapott vertexeket. A libGDX esetében a gyakran visszatérő felhasználásnak köszönhetően külön osztály gondoskodik erről (EarClippingTriangulator). Az OpenGL idiómáinak megfelelően lebegőpontos értékekre bontott vektorokat kér bemenetként, eredménye pedig egy egyszerű, indexekből álló lista -- ennek elemei hármasával határoznak meg egy háromszöget.
+
+\begin{lstlisting}[caption=Példa az EarClippingTriangulator felhasználására]
+    val floats = baseNodes.flatMap { listOf(it.x, it.z) }.toFloatArray()
+    val triangles: ShortArray
+    val triangulator = EarClippingTriangulator()
+    triangles = triangulator.computeTriangles(floats)
+\end{lstlisting}
+
+\subsection{Körbejárási sorrend}
+
+A számítógépes grafika szakterületén általános probléma az egyes felületek fő oldalának meghatározása. Elvileg minden felület lehetne kétoldalú, de ebben az esetben alkalmazásunk teljesítménye nagyban romolhat a felesleges számítások miatt; mindenképp célszerű lenne tehát egy eljárás, amivel megállapítható egy lap normálvektora.
+
+A leginkább elfogadott megoldás a csúcspontok sorrendjét használja fel, és az OpenGL "back-face culling" művelete sem tesz másképp. A néző alapértelmezetten csak azokat az alakzatokat látja, amiknek az óramutató járásával ellentétes a vertex-sorrendje. Ez a viselkedés módosítható.
+
+\begin{lstlisting}[caption=Példa az OpenGL culling műveleteinek beállításaira libGDX-en keresztül]
+    Gdx.gl.glEnable(GL40.GL_CULL_FACE) //bekapcsolás
+    Gdx.gl.glCullFace(GL40.GL_BACK) //szűrendő oldal beállítása (hátsó)
+    Gdx.gl.glFront(GL40.CW) //körbejárási sorrend megváltoztatása óramutató járása szerintire
+\end{lstlisting}
