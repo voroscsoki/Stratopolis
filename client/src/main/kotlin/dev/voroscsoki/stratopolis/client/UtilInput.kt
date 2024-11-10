@@ -7,7 +7,7 @@ import dev.voroscsoki.stratopolis.common.api.Vec3
 import dev.voroscsoki.stratopolis.common.api.getMemoryUsage
 import kotlinx.coroutines.runBlocking
 
-class MyInput : InputAdapter() {
+class UtilInput : InputAdapter() {
     override fun keyDown(keycode: Int): Boolean {
         println("Key down: $keycode")
         //F1

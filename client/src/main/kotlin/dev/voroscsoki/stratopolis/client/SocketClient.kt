@@ -1,3 +1,4 @@
+package dev.voroscsoki.stratopolis.client
 
 import dev.voroscsoki.stratopolis.common.api.ControlMessage
 import io.ktor.client.*

@@ -1,5 +1,5 @@
 package dev.voroscsoki.stratopolis.client
-import SocketClient
+
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import dev.voroscsoki.stratopolis.client.api.HttpAccessor
