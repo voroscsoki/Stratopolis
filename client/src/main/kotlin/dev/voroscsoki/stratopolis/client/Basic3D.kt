@@ -71,13 +71,12 @@ class Basic3D : ApplicationListener {
             update()
         }
         
-        val modelBuilder = ModelBuilder()
-        model = modelBuilder.createBox(
+        modelBuilder = ModelBuilder()
+        val inst = ModelInstance(modelBuilder.createBox(
             1.6f, 0.8f, 1.6f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        )
-        val inst = ModelInstance(model)
+        ))
         //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
         chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = inst
 
@@ -152,7 +151,7 @@ class Basic3D : ApplicationListener {
         return buildList {
             for (x in -radius..radius) {
                 for (z in -radius..radius) {
-                    add("${baseX + x * CHUNK_SIZE}:${baseZ + z * CHUNK_SIZE}")
+                    add("${baseX + x * CHUNKSIZE}:${baseZ + z * CHUNKSIZE}")
                 }
             }
         }
@@ -185,7 +184,7 @@ class Basic3D : ApplicationListener {
                     }
                 ))
             }
-            chunks.getOrPut(getChunkKey(convertedCoords)) { ConcurrentHashMap() }[data.id] = inst
+            chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
         }
     }
 
@@ -245,7 +244,6 @@ class Basic3D : ApplicationListener {
             }
             modelBuilder.end()
         }
-        ))
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
