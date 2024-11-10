@@ -3,7 +3,10 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.*
@@ -12,7 +15,9 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.utils.ShortArray
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.Vec3
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +29,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.atan2
 import kotlin.random.Random
+
 
 data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
 
@@ -205,33 +211,40 @@ class Basic3D : ApplicationListener {
     }
 
     private suspend fun Building.toModel() : Model? {
-        if(this.ways.isEmpty()) return null
-        var baseNodes = this.ways.map { way ->
-            way.nodes.map {
+        if (this.ways.isEmpty()) return null
+        var baseNodes = this.ways.first().nodes.map {
                 node -> val x = node.coords - this.coords
-                x.coordConvert(true)
-            }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }}
-        val center = baseNodes.flatten().reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.flatten().size)
-        baseNodes.forEach { nodeList -> nodeList.forEach { it.sub(center) } }
+            x.coordConvert(true)
+        }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        val center = baseNodes.reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.size)
+        baseNodes.forEach { it.sub(center) }
         baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
-        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toIntOrNull()
-            ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toIntOrNull()
-            ?: 2
-        val topNodes = baseNodes.map { way -> way.map { it.cpy().add(0f, height.toFloat(), 0f) } }
+        val floats = baseNodes.flatMap { listOf(it.x, it.z) }.toFloatArray()
+        val triangles: ShortArray
+        val triangulator = EarClippingTriangulator()
+        try {
+            triangles = triangulator.computeTriangles(floats)
+        }
+        catch (e: Exception) {
+            println("Error triangulating building: ${this.id}")
+            return null
+        }
+
 
         return runOnRenderThread {
             val modelBuilder = ModelBuilder()
             modelBuilder.begin()
             var builder: MeshPartBuilder =
-                modelBuilder.part("bottom", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            baseNodes.forEach { nodeList ->
-                for (i in 0..nodeList.lastIndex-2) {
+                modelBuilder.part("bottom", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            baseNodes.let {
+                for (tri in 0..<triangles.size - 3 step 3) {
                     builder.triangle(
-                        nodeList[i], nodeList[i + 1], nodeList[i + 2]
+                        it[triangles[tri].toInt()], it[triangles[tri + 1].toInt()], it[triangles[tri + 2].toInt()]
                     )
                 }
             }
-            builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+
+            /*builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             topNodes.forEach { nodeList ->
                 for (i in 0..nodeList.lastIndex - 2) {
                     builder.triangle(
@@ -249,7 +262,7 @@ class Basic3D : ApplicationListener {
                         baseNodes[index][j], topNodes[index][j + 1], topNodes[index][j]
                     )
                 }
-            }
+            }*/
             modelBuilder.end()
         }
     }
