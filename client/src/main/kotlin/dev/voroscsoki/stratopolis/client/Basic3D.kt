@@ -209,6 +209,8 @@ class Basic3D : ApplicationListener {
                 node -> val x = node.coords - this.coords
             x.coordConvert(true)
         }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        if(baseNodes.size < 3) return null
+
         val center = baseNodes.reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.size)
         baseNodes.forEach { it.sub(center) }
         baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
@@ -229,7 +231,7 @@ class Basic3D : ApplicationListener {
             var builder: MeshPartBuilder =
                 modelBuilder.part("bottom", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             baseNodes.let {
-                for (tri in 0..<triangles.size - 3 step 3) {
+                for (tri in 0..triangles.size - 2 step 3) {
                     builder.triangle(
                         it[triangles[tri].toInt()], it[triangles[tri + 1].toInt()], it[triangles[tri + 2].toInt()]
                     )
@@ -245,13 +247,14 @@ class Basic3D : ApplicationListener {
                 }
             }
             builder = modelBuilder.part("sides", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            baseNodes.zip(topNodes).let {
-                for (i in 0 until baseNodes.size) {
-                    val next = (i + 1) % baseNodes.size
-                    builder.rect(
-                        baseNodes[i], topNodes[i], topNodes[next], baseNodes[next],
-                        Vector3(0f, 0f, 1f)
-                    )
+            val clockwise = baseNodes.isClockwise()
+            for (i in 0..<baseNodes.lastIndex) {
+                if(clockwise) {
+                    builder.triangle(baseNodes[i], baseNodes[i+1], topNodes[i+1])
+                    builder.triangle(topNodes[i+1], topNodes[i], baseNodes[i])
+                } else {
+                    builder.triangle(baseNodes[i+1], baseNodes[i], topNodes[i+1])
+                    builder.triangle(topNodes[i], topNodes[i+1], baseNodes[i])
                 }
             }
             modelBuilder.end()
@@ -261,5 +264,15 @@ class Basic3D : ApplicationListener {
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
         instance.transform.getTranslation(position)
         return cam.frustum.sphereInFrustum(position, 20f)
+    }
+
+    private fun List<Vector3>.isClockwise(): Boolean {
+        var sum = 0f
+        for (i in indices) {
+            val v1 = this[i]
+            val v2 = this[(i + 1) % this.size]
+            sum += (v2.x - v1.x) * (v2.z + v1.z)
+        }
+        return sum > 0
     }
 }
