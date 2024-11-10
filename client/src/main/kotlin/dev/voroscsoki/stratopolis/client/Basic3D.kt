@@ -3,7 +3,10 @@ package dev.voroscsoki.stratopolis.client
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.*
@@ -12,7 +15,9 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.utils.ShortArray
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.Vec3
 import kotlinx.coroutines.CoroutineScope
@@ -22,16 +27,18 @@ import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.math.atan2
 import kotlin.random.Random
 
+
+data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
 
 class Basic3D : ApplicationListener {
     private lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
-    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, ModelInstance>>()
-    private val visibleChunks = mutableSetOf<String>()
+    private lateinit var defaultBoxModel: Model
+    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
+    private var visibleChunks = setOf<String>()
     private val CHUNKSIZE = 500
     private lateinit var environment: Environment
     private val rand = Random(0)
@@ -66,19 +73,21 @@ class Basic3D : ApplicationListener {
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
             position.set(0f, 10f, 0f)
             lookAt(0f,0f,0f)
+            up.set(1f,0f,0f)
             near = 1f
             far = 2000f
             update()
         }
         
         modelBuilder = ModelBuilder()
-        val inst = ModelInstance(modelBuilder.createBox(
+        defaultBoxModel = modelBuilder.createBox(
             1.6f, 0.8f, 1.6f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        ))
+        )
+        val inst = ModelInstance(defaultBoxModel)
         //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
-        chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = inst
+        chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(cam))
@@ -101,16 +110,11 @@ class Basic3D : ApplicationListener {
             renderCounter = 0
             updateVisibleChunks()
         }
-
+        cam.update()
         modelBatch.begin(cam)
         chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
-            try {
-                chunk.value.forEach { (_, instance) ->
-                    if (isVisible(cam, instance)) modelBatch.render(instance, environment)
-                }
-            } catch (e: Exception) {
-                println("Error rendering chunk: ${chunk.key}")
-                e.printStackTrace()
+            chunk.value.forEach { (_, element) ->
+                if (isVisible(cam, element.instance)) modelBatch.render(element.instance, environment)
             }
         }
         modelBatch.end()
@@ -141,8 +145,8 @@ class Basic3D : ApplicationListener {
     }
 
     private fun updateVisibleChunks() {
-        val res = nearbyChunks(cam.position, 6)
-        visibleChunks.addAll(res)
+        val res = nearbyChunks(cam.position, 5)
+        visibleChunks = res.toSet()
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
@@ -169,7 +173,8 @@ class Basic3D : ApplicationListener {
 
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
-            val inst = ModelInstance(data.toModel())
+            val model = data.toModel() ?: defaultBoxModel
+            val inst = ModelInstance(model)
             val convertedCoords = data.coords.coordConvert()
             val validVec =
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
@@ -184,7 +189,9 @@ class Basic3D : ApplicationListener {
                     }
                 ))
             }
-            chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
+            chunks.getOrPut(
+                getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat()))
+                    { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
         }
     }
 
@@ -196,49 +203,54 @@ class Basic3D : ApplicationListener {
         }
     }
 
-    private suspend fun Building.toModel() : Model {
-        if(this.ways.isEmpty()) return runOnRenderThread { modelBuilder.createBox(1f, 1f, 1f, Material(ColorAttribute.createDiffuse(Color.GREEN)), (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()) }
-        var baseNodes = this.ways.map { way ->
-            way.nodes.map {
+    private suspend fun Building.toModel() : Model? {
+        if (this.ways.isEmpty()) return null
+        var baseNodes = this.ways.first().nodes.map {
                 node -> val x = node.coords - this.coords
-                x.coordConvert(true)
-            }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }}
-        val center = baseNodes.flatten().reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.flatten().size)
-        baseNodes.forEach { nodeList -> nodeList.forEach { it.sub(center) } }
+            x.coordConvert(true)
+        }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        val center = baseNodes.reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.size)
+        baseNodes.forEach { it.sub(center) }
         baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
-        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toIntOrNull()
-            ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toIntOrNull()
-            ?: 2
-        val topNodes = baseNodes.map { way -> way.map { it.cpy().add(0f, height.toFloat(), 0f) } }
+        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
+            ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toFloatOrNull()
+            ?: 2f
+        val topNodes = baseNodes.map { it.cpy().add(0f, height, 0f) }
+
+        val floats = baseNodes.flatMap { listOf(it.x, it.z) }.toFloatArray()
+        val triangles: ShortArray
+        val triangulator = EarClippingTriangulator()
+        triangles = triangulator.computeTriangles(floats)
+
 
         return runOnRenderThread {
             val modelBuilder = ModelBuilder()
             modelBuilder.begin()
             var builder: MeshPartBuilder =
-                modelBuilder.part("bottom", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            baseNodes.forEach { nodeList ->
-                for (i in 0..nodeList.lastIndex-2) {
+                modelBuilder.part("bottom", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            baseNodes.let {
+                for (tri in 0..<triangles.size - 3 step 3) {
                     builder.triangle(
-                        nodeList[i], nodeList[i + 1], nodeList[i + 2]
+                        it[triangles[tri].toInt()], it[triangles[tri + 1].toInt()], it[triangles[tri + 2].toInt()]
                     )
                 }
             }
-            builder = modelBuilder.part("top", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            topNodes.forEach { nodeList ->
-                for (i in 0..nodeList.lastIndex - 2) {
+
+            builder = modelBuilder.part("top", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            topNodes.let {
+                for (tri in 0..<triangles.size - 3 step 3) {
                     builder.triangle(
-                        nodeList[i], nodeList[i + 1], nodeList[nodeList.lastIndex],
+                        it[triangles[tri].toInt()], it[triangles[tri + 1].toInt()], it[triangles[tri + 2].toInt()]
                     )
                 }
             }
-            builder = modelBuilder.part("sides", GL20.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
-            topNodes.indices.forEach { index ->
-                for (j in 0..<topNodes[index].lastIndex) {
-                    builder.triangle(
-                        baseNodes[index][j], baseNodes[index][j + 1], topNodes[index][j + 1]
-                    )
-                    builder.triangle(
-                        baseNodes[index][j], topNodes[index][j + 1], topNodes[index][j]
+            builder = modelBuilder.part("sides", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            baseNodes.zip(topNodes).let {
+                for (i in 0 until baseNodes.size) {
+                    val next = (i + 1) % baseNodes.size
+                    builder.rect(
+                        baseNodes[i], topNodes[i], topNodes[next], baseNodes[next],
+                        Vector3(0f, 0f, 1f)
                     )
                 }
             }
@@ -247,19 +259,7 @@ class Basic3D : ApplicationListener {
     }
 
     private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
-        //return true
         instance.transform.getTranslation(position)
-        return cam.frustum.sphereInFrustum(position, 1.5f)
-    }
-
-    private fun List<Vector3>.sortClockwise(): List<Vector3> {
-        // Calculate the center point of the vectors
-        val centerX = this.sumOf { it.x.toDouble() } / this.size
-        val centerZ = this.sumOf { it.z.toDouble() } / this.size
-
-        // Sort the vectors based on their angle relative to the center point
-        return this.sortedBy { vector ->
-            atan2(vector.z - centerZ, vector.x - centerX)
-        }
+        return cam.frustum.sphereInFrustum(position, 20f)
     }
 }

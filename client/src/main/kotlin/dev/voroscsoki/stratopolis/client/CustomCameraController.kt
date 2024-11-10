@@ -1,5 +1,6 @@
 package dev.voroscsoki.stratopolis.client
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
@@ -11,7 +12,6 @@ import kotlinx.coroutines.sync.withLock
 class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
-    var shiftModifier = false
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val mutex = Mutex()
@@ -77,26 +77,15 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
     //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
-        if(p0 == Keys.CONTROL_LEFT) {
-            ctrlModifier = true
-        }
-        if(p0 == Keys.E) {
-            continuousMove(5f, "rotate")
-        }
-        if(p0 == Keys.Q) {
-            continuousMove(-5f, "rotate")
-        }
-        if(p0 == Keys.A) {
-            continuousMove(-5f, "sideways")
-        }
-        if(p0 == Keys.D) {
-            continuousMove(5f, "sideways")
-        }
-        if (p0 == Keys.W) {
-            continuousMove(-5f, "linear")
-        }
-        if (p0 == Keys.S) {
-            continuousMove(5f, "linear")
+        when (p0) {
+            Keys.ESCAPE -> Gdx.app.exit()
+            Keys.CONTROL_LEFT -> ctrlModifier = true
+            Keys.E -> continuousMove(5f, "rotate")
+            Keys.Q -> continuousMove(-5f, "rotate")
+            Keys.A -> continuousMove(-5f, "sideways")
+            Keys.D -> continuousMove(5f, "sideways")
+             Keys.W -> continuousMove(-5f, "linear")
+             Keys.S -> continuousMove(5f, "linear")
         }
         return super.keyDown(p0)
     }
