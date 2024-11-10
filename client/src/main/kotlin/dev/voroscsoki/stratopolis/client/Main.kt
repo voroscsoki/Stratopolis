@@ -26,7 +26,7 @@ class Main {
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
             config.setWindowedMode(1600,900)
-            config.useVsync(false)
+            config.useVsync(true)
             config.setForegroundFPS(120)
             Lwjgl3Application(appScene, config)
         }

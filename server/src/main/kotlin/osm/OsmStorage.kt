@@ -38,8 +38,8 @@ class OsmStorage(
                 Building(
                     relation.value.id, relation.value.tags.map { SerializableTag(it) }, EntityType.Relation,
                     relation.value.members.filter { it.type == EntityType.Way }.flatMap { w -> ways[w.id]!!.nodeIds.mapNotNull { nodes[it] } }.nodeAverage(),
-                    relation.value.members.filter { it is OsmWay }
-                        .map { way -> SerializableWay((way as OsmWay), (way as OsmWay).nodeIds.map { nodes[it]!! }) }
+                    relation.value.members.filter { it.type == EntityType.Way }
+                        .map { w -> SerializableWay(ways[w.id]!!, ways[w.id]!!.nodeIds.mapNotNull { nodes[it] })}
                 )
             )
         }
