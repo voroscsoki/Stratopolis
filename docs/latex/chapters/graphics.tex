@@ -53,14 +53,19 @@ private suspend fun <T> runOnRenderThread(block: () -> T): T {
 \end{lstlisting}
 
 \section{Implementáció}
-A program grafikus része elemekre bontható. Az épületek bemutatására hivatott interaktív, három dimenziós OpenGL teret csomagoló, főszerepű jeleneten kívül több független, felhasználói kommunikációt megvalósító komponens is létezik.
+A program grafikus része modulokra bontható. Az épületek bemutatására hivatott interaktív, három dimenziós OpenGL teret csomagoló, főszerepű jeleneten kívül több független, felhasználói kommunikációt megvalósító komponens is létezik.
 
 \section{A fő jelenet}
-A grafikus felület egyszerűsített, domborzatot figyelmen kívül hagyó módon ábrázolja az egyes épületeket. Stílusa inspirációt merít a kortárs városépítő videojátékok (SimCity, Cities: Skylines) és a Google Earth kinézetből.
+A grafikus felület egyszerűsített, domborzatot figyelmen kívül hagyó módon ábrázolja az egyes épületeket. Stílusa inspirációt merít a kortárs városépítő videojátékok (SimCity, Cities: Skylines) és a Google Earth kinézetéből. %TODO: felülnézet?
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{images/main_graphics_view.png}
+    \caption{A játék fő képernyője, "fals 3D" nézettel.}
+\end{figure}
 
 \subsection{Egyedi kamera irányítás}
 
-A libGDX-be beépített CameraInputController 
+A libGDX jelenetei egyetlen bemenetet kezelő objektumot, vagy azok összességéből készült multiplexert képesek tárolni. Bár egy nagy osztály is kezelhetné a kamera irányítását, valamint az egyéb menüfunkciókat, ezt a két kategóriát külön építettem fel. A grafikus könyvtárban elérhető CameraInputController csak az egérrel végzett forgatást és nagyítást adja hozzá az azt meghívó jelenetnek. Ehelyett saját kamerakezelőt írtam, ami a felülnézet zárolásán kívül négy tengelyes, finomított, lendülettel bíró mozgást ad a játékos kezébe.
 
 \
  Egy komplexum, de akár az azt határoló vonalak által leírt poligon is lehet konkáv, így a teljes modellek felépítéséhez a fülvágó algoritmust használtam.
