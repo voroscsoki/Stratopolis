@@ -65,7 +65,10 @@ A grafikus felület egyszerűsített, domborzatot figyelmen kívül hagyó módo
 
 \subsection{Egyedi kamera irányítás}
 
-A libGDX jelenetei egyetlen bemenetet kezelő objektumot, vagy azok összességéből készült multiplexert képesek tárolni. Bár egy nagy osztály is kezelhetné a kamera irányítását, valamint az egyéb menüfunkciókat, ezt a két kategóriát külön építettem fel. A grafikus könyvtárban elérhető CameraInputController csak az egérrel végzett forgatást és nagyítást adja hozzá az azt meghívó jelenetnek. Ehelyett saját kamerakezelőt írtam, ami a felülnézet zárolásán kívül négy tengelyes, finomított, lendülettel bíró mozgást ad a játékos kezébe.
+A libGDX jelenetei egyetlen bemenetet feldolgozó adapter objektumot, vagy azok összességéből készült multiplexert képesek tárolni. A könyvtár készítői által ajánlott alapértelmezett 3D keretprogram\cite{basic3DlibGDX} a CameraInputController osztályt használja; ez az eseménykezelő az egérrel végzett forgatást és nagyítást adja hozzá az azt meghívó jelenetnek.
+A publikus InputAdapter interfészre támaszkodva saját kamera- illetve menüfunkciókat fejlesztettem. A megtekintési szög zárolva van, a felhasználó rögzített felülnézetből vizsgálhatja a backend adataiból készült képet. A mozgatás kihasználja a kamera képkockánként szükséges frissítését. A navigációs gombok megnyomása bizonyos mennyiséget hozzáad a jelenlegi a célmozgáshoz, és ez a mérőszám képkockánként százalékosan csökken, ahogy a kamera halad. A számláló kellően kicsi értéke mellett a mozgás azonnal befejeződik.
+Ennek eredménye egy jól kinéző sebességkezelés, ami elkerüli a robotikus, hirtelen irányváltozásokat. Mivel egyszerre több parancs végrehajtása is történhet, minden, a kamera állapotát változtató függvény mutex\footnote{mutual exclusivity} zár alá esik; enélkül a képkockák kirajzolása közben ütköző lépések a képernyő ugrálását idéznék elő.
+% TODO code section
 
 \
  Egy komplexum, de akár az azt határoló vonalak által leírt poligon is lehet konkáv, így a teljes modellek felépítéséhez a fülvágó algoritmust használtam.
