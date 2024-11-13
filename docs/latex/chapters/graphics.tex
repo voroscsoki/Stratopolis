@@ -1,13 +1,15 @@
 %----------------------------------------------------------------------------
-\chapter{Megjelenítési réteg}
+\chapter{Presentation layer}
 
-\section{Alacsony szintű grafikai kihívások}
+\section{Low level graphical challenges}
 
-A gépközeli grafikai interfészek használatával elveszítünk bizonyos egyszerűsített műveleteket, például a komplex alakzatok kódból történő közvetlen felrajzolását. A legtöbb grafikus kártya bizonyos feltételezésekkel él a rajta átfutó adatok feldolgozásakor, és így ezek teljesülésére sem képes garanciát vállalni a programunk. A libGDX kész megoldások helyett erős alapokat biztosít, amivel a fejlesztő saját döntése szerint implementálhatja vagy eseti alapon figyelmen kívül hagyhatja a GPU\footnote{Graphics Processing Unit} írott-íratlan igényeit; pár példát bemutatok ezekből.
+By using near-machine graphical interfaces, we lose certain simplified operations, for instance the ability to draw complex three-dimensional shapes directly from code. Most graphics cards have certain predispositions about the data they process, and in low-level cases, our program can't guarantee that those rules will be followed. LibGDX provides strong foundations in place of ready-made solutions, which the developer can use to implement or in some cases, disregard the GPU's written or unwritten requests. These include the following examples.
+% A gépközeli grafikai interfészek használatával elveszítünk bizonyos egyszerűsített műveleteket, például a komplex alakzatok kódból történő közvetlen felrajzolását. A legtöbb grafikus kártya bizonyos feltételezésekkel él a rajta átfutó adatok feldolgozásakor, és így ezek teljesülésére sem képes garanciát vállalni a programunk. A libGDX kész megoldások helyett erős alapokat biztosít, amivel a fejlesztő saját döntése szerint implementálhatja vagy eseti alapon figyelmen kívül hagyhatja a GPU írott-íratlan igényeit; pár példát bemutatok ezekből.
 
-\subsection{Háromszögelés, fülvágó algoritmus}
+\subsection{Triangulation, ear-clipping algorithm}
 
-A két dimenziós háromszög a leggyakoribb elemi alakzat, amit minden platform grafikus interfésze feltétel nélkül támogat; célszerű lenne tehát a modelleket ezek összességére redukálni.
+Triangles are the most commonly used basic two-dimensional shape that is supported without too many caveats on all platforms. Therefore, it's advisable to reduce any displayed models to a group of them.
+%A két dimenziós háromszög a leggyakoribb elemi alakzat, amit minden platform grafikus interfésze feltétel nélkül támogat; célszerű lenne tehát a modelleket ezek összességére redukálni.
 
 Geometriailag intuitív felosztó eljárás a fülvágó algoritmus (ear-clipping algorithm). Fül alatt olyan háromszöget értünk, amit egy poligon egymást követő három csúcspontja alkot, melyek közül a középső konvex -- tehát az adott pontban a sokszög belső szöge legfeljebb 180 fok ($\pi$ radián).\cite{TriangulationByEarClipping} Az ilyen hármasok által határolt terület garantáltan kivonható a poligonéból, mivel definíció szerint nem lehet lyuk vagy kihagyás benne, így nem kell kompenzálni az üres térért. Az eljárás a megmaradt területre megismételhető, és minden lépés egy újabb háromszög alakú részletet fog eredményezni; így a célunkat el is érjük, amikor már mindössze három csúcspont marad.
 
