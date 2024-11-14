@@ -17,6 +17,9 @@
 *.thm
 *.toc
 *.pdf
+*.fls
+*.synctex.gz
+*.fdb_latexmk
 
 #database
 *.db
