@@ -1,6 +1,8 @@
 package dev.voroscsoki.stratopolis.server
 
 import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.server.Main.Companion.simu
+import dev.voroscsoki.stratopolis.server.Main.Companion.socketServer
 import io.ktor.server.websocket.*
 import io.ktor.util.collections.*
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +13,8 @@ import kotlinx.coroutines.runBlocking
 class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } },
-        BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } }
+        BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } },
+        SimulationStartRequest::class.java to { simu.tick { agent: Agent -> socketServer.sendSocketMessage(AgentStateUpdate(agent)) } }
     )
     private val scope = CoroutineScope(Dispatchers.Default)
 

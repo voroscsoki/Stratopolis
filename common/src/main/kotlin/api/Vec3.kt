@@ -20,7 +20,23 @@ data class Vec3(val x: Double, val y: Double, val z: Double) {
     infix fun dist(other: Vec3): Double {
         return sqrt((other.x - this.x).pow(2.0) + (other.y - this.y).pow(2.0) + (other.z - this.z).pow(2.0))
     }
+    infix operator fun plus(other: Vec3): Vec3 {
+        return Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
+    }
+
     infix operator fun minus(other: Vec3): Vec3 {
         return Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
+    }
+
+    infix operator fun times(amount: Double): Vec3 {
+        return Vec3(this.x * amount, this.y * amount, this.z * amount)
+    }
+
+    fun normalize(): Vec3 {
+        return Vec3(x / length(), y / length(), z / length())
+    }
+
+    private fun length(): Double {
+        return sqrt(x * x + y * y + z * z)
     }
 }

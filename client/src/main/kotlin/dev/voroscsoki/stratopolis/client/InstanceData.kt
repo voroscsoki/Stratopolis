@@ -1,11 +1,13 @@
 package dev.voroscsoki.stratopolis.client
 
 import dev.voroscsoki.stratopolis.common.api.*
+import kotlinx.coroutines.runBlocking
 
 class InstanceData {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeResponse::class.java to { msg -> handleNodes(msg as NodeResponse) },
-        BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) }
+        BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) },
+        AgentStateUpdate::class.java to { msg -> runBlocking { Main.appScene.moveAgent((msg as AgentStateUpdate).agent) } }
     )
 
     private val nodes = ObservableMap<Long, SerializableNode>()

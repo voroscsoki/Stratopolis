@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.ShortArray
+import dev.voroscsoki.stratopolis.common.api.Agent
 import dev.voroscsoki.stratopolis.common.api.Building
 import dev.voroscsoki.stratopolis.common.api.Vec3
 import kotlinx.coroutines.CoroutineScope
@@ -45,6 +46,8 @@ class Basic3D : ApplicationListener {
     private val baselineCoord = Vec3(47.4981399, 0.0, 19.0409544)
     private var renderCounter = 0
     private val position = Vector3()
+    private val agents = ConcurrentHashMap<Long, Agent>()
+    private val arrows = ConcurrentHashMap<Long, ModelInstance>()
 
     // FPS counter variables
     private lateinit var spriteBatch: SpriteBatch
@@ -117,6 +120,9 @@ class Basic3D : ApplicationListener {
                 if (isVisible(cam, element.instance)) modelBatch.render(element.instance, environment)
             }
         }
+        arrows.forEach { (_, instance) ->
+            modelBatch.render(instance, environment)
+        }
         modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
@@ -160,16 +166,6 @@ class Basic3D : ApplicationListener {
             }
         }
     }
-    //TODO: rework
-    /*@OptIn(ExperimentalStdlibApi::class)
-    fun upsertNode(data: SerializableNode) {
-        val inst = ModelInstance(model)
-        val convertedCoords = data.coords.coordConvert()
-        val validVec = Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
-        inst.transform.setTranslation(validVec)
-        inst.materials[0].set(ColorAttribute.createDiffuse(Color.valueOf(rand.nextLong().toHexString())))
-        chunks.getOrPut(getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())) { ConcurrentHashMap() }[data.id] = inst
-    }*/
 
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -274,5 +270,25 @@ class Basic3D : ApplicationListener {
             sum += (v2.x - v1.x) * (v2.z + v1.z)
         }
         return sum > 0
+    }
+
+    suspend fun moveAgent(agent: Agent) {
+        val prev = agents[agent.id]?.location?.coordConvert()
+        agents[agent.id] = agent
+        val current = agent.location.coordConvert()
+        if(prev != null) {
+            runOnRenderThread {
+                val modelBuilder = ModelBuilder()
+                modelBuilder.begin()
+                val builder = modelBuilder.part("line", 1, 3, Material())
+                builder.setColor(Color.RED)
+                builder.line(
+                    prev.x.toFloat(), prev.y.toFloat(), prev.z.toFloat(),
+                    current.x.toFloat(), current.y.toFloat(), current.z.toFloat()
+                )
+                val lineModel = modelBuilder.end()
+                arrows[agent.id] = ModelInstance(lineModel)
+            }
+        }
     }
 }

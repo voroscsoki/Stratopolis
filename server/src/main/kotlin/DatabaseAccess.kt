@@ -10,6 +10,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
@@ -106,6 +107,21 @@ class DatabaseAccess {
                         occupancy = row[Buildings.occupancy]
                     )
                 } else null
+            }
+        }
+
+        fun getBuildingById(id: Long): Building? {
+            return transaction {
+                Buildings.selectAll().where(Buildings.id eq id).map { row ->
+                    Building(
+                        row[Buildings.id].value,
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        type = row[Buildings.type],
+                        coords = row[Buildings.coords],
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        occupancy = row[Buildings.occupancy]
+                    )
+                }.firstOrNull()
             }
         }
     }

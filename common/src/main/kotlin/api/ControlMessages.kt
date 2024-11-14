@@ -24,3 +24,9 @@ class BuildingRequest(val baseCoord: Vec3?, val radius: Vec3? = null) : ControlM
 
 @Serializable
 class BuildingResponse(val res: ControlResult, val buildings: List<Building> = emptyList()) : ControlMessage()
+
+@Serializable
+class SimulationStartRequest : ControlMessage()
+
+@Serializable
+class AgentStateUpdate(val agent: Agent) : ControlMessage()
