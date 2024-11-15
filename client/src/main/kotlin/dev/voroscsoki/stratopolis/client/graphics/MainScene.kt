@@ -30,27 +30,32 @@ import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.random.Random
 
 
 data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
 
-class Basic3D : ApplicationListener {
+class MainScene : ApplicationListener {
+    //libGDX variables
     private lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
     private lateinit var defaultBoxModel: Model
     private lateinit var arrowModel: Model
-    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
-    private var visibleChunks = setOf<String>()
-    private val CHUNKSIZE = 500
     private lateinit var environment: Environment
-    private val rand = Random(0)
+
+    //constants
+    private val chunkSize = 500
     private val baselineCoord = Vec3(47.472935, 0.0, 19.053410)
-    private var renderCounter = 0
-    private val position = Vector3()
+
+    //updatables
+    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     private val arrows = ConcurrentHashMap<Long, ModelInstance>()
+    private var visibleChunks = setOf<String>()
+
+    //helper
+    private var renderCounter = 0
+    private val position = Vector3()
 
     // text variables
     private var currentTime: Instant = Instant.fromEpochSeconds(0)
@@ -157,8 +162,8 @@ class Basic3D : ApplicationListener {
 
     private fun getChunkKey(xCoord: Float, zCoord: Float): String {
         //floor to nearest multiple of CHUNK_SIZE
-        val x = Math.floorDiv(xCoord.toInt(), CHUNKSIZE) * CHUNKSIZE
-        val z = Math.floorDiv(zCoord.toInt(), CHUNKSIZE) * CHUNKSIZE
+        val x = Math.floorDiv(xCoord.toInt(), chunkSize) * chunkSize
+        val z = Math.floorDiv(zCoord.toInt(), chunkSize) * chunkSize
         return "$x:$z"
     }
 
@@ -168,12 +173,12 @@ class Basic3D : ApplicationListener {
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
-        val baseX = Math.floorDiv(position.x.toInt(), CHUNKSIZE) * CHUNKSIZE
-        val baseZ = Math.floorDiv(position.z.toInt(), CHUNKSIZE) * CHUNKSIZE
+        val baseX = Math.floorDiv(position.x.toInt(), chunkSize) * chunkSize
+        val baseZ = Math.floorDiv(position.z.toInt(), chunkSize) * chunkSize
         return buildList {
             for (x in -radius..radius) {
                 for (z in -radius..radius) {
-                    add("${baseX + x * CHUNKSIZE}:${baseZ + z * CHUNKSIZE}")
+                    add("${baseX + x * chunkSize}:${baseZ + z * chunkSize}")
                 }
             }
         }
