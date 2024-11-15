@@ -38,12 +38,13 @@ class Basic3D : ApplicationListener {
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
     private lateinit var defaultBoxModel: Model
+    private lateinit var arrowModel: Model
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
     private var visibleChunks = setOf<String>()
     private val CHUNKSIZE = 500
     private lateinit var environment: Environment
     private val rand = Random(0)
-    private val baselineCoord = Vec3(47.4981399, 0.0, 19.0409544)
+    private val baselineCoord = Vec3(47.472935, 0.0, 19.053410)
     private var renderCounter = 0
     private val position = Vector3()
     private val agents = ConcurrentHashMap<Long, Agent>()
@@ -74,7 +75,7 @@ class Basic3D : ApplicationListener {
 
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
-            position.set(0f, 10f, 0f)
+            position.set(0f, 100f, 0f)
             lookAt(0f,0f,0f)
             up.set(1f,0f,0f)
             near = 1f
@@ -86,6 +87,12 @@ class Basic3D : ApplicationListener {
         defaultBoxModel = modelBuilder.createBox(
             1.6f, 0.8f, 1.6f,
             Material(ColorAttribute.createDiffuse(Color.GREEN)),
+            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+        )
+        arrowModel = modelBuilder.createArrow(
+            Vector3(0f, 100f, 0f),
+            Vector3(20f, 100f, 0f),
+            Material(ColorAttribute.createDiffuse(Color.RED)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
         val inst = ModelInstance(defaultBoxModel)
@@ -278,16 +285,14 @@ class Basic3D : ApplicationListener {
         val current = agent.location.coordConvert()
         if(prev != null) {
             runOnRenderThread {
-                val modelBuilder = ModelBuilder()
-                modelBuilder.begin()
-                val builder = modelBuilder.part("line", 1, 3, Material())
-                builder.setColor(Color.RED)
-                builder.line(
-                    prev.x.toFloat(), prev.y.toFloat(), prev.z.toFloat(),
-                    current.x.toFloat(), current.y.toFloat(), current.z.toFloat()
-                )
-                val lineModel = modelBuilder.end()
-                arrows[agent.id] = ModelInstance(lineModel)
+                (arrows.putIfAbsent(agent.id, ModelInstance(arrowModel)) ?: arrows[agent.id])!!.apply {
+                    //transform to point from prev to current
+                    transform.setToTranslation(Vector3(prev.x.toFloat(), prev.y.toFloat(), prev.z.toFloat()))
+                    /*val angle = (current - prev).let {
+                        Math.toDegrees(asin(it.z/it.x)).toFloat()
+                    }
+                    transform.rotate(Vector3(0f, 1f, 0f), angle)*/
+                }
             }
         }
     }
