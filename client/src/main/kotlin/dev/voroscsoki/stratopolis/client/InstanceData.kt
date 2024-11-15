@@ -1,6 +1,13 @@
 package dev.voroscsoki.stratopolis.client
 
-import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.SerializableNode
+import dev.voroscsoki.stratopolis.common.networking.AgentStateUpdate
+import dev.voroscsoki.stratopolis.common.networking.BuildingResponse
+import dev.voroscsoki.stratopolis.common.networking.ControlMessage
+import dev.voroscsoki.stratopolis.common.networking.NodeResponse
+import dev.voroscsoki.stratopolis.common.util.MapChange
+import dev.voroscsoki.stratopolis.common.util.ObservableMap
 import kotlinx.coroutines.runBlocking
 
 class InstanceData {

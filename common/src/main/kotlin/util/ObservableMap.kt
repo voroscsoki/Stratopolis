@@ -1,11 +1,11 @@
-package dev.voroscsoki.stratopolis.common.api
+package dev.voroscsoki.stratopolis.common.util
 
 class ObservableMap<K,V>(
     private val innerMap: MutableMap<K,V> = mutableMapOf()
 ) : MutableMap<K,V> by innerMap {
-    val listeners = mutableListOf<(MapChange<K,V>) -> Unit>()
+    val listeners = mutableListOf<(MapChange<K, V>) -> Unit>()
 
-    private fun notifyAll(change: MapChange<K,V>) {
+    private fun notifyAll(change: MapChange<K, V>) {
         listeners.forEach { it(change) }
     }
 
@@ -28,6 +28,6 @@ class ObservableMap<K,V>(
 }
 
 sealed class MapChange<T, U> {
-    data class Put<T,U>(val key: T, val oldVal: U?, val newVal: U) : MapChange<T,U>()
-    data class Remove<T,U>(val key: T, val oldVal: U) : MapChange<T,U>()
+    data class Put<T,U>(val key: T, val oldVal: U?, val newVal: U) : MapChange<T, U>()
+    data class Remove<T,U>(val key: T, val oldVal: U) : MapChange<T, U>()
 }

@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.client
+package dev.voroscsoki.stratopolis.client.graphics
 
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import kotlinx.coroutines.*

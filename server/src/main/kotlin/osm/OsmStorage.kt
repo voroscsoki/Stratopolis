@@ -1,9 +1,14 @@
 package dev.voroscsoki.stratopolis.server.osm
 
-import api.SerializableWay
 import de.topobyte.osm4j.core.model.iface.*
 import de.topobyte.osm4j.pbf.seq.PbfIterator
-import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.SerializableTag
+import dev.voroscsoki.stratopolis.common.elements.SerializableWay
+import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.members
+import dev.voroscsoki.stratopolis.common.util.nodeIds
+import dev.voroscsoki.stratopolis.common.util.tags
 import java.io.File
 
 

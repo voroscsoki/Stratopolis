@@ -1,6 +1,6 @@
-package dev.voroscsoki.stratopolis.server.api
+package dev.voroscsoki.stratopolis.server.osm
 
-import dev.voroscsoki.stratopolis.common.api.Agent
+import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant

@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.common.api
+package dev.voroscsoki.stratopolis.common.util
 
 import de.topobyte.osm4j.core.model.iface.*
 

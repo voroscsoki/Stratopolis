@@ -1,6 +1,6 @@
-package dev.voroscsoki.stratopolis.common.api
-import api.SerializableWay
+package dev.voroscsoki.stratopolis.common.elements
 import de.topobyte.osm4j.core.model.iface.EntityType
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -1,5 +1,6 @@
-package dev.voroscsoki.stratopolis.common.api
+package dev.voroscsoki.stratopolis.common.elements
 
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.serialization.Serializable
 
 @Serializable

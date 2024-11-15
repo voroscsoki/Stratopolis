@@ -1,4 +1,8 @@
-package dev.voroscsoki.stratopolis.common.api
+package dev.voroscsoki.stratopolis.common.networking
+import dev.voroscsoki.stratopolis.common.elements.Agent
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.SerializableNode
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 

@@ -1,13 +1,12 @@
-package dev.voroscsoki.stratopolis.client.api
+package dev.voroscsoki.stratopolis.client.networking
 
-import dev.voroscsoki.stratopolis.common.api.Building
+import dev.voroscsoki.stratopolis.common.elements.Building
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 

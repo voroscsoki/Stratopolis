@@ -1,7 +1,7 @@
 package dev.voroscsoki.stratopolis.server.db
 
 import de.topobyte.osm4j.core.model.iface.EntityType
-import dev.voroscsoki.stratopolis.common.api.Vec3
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column

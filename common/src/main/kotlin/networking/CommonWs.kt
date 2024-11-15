@@ -1,5 +1,5 @@
 
-package dev.voroscsoki.stratopolis.common.api
+package dev.voroscsoki.stratopolis.common.networking
 import io.ktor.websocket.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

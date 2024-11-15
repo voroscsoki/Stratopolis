@@ -1,6 +1,8 @@
-package dev.voroscsoki.stratopolis.server
+package dev.voroscsoki.stratopolis.server.networking
 
-import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.common.elements.Agent
+import dev.voroscsoki.stratopolis.common.networking.*
+import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.Main.Companion.simu
 import dev.voroscsoki.stratopolis.server.Main.Companion.socketServer
 import io.ktor.server.websocket.*

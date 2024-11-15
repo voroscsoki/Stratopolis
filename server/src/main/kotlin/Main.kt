@@ -1,7 +1,8 @@
 package dev.voroscsoki.stratopolis.server
 
-import dev.voroscsoki.stratopolis.server.api.Simulation
+import dev.voroscsoki.stratopolis.server.networking.SocketServer
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
+import dev.voroscsoki.stratopolis.server.osm.Simulation
 import io.ktor.server.netty.*
 import java.io.File
 

@@ -1,6 +1,6 @@
 package dev.voroscsoki.stratopolis.server.db
 
-import dev.voroscsoki.stratopolis.common.api.Vec3
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import org.jetbrains.exposed.sql.ColumnType
 
 object Vec3ColumnType : ColumnType<Vec3>() {

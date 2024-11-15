@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.client
+package dev.voroscsoki.stratopolis.client.graphics
 
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
@@ -18,9 +18,10 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.ShortArray
-import dev.voroscsoki.stratopolis.common.api.Agent
-import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.Vec3
+import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
+import dev.voroscsoki.stratopolis.common.elements.Agent
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -136,13 +137,14 @@ class Basic3D : ApplicationListener {
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
-        font.draw(spriteBatch, "Time: ${currentTime}", 10f, Gdx.graphics.height - 30f)
+        font.draw(spriteBatch, "Time: $currentTime", 10f, Gdx.graphics.height - 30f)
         spriteBatch.end()
     }
 
     override fun dispose() {
         modelBatch.dispose()
         spriteBatch.dispose()
+        chunks.values.forEach { c -> c.values.forEach { it.model.dispose() } }
         font.dispose()
     }
 

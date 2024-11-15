@@ -1,9 +1,9 @@
 package dev.voroscsoki.stratopolis.server.db
 
-import api.SerializableWay
-import dev.voroscsoki.stratopolis.common.api.Building
-import dev.voroscsoki.stratopolis.common.api.SerializableNode
-import dev.voroscsoki.stratopolis.common.api.SerializableTag
+import dev.voroscsoki.stratopolis.common.elements.SerializableWay
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.SerializableNode
+import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass

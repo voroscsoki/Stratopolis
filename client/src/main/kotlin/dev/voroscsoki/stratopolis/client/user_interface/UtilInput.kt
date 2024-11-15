@@ -1,7 +1,12 @@
-package dev.voroscsoki.stratopolis.client
+package dev.voroscsoki.stratopolis.client.user_interface
 
 import com.badlogic.gdx.InputAdapter
-import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.client.Main
+import dev.voroscsoki.stratopolis.common.networking.BuildingRequest
+import dev.voroscsoki.stratopolis.common.networking.NodeRequest
+import dev.voroscsoki.stratopolis.common.networking.SimulationStartRequest
+import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.getMemoryUsage
 import kotlinx.coroutines.runBlocking
 
 class UtilInput : InputAdapter() {

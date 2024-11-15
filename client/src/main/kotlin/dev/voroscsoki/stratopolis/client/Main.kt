@@ -2,7 +2,9 @@ package dev.voroscsoki.stratopolis.client
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
-import dev.voroscsoki.stratopolis.client.api.HttpAccessor
+import dev.voroscsoki.stratopolis.client.networking.HttpAccessor
+import dev.voroscsoki.stratopolis.client.graphics.Basic3D
+import dev.voroscsoki.stratopolis.client.networking.SocketClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 

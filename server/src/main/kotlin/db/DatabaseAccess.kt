@@ -1,7 +1,12 @@
 package dev.voroscsoki.stratopolis.server
 
-import api.SerializableWay
-import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.SerializableNode
+import dev.voroscsoki.stratopolis.common.elements.SerializableTag
+import dev.voroscsoki.stratopolis.common.elements.SerializableWay
+import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.nodeIds
+import dev.voroscsoki.stratopolis.common.util.tags
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Nodes
 import dev.voroscsoki.stratopolis.server.db.Ways

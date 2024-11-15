@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.common.api
+package dev.voroscsoki.stratopolis.common.util
 
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
