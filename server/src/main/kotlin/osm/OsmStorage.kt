@@ -46,6 +46,8 @@ class OsmStorage(
         return output.toHashSet()
     }
 
+    //private fun createRoadSet(): HashSet<>
+
     private fun processOsmEntities(iter: Iterator<EntityContainer>) {
         for (entity in iter) {
             when (val osmEntity = entity.entity) {

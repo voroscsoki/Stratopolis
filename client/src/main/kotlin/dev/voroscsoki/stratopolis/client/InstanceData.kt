@@ -7,7 +7,7 @@ class InstanceData {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeResponse::class.java to { msg -> handleNodes(msg as NodeResponse) },
         BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) },
-        AgentStateUpdate::class.java to { msg -> runBlocking { Main.appScene.moveAgent((msg as AgentStateUpdate).agent) } }
+        AgentStateUpdate::class.java to { msg -> runBlocking { (msg as AgentStateUpdate).let { Main.appScene.moveAgents(it.agents, it.time) } }}
     )
 
     private val nodes = ObservableMap<Long, SerializableNode>()

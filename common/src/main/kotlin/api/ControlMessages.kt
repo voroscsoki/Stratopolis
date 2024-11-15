@@ -1,4 +1,5 @@
 package dev.voroscsoki.stratopolis.common.api
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 enum class ControlResult {
@@ -29,4 +30,4 @@ class BuildingResponse(val res: ControlResult, val buildings: List<Building> = e
 class SimulationStartRequest : ControlMessage()
 
 @Serializable
-class AgentStateUpdate(val agent: Agent) : ControlMessage()
+class AgentStateUpdate(val agents: List<Agent>, val time: Instant) : ControlMessage()

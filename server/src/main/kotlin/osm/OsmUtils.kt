@@ -11,6 +11,10 @@ fun OsmEntity.isBuilding(): Boolean {
     return this.tags.any { it.key == "building" }
 }
 
+fun OsmEntity.isRoad(): Boolean {
+    return this is OsmWay && this.tags.any { it.key == "highway" }
+}
+
 fun List<OsmNode>.nodeAverage() : Vec3 {
     val coords = this.map { it.latitude to it.longitude }
     val avgLat = coords.map { it.first }.average()

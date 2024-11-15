@@ -3,6 +3,7 @@ package dev.voroscsoki.stratopolis.server.api
 import dev.voroscsoki.stratopolis.common.api.Agent
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
 
@@ -23,14 +24,14 @@ class Simulation {
         }
     }
 
-    fun tick(callback: (Agent) -> Unit) {
+    fun tick(callback: (List<Agent>, Instant) -> Unit) {
+        clock += 1.minutes
         agents.forEach { ag ->
             ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords) * (1 / 10.0)
-            callback(ag)
             if (ag.location dist ag.targetBuilding.coords < 0.0001) {
                 ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
             }
         }
-        clock += 1.minutes
+        callback(agents, clock)
     }
 }

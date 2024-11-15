@@ -24,6 +24,7 @@ import dev.voroscsoki.stratopolis.common.api.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
@@ -50,7 +51,8 @@ class Basic3D : ApplicationListener {
     private val agents = ConcurrentHashMap<Long, Agent>()
     private val arrows = ConcurrentHashMap<Long, ModelInstance>()
 
-    // FPS counter variables
+    // text variables
+    private var currentTime: Instant = Instant.fromEpochSeconds(0)
     private lateinit var spriteBatch: SpriteBatch
     private lateinit var font: BitmapFont
 
@@ -134,6 +136,7 @@ class Basic3D : ApplicationListener {
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
+        font.draw(spriteBatch, "Time: ${currentTime}", 10f, Gdx.graphics.height - 30f)
         spriteBatch.end()
     }
 
@@ -279,19 +282,22 @@ class Basic3D : ApplicationListener {
         return sum > 0
     }
 
-    suspend fun moveAgent(agent: Agent) {
-        val prev = agents[agent.id]?.location?.coordConvert()
-        agents[agent.id] = agent
-        val current = agent.location.coordConvert()
-        if(prev != null) {
-            runOnRenderThread {
-                (arrows.putIfAbsent(agent.id, ModelInstance(arrowModel)) ?: arrows[agent.id])!!.apply {
-                    //transform to point from prev to current
-                    transform.setToTranslation(Vector3(prev.x.toFloat(), prev.y.toFloat(), prev.z.toFloat()))
-                    /*val angle = (current - prev).let {
-                        Math.toDegrees(asin(it.z/it.x)).toFloat()
+    suspend fun moveAgents(received: List<Agent>, time: Instant) {
+        currentTime = time
+        received.forEach { agent ->
+            val prev = agents[agent.id]?.location?.coordConvert()
+            agents[agent.id] = agent
+            val current = agent.location.coordConvert()
+            if(prev != null) {
+                runOnRenderThread {
+                    (arrows.putIfAbsent(agent.id, ModelInstance(arrowModel)) ?: arrows[agent.id])!!.apply {
+                        //transform to point from prev to current
+                        transform.setToTranslation(Vector3(prev.x.toFloat(), prev.y.toFloat(), prev.z.toFloat()))
+                        /*val angle = (current - prev).let {
+                            Math.toDegrees(asin(it.z/it.x)).toFloat()
+                        }
+                        transform.rotate(Vector3(0f, 1f, 0f), angle)*/
                     }
-                    transform.rotate(Vector3(0f, 1f, 0f), angle)*/
                 }
             }
         }

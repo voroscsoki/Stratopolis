@@ -9,12 +9,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Instant
 
 class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } },
         BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } },
-        SimulationStartRequest::class.java to { simu.tick { agent: Agent -> socketServer.sendSocketMessage(AgentStateUpdate(agent)) } }
+        SimulationStartRequest::class.java to { simu.tick { agents: List<Agent>, time: Instant -> socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } }
     )
     private val scope = CoroutineScope(Dispatchers.Default)
 
