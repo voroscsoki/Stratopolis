@@ -47,7 +47,7 @@ class MainScene : ApplicationListener {
 
     //constants
     private val chunkSize = 500
-    private val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
+    val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
@@ -63,19 +63,6 @@ class MainScene : ApplicationListener {
     private var currentTime: Instant = Instant.fromEpochSeconds(0)
     private lateinit var spriteBatch: SpriteBatch
     private lateinit var font: BitmapFont
-
-    private fun Vec3.coordConvert(scaleOnly: Boolean = false): Vec3 {
-        if(scaleOnly) {
-            val x = this.x * 100000
-            val y = this.y * 100000
-            val z = this.z * 100000
-            return Vec3(x, y, z)
-        }
-        val x = (this.x - baselineCoord.x) * 100000
-        val y = (this.y - baselineCoord.y) * 100000
-        val z = (this.z - baselineCoord.z) * 100000
-        return Vec3(x, y, z)
-    }
 
     override fun create() {
         environment = Environment().apply {
@@ -171,6 +158,7 @@ class MainScene : ApplicationListener {
 
     private fun updateVisibleChunks() {
         val res = nearbyChunks(cam.position, 5)
+        //TODO: request buildings for new chunks
         visibleChunks = res.toSet()
     }
 
@@ -190,7 +178,7 @@ class MainScene : ApplicationListener {
         CoroutineScope(Dispatchers.IO).launch {
             val model = data.toModel() ?: defaultBoxModel
             val inst = ModelInstance(model)
-            val convertedCoords = data.coords.coordConvert()
+            val convertedCoords = data.coords.toSceneCoords(this@MainScene.baselineCoord)
             val validVec =
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
             inst.transform.setTranslation(validVec)
@@ -222,7 +210,7 @@ class MainScene : ApplicationListener {
         if (this.ways.isEmpty()) return null
         var baseNodes = this.ways.first().nodes.map {
                 node -> val x = node.coords - this.coords
-            x.coordConvert(true)
+            x.toSceneCoords(this@MainScene.baselineCoord, true)
         }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
         if(baseNodes.size < 3) return null
 
@@ -294,9 +282,9 @@ class MainScene : ApplicationListener {
     suspend fun moveAgents(received: List<Agent>, time: Instant) {
         currentTime = time
         received.forEach { agent ->
-            val prev = agents[agent.id]?.location?.coordConvert()
+            val prev = agents[agent.id]?.location?.toSceneCoords(this@MainScene.baselineCoord)
             agents[agent.id] = agent
-            val current = agent.location.coordConvert()
+            val current = agent.location.toSceneCoords(this@MainScene.baselineCoord)
             if(prev != null) {
                 runOnRenderThread {
                     (arrows.putIfAbsent(agent.id, ModelInstance(arrowModel)) ?: arrows[agent.id])!!.apply {
