@@ -306,13 +306,12 @@ class MainScene : ApplicationListener {
         //check for intersection with buildings
         val intersection = chunks.asSequence().filter { visibleChunks.contains(it.key) }.flatMap { it.value.values }
             .filter { isVisible(cam, it.instance) }
-            .map { it.instance }
-            .mapNotNull { instance ->
+            .mapNotNull { bldg ->
                 val intersection = Vector3()
                 val bbox = BoundingBox()
-                if (Intersector.intersectRayBounds(ray, instance.calculateBoundingBox(bbox), intersection)) intersection else null
+                if (Intersector.intersectRayBounds(ray, bldg.instance.calculateBoundingBox(bbox), intersection)) intersection to bldg else null
             }
-            .minByOrNull { it.dst(cam.position) }
-        println("Intersection: $intersection")
+            .minByOrNull { it.first.dst(cam.position) }
+        println("Intersection: ${intersection?.second?.apiData?.tags}")
     }
 }

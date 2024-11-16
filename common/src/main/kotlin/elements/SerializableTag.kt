@@ -6,4 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 class SerializableTag(val key: String, val value: String) {
     constructor(wrappedTag: OsmTag) : this(wrappedTag.key, wrappedTag.value)
+
+    override fun toString(): String {
+        return "$key=$value"
+    }
 }
