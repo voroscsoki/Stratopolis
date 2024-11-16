@@ -36,7 +36,7 @@ class SocketServer {
     private fun handleBuildingRequest(msg: BuildingRequest) {
         scope.launch {
             DatabaseAccess.getBuildings(msg.baseCoord, msg.radius)
-                .chunked(1000)
+                .chunked(10000)
                 .forEach { chunk ->
                     launch {
                         sendSocketMessage(BuildingResponse(ControlResult.OK, chunk))

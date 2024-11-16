@@ -113,7 +113,7 @@ class MainScene : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
-        if (renderCounter++ == 20) {
+        if (renderCounter++ == 60) {
             renderCounter = 0
             updateVisibleChunks()
         }
@@ -157,9 +157,18 @@ class MainScene : ApplicationListener {
     }
 
     private fun updateVisibleChunks() {
-        val res = nearbyChunks(cam.position, 5)
-        //TODO: request buildings for new chunks
-        visibleChunks = res.toSet()
+        val res = nearbyChunks(cam.position, 5).toSet()
+        if(res.toSet() != visibleChunks) {
+            /*val toRemove = visibleChunks - res
+            toRemove.forEach { key ->
+                chunks[key]?.values?.forEach { it.instance.model.dispose() }
+                chunks.remove(key)
+            }
+            CoroutineScope(Dispatchers.IO).launch {
+                Main.socket.sendSocketMessage(BuildingRequest(cam.position.toWorldCoords(baselineCoord), 0.1f))
+            }*/
+        }
+        visibleChunks = res
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
@@ -176,6 +185,7 @@ class MainScene : ApplicationListener {
 
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
+            //if(chunks.values.any { it.containsKey(data.id) }) return@launch
             val model = data.toModel() ?: defaultBoxModel
             val inst = ModelInstance(model)
             val convertedCoords = data.coords.toSceneCoords(this@MainScene.baselineCoord)
