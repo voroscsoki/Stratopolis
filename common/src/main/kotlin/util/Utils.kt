@@ -13,8 +13,8 @@ val OsmWay.nodeIds: List<Long>
     get() = (0..<this.numberOfNodes).map { this.getNodeId(it) }
 
 fun List<OsmNode>.getAverage() : Vec3 {
-    val sum = this.fold(Pair(0.0, 0.0)) { acc, node -> Pair(acc.first + node.latitude, acc.second + node.longitude) }
-    return Vec3(sum.first / this.size,0.0, sum.second / this.size)
+    val sum = this.fold(Pair(0f, 0f)) { acc, node -> Pair(acc.first + node.latitude.toFloat(), acc.second + node.longitude.toFloat()) }
+    return Vec3(sum.first / this.size,0f, sum.second / this.size)
 }
 
 fun getMemoryUsage(): Long {

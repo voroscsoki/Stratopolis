@@ -80,7 +80,7 @@ class DatabaseAccess {
 
             return resultRows.mapNotNull { row ->
                 val buildingCoords = row[Nodes.coords]
-                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
+                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0f
 
                 if (rangeDegrees == null || distance <= rangeDegrees) {
                     SerializableNode(
@@ -92,16 +92,16 @@ class DatabaseAccess {
             }
         }
 
-        fun getBuildings(baseCoord: Vec3? = null, rangeDegrees: Float? = null): Sequence<Building> {
+        fun getBuildings(baseCoord: Vec3? = null, range: Float? = null): Sequence<Building> {
             val resultRows = transaction {
                 Buildings.selectAll().iterator().asSequence()
             }
 
             return resultRows.mapNotNull { row ->
                 val buildingCoords = row[Buildings.coords]
-                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
+                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0f
 
-                if (rangeDegrees == null || distance <= rangeDegrees) {
+                if (range == null || distance <= range) {
                     //TODO: use .toBuilding() (issue is the transaction scope)
                     Building(
                         row[Buildings.id].value,

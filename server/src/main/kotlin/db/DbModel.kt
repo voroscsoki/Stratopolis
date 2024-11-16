@@ -12,7 +12,7 @@ object Nodes : IdTable<Long>("nodes") {
     override val id: Column<EntityID<Long>> = long("osm_id").entityId()
     override val primaryKey = PrimaryKey(id)
 
-    val coords = customVec3("coords").default(Vec3(0.0, 0.0, 0.0))
+    val coords = customVec3("coords").default(Vec3(0f, 0f, 0f))
     val way = reference("wayId", Ways).nullable()
     val tags = text("tags")
 }

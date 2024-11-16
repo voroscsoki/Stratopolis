@@ -16,7 +16,9 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.EarClippingTriangulator
+import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.ShortArray
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
 import dev.voroscsoki.stratopolis.common.elements.Agent
@@ -36,7 +38,7 @@ data class GraphicalBuilding(val apiData: Building?, val model: Model, val insta
 
 class MainScene : ApplicationListener {
     //libGDX variables
-    private lateinit var cam: PerspectiveCamera
+    lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
     private lateinit var defaultBoxModel: Model
@@ -45,7 +47,7 @@ class MainScene : ApplicationListener {
 
     //constants
     private val chunkSize = 500
-    private val baselineCoord = Vec3(47.472935, 0.0, 19.053410)
+    private val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
@@ -109,7 +111,7 @@ class MainScene : ApplicationListener {
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(cam))
-            addProcessor(UtilInput())
+            addProcessor(UtilInput(this@MainScene))
         }
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
@@ -149,7 +151,7 @@ class MainScene : ApplicationListener {
     override fun dispose() {
         modelBatch.dispose()
         spriteBatch.dispose()
-        chunks.values.forEach { c -> c.values.forEach { it.model.dispose() } }
+        chunks.values.forEach { c -> c.values.forEach { it.instance.model.dispose() } }
         font.dispose()
     }
 
@@ -308,5 +310,21 @@ class MainScene : ApplicationListener {
                 }
             }
         }
+    }
+
+    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int) {
+        //cast ray from screen coordinates
+        val ray = cam.getPickRay(screenCoordX.toFloat(), screenCoordY.toFloat())
+        //check for intersection with buildings
+        val intersection = chunks.asSequence().filter { visibleChunks.contains(it.key) }.flatMap { it.value.values }
+            .filter { isVisible(cam, it.instance) }
+            .map { it.instance }
+            .mapNotNull { instance ->
+                val intersection = Vector3()
+                val bbox = BoundingBox()
+                if (Intersector.intersectRayBounds(ray, instance.calculateBoundingBox(bbox), intersection)) intersection else null
+            }
+            .minByOrNull { it.dst(cam.position) }
+        println("Intersection: $intersection")
     }
 }

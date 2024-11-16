@@ -27,7 +27,7 @@ class Simulation {
     fun tick(callback: (List<Agent>, Instant) -> Unit) {
         clock += 1.minutes
         agents.forEach { ag ->
-            ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords) * (1 / 10.0)
+            ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords) * (1 / 10f)
             if (ag.location dist ag.targetBuilding.coords < 0.0001) {
                 ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
             }

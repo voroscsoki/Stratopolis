@@ -8,7 +8,7 @@ data class Building(
     val id: Long,
     val tags: List<SerializableTag>,
     val type: EntityType,
-    val coords: Vec3 = Vec3(0.0,0.0,0.0),
+    val coords: Vec3 = Vec3(0f,0f,0f),
     val ways: List<SerializableWay>,
     var occupancy: Int = 0,
 )

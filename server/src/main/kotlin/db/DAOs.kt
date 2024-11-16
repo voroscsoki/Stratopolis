@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 
+
 class NodeDAO(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<NodeDAO>(Nodes)
     var coords by Nodes.coords

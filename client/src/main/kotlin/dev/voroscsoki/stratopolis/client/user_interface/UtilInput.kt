@@ -1,7 +1,9 @@
 package dev.voroscsoki.stratopolis.client.user_interface
 
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import dev.voroscsoki.stratopolis.client.Main
+import dev.voroscsoki.stratopolis.client.graphics.MainScene
 import dev.voroscsoki.stratopolis.common.networking.BuildingRequest
 import dev.voroscsoki.stratopolis.common.networking.NodeRequest
 import dev.voroscsoki.stratopolis.common.networking.SimulationStartRequest
@@ -9,17 +11,18 @@ import dev.voroscsoki.stratopolis.common.util.Vec3
 import dev.voroscsoki.stratopolis.common.util.getMemoryUsage
 import kotlinx.coroutines.runBlocking
 
-class UtilInput : InputAdapter() {
+class UtilInput(val scene: MainScene) : InputAdapter() {
     override fun keyDown(keycode: Int): Boolean {
         println("Key down: $keycode")
         //F1
         if (keycode == 131) {
             runBlocking {
-                Main.socket.sendSocketMessage(NodeRequest(Vec3(47.4979, 0.0, 19.0402))) }
+                Main.socket.sendSocketMessage(NodeRequest(Vec3(47.4979f, 0f, 19.0402f))) }
         }
         if (keycode == 132) {
             runBlocking {
-                Main.socket.sendSocketMessage(BuildingRequest(Vec3(47.4979, 0.0, 19.0402))) }
+                val source = scene.cam.position.let { Vec3(it.x, it.y, it.z) }
+                Main.socket.sendSocketMessage(BuildingRequest(source, 0.00001f)) }
         }
         if (keycode == 133) {
             runBlocking {
@@ -37,5 +40,10 @@ class UtilInput : InputAdapter() {
 
     override fun keyTyped(character: Char): Boolean {
         return super.keyTyped(character)
+    }
+
+    override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+        if(button == Input.Buttons.LEFT) scene.pickBuildingRay(screenX, screenY)
+        return super.touchDown(screenX, screenY, pointer, button)
     }
 }
