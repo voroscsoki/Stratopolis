@@ -234,15 +234,12 @@ class MainScene : ApplicationListener {
 
     private suspend fun Building.toModel() : Model? {
         if (this.ways.isEmpty()) return null
-        var baseNodes = this.ways.first().nodes.map {
+        val baseNodes = this.ways.first().nodes.map {
                 node -> val x = node.coords - this.coords
             x.toSceneCoords(this@MainScene.baselineCoord, true)
-        }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+        }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }.distinct() //the last node is repeated for closed loops!
         if(baseNodes.size < 3) return null
 
-        val center = baseNodes.reduce { acc, vector3 -> acc.add(vector3) }.scl(1f / baseNodes.size)
-        baseNodes.forEach { it.sub(center) }
-        baseNodes = baseNodes.filter { it != Vector3(0f,0f,0f) }
         val height = this.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
             ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toFloatOrNull()
             ?: 2f
@@ -269,7 +266,7 @@ class MainScene : ApplicationListener {
 
             builder = modelBuilder.part("top", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             topNodes.let {
-                for (tri in 0..<triangles.size - 3 step 3) {
+                for (tri in 0..<triangles.size - 2 step 3) {
                     builder.triangle(
                         it[triangles[tri].toInt()], it[triangles[tri + 1].toInt()], it[triangles[tri + 2].toInt()]
                     )
@@ -285,6 +282,14 @@ class MainScene : ApplicationListener {
                     builder.triangle(baseNodes[i+1], baseNodes[i], topNodes[i+1])
                     builder.triangle(topNodes[i], topNodes[i+1], baseNodes[i])
                 }
+            }
+            //connect last and first
+            if(clockwise) {
+                builder.triangle(topNodes.first(), baseNodes.first(), baseNodes.last())
+                builder.triangle(topNodes.first(), topNodes.last(), baseNodes.last())
+            } else {
+                builder.triangle(baseNodes.first(), baseNodes.last(), topNodes.last())
+                builder.triangle(baseNodes.first(), topNodes.last(), topNodes.first())
             }
             modelBuilder.end()
         }
