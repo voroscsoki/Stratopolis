@@ -19,7 +19,10 @@ import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.utils.ShortArray
+import com.badlogic.gdx.utils.viewport.ScreenViewport
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
@@ -44,6 +47,10 @@ class MainScene : ApplicationListener {
     private lateinit var defaultBoxModel: Model
     private lateinit var arrowModel: Model
     private lateinit var environment: Environment
+
+    private lateinit var stage: Stage
+    private lateinit var skin: Skin
+    private var popup: PopupWindow? = null
 
     //constants
     private val chunkSize = 500
@@ -79,7 +86,10 @@ class MainScene : ApplicationListener {
             far = 2000f
             update()
         }
-        
+
+        stage = Stage(ScreenViewport())
+        skin = createDefaultGdxSkin()
+
         modelBuilder = ModelBuilder()
         defaultBoxModel = modelBuilder.createBox(
             1.6f, 0.8f, 1.6f,
@@ -99,10 +109,12 @@ class MainScene : ApplicationListener {
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(cam))
             addProcessor(UtilInput(this@MainScene))
+            addProcessor(stage)
         }
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
         Gdx.gl.glCullFace(GL40.GL_BACK)
+
 
         // Initialize FPS counter
         spriteBatch = SpriteBatch()
@@ -133,6 +145,10 @@ class MainScene : ApplicationListener {
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
         font.draw(spriteBatch, "Time: $currentTime", 10f, Gdx.graphics.height - 30f)
         spriteBatch.end()
+
+        // Render UI
+        stage.act(Gdx.graphics.deltaTime)
+        stage.draw()
     }
 
     override fun dispose() {
@@ -310,7 +326,7 @@ class MainScene : ApplicationListener {
         }
     }
 
-    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int) {
+    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int) : Pair<Vector3, GraphicalBuilding>? {
         //cast ray from screen coordinates
         val ray = cam.getPickRay(screenCoordX.toFloat(), screenCoordY.toFloat())
         //check for intersection with buildings
@@ -322,6 +338,13 @@ class MainScene : ApplicationListener {
                 if (Intersector.intersectRayBounds(ray, bldg.instance.calculateBoundingBox(bbox), intersection)) intersection to bldg else null
             }
             .minByOrNull { it.first.dst(cam.position) }
-        println("Intersection: ${intersection?.second?.apiData?.tags}")
+        return intersection
+    }
+
+    fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
+        if(popup == null) {
+            popup = PopupWindow(stage, skin, building.apiData!!)
+        }
+        popup!!.show()
     }
 }
