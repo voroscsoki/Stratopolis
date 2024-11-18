@@ -83,7 +83,7 @@ class MainScene : ApplicationListener {
             lookAt(0f,0f,0f)
             up.set(1f,0f,0f)
             near = 1f
-            far = 2000f
+            far = 20000f
             update()
         }
 
@@ -213,7 +213,10 @@ class MainScene : ApplicationListener {
                     when (data.tags.find { it.key == "building" }?.value) {
                         "commercial" -> Color.BLUE
                         "house" -> Color.GREEN
+                        "apartments" -> Color.GREEN
                         "industrial" -> Color.YELLOW
+                        "office" -> Color.GRAY
+                        "public" -> Color.RED
                         else -> Color.CYAN
                     }
                 ))
@@ -331,25 +334,31 @@ class MainScene : ApplicationListener {
         }
     }
 
-    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int) : Pair<Vector3, GraphicalBuilding>? {
+    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int) : Pair<Float, GraphicalBuilding>? {
         //cast ray from screen coordinates
         val ray = cam.getPickRay(screenCoordX.toFloat(), screenCoordY.toFloat())
         //check for intersection with buildings
-        val intersection = chunks.asSequence().filter { visibleChunks.contains(it.key) }.flatMap { it.value.values }
-            .filter { isVisible(cam, it.instance) }
+        val filter = chunks.asSequence().filter { visibleChunks.contains(it.key) }.flatMap { it.value.values }
+            .filter { isVisible(cam, it.instance) }.toList()
+        val intersection = filter
             .mapNotNull { bldg ->
-                val intersection = Vector3()
-                val bbox = BoundingBox()
-                if (Intersector.intersectRayBounds(ray, bldg.instance.calculateBoundingBox(bbox), intersection)) intersection to bldg else null
+                if (Intersector.intersectRayBounds(ray, bldg.instance.getTransformedBoundingBox(), null)) {
+                    ray.origin.dst(bldg.instance.getTransformedBoundingBox().getCenter(Vector3())) to bldg
+                } else null
             }
-            .minByOrNull { it.first.dst(cam.position) }
+            .minByOrNull { it.first }
         return intersection
     }
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
-        if(popup == null) {
-            popup = PopupWindow(stage, skin, building.apiData!!)
-        }
+        popup = PopupWindow(stage, skin, building.apiData!!)
         popup!!.show()
+    }
+
+    fun ModelInstance.getTransformedBoundingBox(): BoundingBox {
+        val bounds = BoundingBox()
+        calculateBoundingBox(bounds)
+        bounds.mul(transform)
+        return bounds
     }
 }
