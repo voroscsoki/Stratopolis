@@ -128,7 +128,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
         CoroutineScope(Dispatchers.IO).launch {
             zoomHandler.requestMove(amountY * 5f
                     * if (invertedZoom) 1f else -1f
-                    * if (ctrlModifier) 4f else 1f)
+                    * if (ctrlModifier) 10f else 1f)
         }
         return super.scrolled(amountX, amountY)
     }

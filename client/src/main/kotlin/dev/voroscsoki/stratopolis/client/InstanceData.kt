@@ -8,7 +8,7 @@ import dev.voroscsoki.stratopolis.common.networking.ControlMessage
 import dev.voroscsoki.stratopolis.common.networking.NodeResponse
 import dev.voroscsoki.stratopolis.common.util.MapChange
 import dev.voroscsoki.stratopolis.common.util.ObservableMap
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 
 class InstanceData {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
@@ -19,6 +19,15 @@ class InstanceData {
 
     private val nodes = ObservableMap<Long, SerializableNode>()
     private val buildings = ObservableMap<Long, Building>()
+    private var throttleJob: Job? = null
+
+    private fun throttleRequest(action: () -> Unit) {
+        throttleJob?.cancel() // Cancel any previous timer
+        throttleJob = CoroutineScope(Dispatchers.Default).launch {
+            delay(1000) // Wait for the specified delay
+            action() // Execute the action if no further calls reset the timer
+        }
+    }
 
     init {
         /*nodes.listeners.add { change ->
@@ -30,7 +39,7 @@ class InstanceData {
 
         buildings.listeners.add { change ->
             when (change) {
-                is MapChange.Put -> Main.appScene.upsertBuilding(change.newVal)
+                is MapChange.Put ->  Main.appScene.upsertBuilding(change.newVal)
                 else -> {}
             }
         }
@@ -42,6 +51,7 @@ class InstanceData {
 
     private fun handleBuildings(msg: BuildingResponse) {
         msg.buildings.forEach { buildings += it.id to it }
+        throttleRequest { Main.appScene.updateCaches() }
     }
 
     private fun handleNodes(msg: NodeResponse) {

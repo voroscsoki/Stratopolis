@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Intersector
+import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -30,7 +31,8 @@ import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.Instant
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
@@ -48,18 +50,18 @@ class MainScene : ApplicationListener {
     private lateinit var defaultBoxModel: Model
     private lateinit var arrowModel: Model
     private lateinit var environment: Environment
-    private lateinit var modelCache: ModelCache
 
     private lateinit var stage: Stage
     private lateinit var skin: Skin
     private var popup: PopupWindow? = null
 
     //constants
-    private val chunkSize = 500
+    private val chunkSize = 5000
     val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
+    private val caches = ConcurrentHashMap<String, Pair<ModelCache, Mutex>>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     private val arrows = ConcurrentHashMap<Long, ModelInstance>()
     private var visibleChunks = mapOf<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
@@ -80,7 +82,6 @@ class MainScene : ApplicationListener {
             add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f))
         }
 
-        modelCache = ModelCache()
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
             position.set(0f, 100f, 0f)
@@ -129,17 +130,14 @@ class MainScene : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
-        if (renderCounter++ == 60) {
-            renderCounter = 0
-            CoroutineScope(Dispatchers.IO).launch { updateVisibleChunks() }
+        if(caches.isNotEmpty()) {
+            modelBatch.begin(cam)
+            caches.values.forEach { if(!it.second.isLocked) { modelBatch.render(it.first, environment) } }
+            arrows.forEach { (_, instance) ->
+                modelBatch.render(instance, environment)
+            }
+            modelBatch.end()
         }
-        cam.update()
-        modelBatch.begin(cam)
-        modelBatch.render(modelCache, environment)
-        arrows.forEach { (_, instance) ->
-            modelBatch.render(instance, environment)
-        }
-        modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
@@ -170,34 +168,6 @@ class MainScene : ApplicationListener {
         val x = Math.floorDiv(xCoord.toInt(), chunkSize) * chunkSize
         val z = Math.floorDiv(zCoord.toInt(), chunkSize) * chunkSize
         return "$x:$z"
-    }
-
-    private suspend fun updateVisibleChunks() {
-        val res = withContext(Dispatchers.Default) {
-            chunks.filter {
-                val coords = it.key.split(":")
-                val x = coords[0].toFloat()
-                val z = coords[1].toFloat()
-                cam.frustum.pointInFrustum(x, 0f, z) || cam.frustum.pointInFrustum(x + chunkSize, 0f, z) ||
-                        cam.frustum.pointInFrustum(x, 0f, z + chunkSize) || cam.frustum.pointInFrustum(x + chunkSize, 0f, z + chunkSize)
-            }
-        }
-        if (res != visibleChunks) {
-            modelCache = updateCache(res)
-            visibleChunks = res
-        }
-    }
-
-    private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
-        val baseX = Math.floorDiv(position.x.toInt(), chunkSize) * chunkSize
-        val baseZ = Math.floorDiv(position.z.toInt(), chunkSize) * chunkSize
-        return buildList {
-            for (x in -radius..radius) {
-                for (z in -radius..radius) {
-                    add("${baseX + x * chunkSize}:${baseZ + z * chunkSize}")
-                }
-            }
-        }
     }
 
     fun upsertBuilding(data: Building) {
@@ -343,18 +313,18 @@ class MainScene : ApplicationListener {
 
     fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int): Pair<Float, GraphicalBuilding>? {
         //cast ray from screen coordinates
+        val inter = Vector3()
         val ray = cam.getPickRay(screenCoordX.toFloat(), screenCoordY.toFloat())
+        Intersector.intersectRayPlane(ray, Plane(Vector3(0f, 1f, 0f), Vector3(0f,0f,0f)), inter)
+
         //check for intersection with buildings
-        val filter = visibleChunks.asSequence().flatMap { it.value.values }
-            .filter { isVisible(cam, it.instance) }.toList()
-        val intersection = filter
-            .mapNotNull { bldg ->
+        return chunks[getChunkKey(inter.x, inter.z)]?.values
+            ?.mapNotNull { bldg ->
                 if (Intersector.intersectRayBounds(ray, bldg.instance.getTransformedBoundingBox(), null)) {
                     ray.origin.dst(bldg.instance.getTransformedBoundingBox().getCenter(Vector3())) to bldg
                 } else null
             }
-            .minByOrNull { it.first }
-        return intersection
+            ?.minByOrNull { it.first }
     }
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
@@ -362,21 +332,28 @@ class MainScene : ApplicationListener {
         popup!!.show()
     }
 
-    fun ModelInstance.getTransformedBoundingBox(): BoundingBox {
+    private fun ModelInstance.getTransformedBoundingBox(): BoundingBox {
         val bounds = BoundingBox()
         calculateBoundingBox(bounds)
         bounds.mul(transform)
         return bounds
     }
 
-    suspend fun updateCache(toAdd: Map<String, ConcurrentHashMap<Long, GraphicalBuilding>>): ModelCache {
-        val cacheInstances = toAdd.values.flatMap {
-            it.values.map { graphicalBuilding -> graphicalBuilding.instance }
+    fun updateCaches() {
+        runBlocking {
+            chunks.keys.forEach { c ->
+                val chunk = chunks[c] ?: return@forEach
+                val cache = caches.getOrPut(c) { ModelCache() to Mutex() }
+                val modelCache = cache.first
+                val mutex = cache.second
+                if (mutex.isLocked) return@forEach
+                mutex.lock()
+                modelCache.begin()
+                chunk.values.forEach { modelCache.add(it.instance) }
+                runOnRenderThread { modelCache.end() }
+                mutex.unlock()
+            }
         }
-        val cpy = ModelCache()
-        cpy.begin()
-        cacheInstances.forEach { cpy.add(it) }
-        runOnRenderThread { cpy.end() }
-        return cpy
     }
+
 }
