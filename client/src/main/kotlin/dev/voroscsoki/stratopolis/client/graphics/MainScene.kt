@@ -30,6 +30,7 @@ import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
@@ -47,6 +48,7 @@ class MainScene : ApplicationListener {
     private lateinit var defaultBoxModel: Model
     private lateinit var arrowModel: Model
     private lateinit var environment: Environment
+    private lateinit var modelCache: ModelCache
 
     private lateinit var stage: Stage
     private lateinit var skin: Skin
@@ -60,11 +62,12 @@ class MainScene : ApplicationListener {
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     private val arrows = ConcurrentHashMap<Long, ModelInstance>()
-    private var visibleChunks = setOf<String>()
+    private var visibleChunks = mapOf<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
 
     //helper
     private var renderCounter = 0
     private val position = Vector3()
+    private val coroScope = CoroutineScope(Dispatchers.IO)
 
     // text variables
     private var currentTime: Instant = Instant.fromEpochSeconds(0)
@@ -77,11 +80,12 @@ class MainScene : ApplicationListener {
             add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f))
         }
 
+        modelCache = ModelCache()
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
             position.set(0f, 100f, 0f)
-            lookAt(0f,0f,0f)
-            up.set(1f,0f,0f)
+            lookAt(0f, 0f, 0f)
+            up.set(1f, 0f, 0f)
             near = 1f
             far = 20000f
             update()
@@ -104,7 +108,7 @@ class MainScene : ApplicationListener {
         )
         val inst = ModelInstance(defaultBoxModel)
         //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
-        chunks.getOrPut(getChunkKey(0f,0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
+        chunks.getOrPut(getChunkKey(0f, 0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(cam))
@@ -127,15 +131,11 @@ class MainScene : ApplicationListener {
 
         if (renderCounter++ == 60) {
             renderCounter = 0
-            updateVisibleChunks()
+            CoroutineScope(Dispatchers.IO).launch { updateVisibleChunks() }
         }
         cam.update()
         modelBatch.begin(cam)
-        chunks.filter { visibleChunks.contains(it.key) }.forEach { chunk ->
-            chunk.value.forEach { (_, element) ->
-                if (isVisible(cam, element.instance)) modelBatch.render(element.instance, environment)
-            }
-        }
+        modelBatch.render(modelCache, environment)
         arrows.forEach { (_, instance) ->
             modelBatch.render(instance, environment)
         }
@@ -172,19 +172,20 @@ class MainScene : ApplicationListener {
         return "$x:$z"
     }
 
-    private fun updateVisibleChunks() {
-        val res = nearbyChunks(cam.position, 5).toSet()
-        if(res.toSet() != visibleChunks) {
-            /*val toRemove = visibleChunks - res
-            toRemove.forEach { key ->
-                chunks[key]?.values?.forEach { it.instance.model.dispose() }
-                chunks.remove(key)
+    private suspend fun updateVisibleChunks() {
+        val res = withContext(Dispatchers.Default) {
+            chunks.filter {
+                val coords = it.key.split(":")
+                val x = coords[0].toFloat()
+                val z = coords[1].toFloat()
+                cam.frustum.pointInFrustum(x, 0f, z) || cam.frustum.pointInFrustum(x + chunkSize, 0f, z) ||
+                        cam.frustum.pointInFrustum(x, 0f, z + chunkSize) || cam.frustum.pointInFrustum(x + chunkSize, 0f, z + chunkSize)
             }
-            CoroutineScope(Dispatchers.IO).launch {
-                Main.socket.sendSocketMessage(BuildingRequest(cam.position.toWorldCoords(baselineCoord), 0.1f))
-            }*/
         }
-        visibleChunks = res
+        if (res != visibleChunks) {
+            modelCache = updateCache(res)
+            visibleChunks = res
+        }
     }
 
     private fun nearbyChunks(position: Vector3, radius: Int): List<String> {
@@ -209,21 +210,24 @@ class MainScene : ApplicationListener {
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
             inst.transform.setTranslation(validVec)
             inst.materials.forEach { material ->
-                material.set(ColorAttribute.createDiffuse(
-                    when (data.tags.find { it.key == "building" }?.value) {
-                        "commercial" -> Color.BLUE
-                        "house" -> Color.GREEN
-                        "apartments" -> Color.GREEN
-                        "industrial" -> Color.YELLOW
-                        "office" -> Color.GRAY
-                        "public" -> Color.RED
-                        else -> Color.CYAN
-                    }
-                ))
+                material.set(
+                    ColorAttribute.createDiffuse(
+                        when (data.tags.find { it.key == "building" }?.value) {
+                            "commercial" -> Color.BLUE
+                            "house" -> Color.GREEN
+                            "apartments" -> Color.GREEN
+                            "industrial" -> Color.YELLOW
+                            "office" -> Color.GRAY
+                            "public" -> Color.RED
+                            else -> Color.CYAN
+                        }
+                    )
+                )
             }
             chunks.getOrPut(
-                getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat()))
-                    { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
+                getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())
+            )
+            { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
         }
     }
 
@@ -235,16 +239,17 @@ class MainScene : ApplicationListener {
         }
     }
 
-    private suspend fun Building.toModel() : Model? {
+    private suspend fun Building.toModel(): Model? {
         if (this.ways.isEmpty()) return null
-        val baseNodes = this.ways.first().nodes.map {
-                node -> val x = node.coords - this.coords
+        val baseNodes = this.ways.first().nodes.map { node ->
+            val x = node.coords - this.coords
             x.toSceneCoords(this@MainScene.baselineCoord, true)
-        }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }.distinct() //the last node is repeated for closed loops!
-        if(baseNodes.size < 3) return null
+        }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+            .distinct() //the last node is repeated for closed loops!
+        if (baseNodes.size < 3) return null
 
         val height = this.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
-            ?: this.tags.firstOrNull { it.key == "building:levels"}?.value?.toFloatOrNull()
+            ?: this.tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
             ?: 2f
         val topNodes = baseNodes.map { it.cpy().add(0f, height, 0f) }
 
@@ -267,7 +272,8 @@ class MainScene : ApplicationListener {
                 }
             }
 
-            builder = modelBuilder.part("top", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            builder =
+                modelBuilder.part("top", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             topNodes.let {
                 for (tri in 0..<triangles.size - 2 step 3) {
                     builder.triangle(
@@ -275,19 +281,20 @@ class MainScene : ApplicationListener {
                     )
                 }
             }
-            builder = modelBuilder.part("sides", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
+            builder =
+                modelBuilder.part("sides", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material())
             val clockwise = baseNodes.isClockwise()
             for (i in 0..<baseNodes.lastIndex) {
-                if(clockwise) {
-                    builder.triangle(baseNodes[i], baseNodes[i+1], topNodes[i+1])
-                    builder.triangle(topNodes[i+1], topNodes[i], baseNodes[i])
+                if (clockwise) {
+                    builder.triangle(baseNodes[i], baseNodes[i + 1], topNodes[i + 1])
+                    builder.triangle(topNodes[i + 1], topNodes[i], baseNodes[i])
                 } else {
-                    builder.triangle(baseNodes[i+1], baseNodes[i], topNodes[i+1])
-                    builder.triangle(topNodes[i], topNodes[i+1], baseNodes[i])
+                    builder.triangle(baseNodes[i + 1], baseNodes[i], topNodes[i + 1])
+                    builder.triangle(topNodes[i], topNodes[i + 1], baseNodes[i])
                 }
             }
             //connect last and first
-            if(clockwise) {
+            if (clockwise) {
                 builder.triangle(topNodes.first(), baseNodes.first(), baseNodes.last())
                 builder.triangle(topNodes.first(), topNodes.last(), baseNodes.last())
             } else {
@@ -319,7 +326,7 @@ class MainScene : ApplicationListener {
             val prev = agents[agent.id]?.location?.toSceneCoords(this@MainScene.baselineCoord)
             agents[agent.id] = agent
             val current = agent.location.toSceneCoords(this@MainScene.baselineCoord)
-            if(prev != null) {
+            if (prev != null) {
                 runOnRenderThread {
                     (arrows.putIfAbsent(agent.id, ModelInstance(arrowModel)) ?: arrows[agent.id])!!.apply {
                         //transform to point from prev to current
@@ -334,11 +341,11 @@ class MainScene : ApplicationListener {
         }
     }
 
-    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int) : Pair<Float, GraphicalBuilding>? {
+    fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int): Pair<Float, GraphicalBuilding>? {
         //cast ray from screen coordinates
         val ray = cam.getPickRay(screenCoordX.toFloat(), screenCoordY.toFloat())
         //check for intersection with buildings
-        val filter = chunks.asSequence().filter { visibleChunks.contains(it.key) }.flatMap { it.value.values }
+        val filter = visibleChunks.asSequence().flatMap { it.value.values }
             .filter { isVisible(cam, it.instance) }.toList()
         val intersection = filter
             .mapNotNull { bldg ->
@@ -360,5 +367,16 @@ class MainScene : ApplicationListener {
         calculateBoundingBox(bounds)
         bounds.mul(transform)
         return bounds
+    }
+
+    suspend fun updateCache(toAdd: Map<String, ConcurrentHashMap<Long, GraphicalBuilding>>): ModelCache {
+        val cacheInstances = toAdd.values.flatMap {
+            it.values.map { graphicalBuilding -> graphicalBuilding.instance }
+        }
+        val cpy = ModelCache()
+        cpy.begin()
+        cacheInstances.forEach { cpy.add(it) }
+        runOnRenderThread { cpy.end() }
+        return cpy
     }
 }
