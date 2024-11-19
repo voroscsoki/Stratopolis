@@ -2,13 +2,15 @@ package dev.voroscsoki.stratopolis.client
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
-import dev.voroscsoki.stratopolis.client.api.HttpAccessor
+import dev.voroscsoki.stratopolis.client.graphics.MainScene
+import dev.voroscsoki.stratopolis.client.networking.HttpAccessor
+import dev.voroscsoki.stratopolis.client.networking.SocketClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class Main {
     companion object {
-        val appScene = Basic3D()
+        val appScene = MainScene()
         val instanceData = InstanceData()
         val socket = SocketClient(instanceData::handleIncomingMessage, "ws://localhost:8085/control")
 
@@ -25,9 +27,9 @@ class Main {
 
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
-            config.setWindowedMode(1600,900)
-            config.useVsync(true)
-            config.setForegroundFPS(120)
+            config.setWindowedMode(1920,1080)
+            config.useVsync(false)
+            config.setForegroundFPS(10000)
             Lwjgl3Application(appScene, config)
         }
     }

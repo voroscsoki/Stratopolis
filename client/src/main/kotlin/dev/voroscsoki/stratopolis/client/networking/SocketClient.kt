@@ -1,6 +1,6 @@
-package dev.voroscsoki.stratopolis.client
+package dev.voroscsoki.stratopolis.client.networking
 
-import dev.voroscsoki.stratopolis.common.api.ControlMessage
+import dev.voroscsoki.stratopolis.common.networking.ControlMessage
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.serialization.kotlinx.*

@@ -1,7 +1,12 @@
 package dev.voroscsoki.stratopolis.server
 
-import api.SerializableWay
-import dev.voroscsoki.stratopolis.common.api.*
+import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.SerializableNode
+import dev.voroscsoki.stratopolis.common.elements.SerializableTag
+import dev.voroscsoki.stratopolis.common.elements.SerializableWay
+import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.nodeIds
+import dev.voroscsoki.stratopolis.common.util.tags
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Nodes
 import dev.voroscsoki.stratopolis.server.db.Ways
@@ -10,6 +15,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
@@ -74,7 +80,7 @@ class DatabaseAccess {
 
             return resultRows.mapNotNull { row ->
                 val buildingCoords = row[Nodes.coords]
-                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
+                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0f
 
                 if (rangeDegrees == null || distance <= rangeDegrees) {
                     SerializableNode(
@@ -86,16 +92,16 @@ class DatabaseAccess {
             }
         }
 
-        fun getBuildings(baseCoord: Vec3? = null, rangeDegrees: Float? = null): Sequence<Building> {
+        fun getBuildings(baseCoord: Vec3? = null, range: Float? = null): Sequence<Building> {
             val resultRows = transaction {
                 Buildings.selectAll().iterator().asSequence()
             }
 
             return resultRows.mapNotNull { row ->
                 val buildingCoords = row[Buildings.coords]
-                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
+                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0f
 
-                if (rangeDegrees == null || distance <= rangeDegrees) {
+                if (range == null || distance <= range) {
                     //TODO: use .toBuilding() (issue is the transaction scope)
                     Building(
                         row[Buildings.id].value,
@@ -106,6 +112,21 @@ class DatabaseAccess {
                         occupancy = row[Buildings.occupancy]
                     )
                 } else null
+            }
+        }
+
+        fun getBuildingById(id: Long): Building? {
+            return transaction {
+                Buildings.selectAll().where(Buildings.id eq id).map { row ->
+                    Building(
+                        row[Buildings.id].value,
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        type = row[Buildings.type],
+                        coords = row[Buildings.coords],
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        occupancy = row[Buildings.occupancy]
+                    )
+                }.firstOrNull()
             }
         }
     }

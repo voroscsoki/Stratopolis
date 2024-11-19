@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.client
+package dev.voroscsoki.stratopolis.client.graphics
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input.Keys
@@ -9,7 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
+class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
 
@@ -128,7 +128,7 @@ class CustomCameraController(val cam: PerspectiveCamera) : InputAdapter() {
         CoroutineScope(Dispatchers.IO).launch {
             zoomHandler.requestMove(amountY * 5f
                     * if (invertedZoom) 1f else -1f
-                    * if (ctrlModifier) 4f else 1f)
+                    * if (ctrlModifier) 10f else 1f)
         }
         return super.scrolled(amountX, amountY)
     }

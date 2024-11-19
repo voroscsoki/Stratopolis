@@ -1,6 +1,7 @@
-package dev.voroscsoki.stratopolis.server
+package dev.voroscsoki.stratopolis.server.networking
 
-import dev.voroscsoki.stratopolis.common.api.ControlMessage
+import dev.voroscsoki.stratopolis.common.networking.ControlMessage
+import dev.voroscsoki.stratopolis.server.Main
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*

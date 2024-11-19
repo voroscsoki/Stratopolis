@@ -1,7 +1,7 @@
 package dev.voroscsoki.stratopolis.server.db
 
 import de.topobyte.osm4j.core.model.iface.EntityType
-import dev.voroscsoki.stratopolis.common.api.Vec3
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -12,7 +12,7 @@ object Nodes : IdTable<Long>("nodes") {
     override val id: Column<EntityID<Long>> = long("osm_id").entityId()
     override val primaryKey = PrimaryKey(id)
 
-    val coords = customVec3("coords").default(Vec3(0.0, 0.0, 0.0))
+    val coords = customVec3("coords").default(Vec3(0f, 0f, 0f))
     val way = reference("wayId", Ways).nullable()
     val tags = text("tags")
 }
