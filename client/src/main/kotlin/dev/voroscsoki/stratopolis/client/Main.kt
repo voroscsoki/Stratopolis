@@ -27,9 +27,9 @@ class Main {
 
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
-            config.setWindowedMode(1920,1080)
+            config.setWindowedMode(3840,2160)
             config.useVsync(false)
-            config.setForegroundFPS(10000)
+            config.setForegroundFPS(120)
             Lwjgl3Application(appScene, config)
         }
     }

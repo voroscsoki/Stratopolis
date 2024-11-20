@@ -24,7 +24,7 @@ class InstanceData {
     private fun throttleRequest(action: () -> Unit) {
         throttleJob?.cancel() // Cancel any previous timer
         throttleJob = CoroutineScope(Dispatchers.Default).launch {
-            delay(2000) // Wait for the specified delay
+            delay(500) // Wait for the specified delay
             action() // Execute the action if no further calls reset the timer
         }
     }

@@ -16,7 +16,7 @@ class Main {
             DatabaseAccess.connect()
             println("Hello from the server!")
             //reinitalizeDB()
-            simu = Simulation()
+            //simu = Simulation()
 
             EngineMain.main(args)
         }

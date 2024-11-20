@@ -43,9 +43,7 @@ data class GraphicalBuilding(val apiData: Building?, val model: Model, val insta
 
 data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
     fun checkVisibility(cam: PerspectiveCamera) {
-        //project 4x4 grid onto chunk
-        //if any of the points are in the frustum, set isVisible to true
-        val resolution = 4
+        val resolution = 32
         for (x in 0..resolution) {
             for (z in 0..resolution) {
                 val point = Vector3(
@@ -75,6 +73,7 @@ class MainScene : ApplicationListener {
     private lateinit var stage: Stage
     private lateinit var skin: Skin
     private var popup: PopupWindow? = null
+    private var menu: GameMenu? = null
 
     //constants
     private val chunkSize = 5000
@@ -142,6 +141,7 @@ class MainScene : ApplicationListener {
         // Initialize FPS counter
         spriteBatch = SpriteBatch()
         font = BitmapFont()
+        this.showMenu()
     }
 
     override fun render() {
@@ -152,8 +152,8 @@ class MainScene : ApplicationListener {
             if(it) keyframeCounter = 0
         }
 
+        modelBatch.begin(cam)
         if(caches.isNotEmpty()) {
-            modelBatch.begin(cam)
             caches.values.forEach {
                 if (it.lock.isLocked) return@forEach
                 if (isKeyframe) it.checkVisibility(cam)
@@ -162,8 +162,8 @@ class MainScene : ApplicationListener {
             arrows.forEach { (_, instance) ->
                 modelBatch.render(instance, environment)
             }
-            modelBatch.end()
         }
+        modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
@@ -179,6 +179,8 @@ class MainScene : ApplicationListener {
         modelBatch.dispose()
         spriteBatch.dispose()
         chunks.values.forEach { c -> c.values.forEach { it.instance.model.dispose() } }
+        popup?.dispose()
+        menu?.dispose()
         font.dispose()
     }
 
@@ -350,8 +352,15 @@ class MainScene : ApplicationListener {
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
         if(popup?.isVisible == true) return
+        //TODO: if over menu, return
         popup = PopupWindow(stage, skin, building.apiData!!)
         popup!!.show()
+    }
+
+    private fun showMenu() {
+        if(menu?.isVisible == true) return
+        menu = GameMenu(stage, skin, stage.width, stage.height, this)
+        menu!!.show()
     }
 
     private fun ModelInstance.getTransformedBoundingBox(): BoundingBox {

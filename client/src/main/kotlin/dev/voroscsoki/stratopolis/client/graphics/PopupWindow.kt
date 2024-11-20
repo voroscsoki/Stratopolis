@@ -9,9 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Window
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import dev.voroscsoki.stratopolis.common.elements.Building
 
-class PopupWindow(private val stage: Stage, skin: Skin, building: Building) : Window("Popup", skin) {
+class PopupWindow(stage: Stage, skin: Skin, building: Building) : Window("Popup", skin) {
     init {
-        building.tags.toString().split(",").forEach {
+        building.tags.map { "${it.key}: ${it.value}" }.forEach {
             add(Label(it, skin)).row()
         }
         val closeButton = TextButton("Close", skin)
@@ -35,5 +35,9 @@ class PopupWindow(private val stage: Stage, skin: Skin, building: Building) : Wi
 
     fun hide() {
         isVisible = false
+    }
+
+    fun dispose() {
+        remove()
     }
 }
