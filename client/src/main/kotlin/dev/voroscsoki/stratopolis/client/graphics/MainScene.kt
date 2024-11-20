@@ -3,7 +3,6 @@ package dev.voroscsoki.stratopolis.client.graphics
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.VertexAttributes
@@ -42,6 +41,28 @@ import kotlin.coroutines.suspendCoroutine
 
 data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
 
+data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
+    fun checkVisibility(cam: PerspectiveCamera) {
+        //project 4x4 grid onto chunk
+        //if any of the points are in the frustum, set isVisible to true
+        val resolution = 4
+        for (x in 0..resolution) {
+            for (z in 0..resolution) {
+                val point = Vector3(
+                    startingCoords.x + (x.toFloat()/resolution) * size,
+                    startingCoords.y,
+                    startingCoords.z + (z.toFloat()/resolution) * size
+                )
+                if (cam.frustum.pointInFrustum(point)) {
+                    isVisible = true
+                    return
+                }
+            }
+        }
+        isVisible = false
+    }
+}
+
 class MainScene : ApplicationListener {
     //libGDX variables
     lateinit var cam: PerspectiveCamera
@@ -61,15 +82,12 @@ class MainScene : ApplicationListener {
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
-    private val caches = ConcurrentHashMap<String, Pair<ModelCache, Mutex>>()
+    private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     private val arrows = ConcurrentHashMap<Long, ModelInstance>()
-    private var visibleChunks = mapOf<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
 
     //helper
-    private var renderCounter = 0
-    private val position = Vector3()
-    private val coroScope = CoroutineScope(Dispatchers.IO)
+    private var keyframeCounter = 0
 
     // text variables
     private var currentTime: Instant = Instant.fromEpochSeconds(0)
@@ -130,9 +148,17 @@ class MainScene : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
+        val isKeyframe = (keyframeCounter++ == 5).also {
+            if(it) keyframeCounter = 0
+        }
+
         if(caches.isNotEmpty()) {
             modelBatch.begin(cam)
-            caches.values.forEach { if(!it.second.isLocked) { modelBatch.render(it.first, environment) } }
+            caches.values.forEach {
+                if (it.lock.isLocked) return@forEach
+                if (isKeyframe) it.checkVisibility(cam)
+                if(it.isVisible) modelBatch.render(it.cache, environment)
+            }
             arrows.forEach { (_, instance) ->
                 modelBatch.render(instance, environment)
             }
@@ -275,11 +301,6 @@ class MainScene : ApplicationListener {
         }
     }
 
-    private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
-        instance.transform.getTranslation(position)
-        return cam.frustum.sphereInFrustum(position, 20f)
-    }
-
     private fun List<Vector3>.isClockwise(): Boolean {
         var sum = 0f
         for (i in indices) {
@@ -328,6 +349,7 @@ class MainScene : ApplicationListener {
     }
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
+        if(popup?.isVisible == true) return
         popup = PopupWindow(stage, skin, building.apiData!!)
         popup!!.show()
     }
@@ -343,15 +365,16 @@ class MainScene : ApplicationListener {
         runBlocking {
             chunks.keys.forEach { c ->
                 val chunk = chunks[c] ?: return@forEach
-                val cache = caches.getOrPut(c) { ModelCache() to Mutex() }
-                val modelCache = cache.first
-                val mutex = cache.second
+                val cache = caches.getOrPut(c) { CacheObject(ModelCache(), Mutex(), c.split(":").let { Vector3(it[0].toFloat(), 0f, it[1].toFloat()) }, chunkSize ) }
+                val modelCache = cache.cache
+                val mutex = cache.lock
                 if (mutex.isLocked) return@forEach
                 mutex.lock()
                 modelCache.begin()
                 chunk.values.forEach { modelCache.add(it.instance) }
                 runOnRenderThread { modelCache.end() }
                 mutex.unlock()
+                println(caches.size)
             }
         }
     }

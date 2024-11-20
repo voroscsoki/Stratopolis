@@ -23,7 +23,7 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
         if (keycode == 132) {
             runBlocking {
                 val source = scene.cam.position?.toWorldCoords(scene.baselineCoord)!!.copy(y = 0f)
-                Main.socket.sendSocketMessage(BuildingRequest(source, 0.5f)) }
+                Main.socket.sendSocketMessage(BuildingRequest(source, 0.15f)) }
         }
         if (keycode == 133) {
             runBlocking {

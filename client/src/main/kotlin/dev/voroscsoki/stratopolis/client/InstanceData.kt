@@ -24,7 +24,7 @@ class InstanceData {
     private fun throttleRequest(action: () -> Unit) {
         throttleJob?.cancel() // Cancel any previous timer
         throttleJob = CoroutineScope(Dispatchers.Default).launch {
-            delay(1000) // Wait for the specified delay
+            delay(2000) // Wait for the specified delay
             action() // Execute the action if no further calls reset the timer
         }
     }
@@ -50,7 +50,7 @@ class InstanceData {
     }
 
     private fun handleBuildings(msg: BuildingResponse) {
-        msg.buildings.forEach { buildings += it.id to it }
+        buildings.putAll(msg.buildings.map { it.id to it })
         throttleRequest { Main.appScene.updateCaches() }
     }
 
