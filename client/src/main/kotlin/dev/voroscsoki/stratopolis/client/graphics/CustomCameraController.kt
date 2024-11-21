@@ -77,15 +77,23 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
     //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
+        val multiplier = if(ctrlModifier) 4f else 1f
         when (p0) {
             Keys.ESCAPE -> Gdx.app.exit()
-            Keys.CONTROL_LEFT -> ctrlModifier = true
-            Keys.E -> continuousMove(5f, "rotate")
-            Keys.Q -> continuousMove(-5f, "rotate")
-            Keys.A -> continuousMove(-5f, "sideways")
-            Keys.D -> continuousMove(5f, "sideways")
-             Keys.W -> continuousMove(-5f, "linear")
-             Keys.S -> continuousMove(5f, "linear")
+            Keys.CONTROL_LEFT -> {
+                ctrlModifier = true
+                jobs.forEach {
+                    if(it.value?.isActive == true) cancelMove(it.key)
+                }
+                //TODO: janky
+            }
+
+            Keys.E -> continuousMove(0.5f * multiplier, "rotate")
+            Keys.Q -> continuousMove(-0.5f * multiplier, "rotate")
+            Keys.A -> continuousMove(-4f * multiplier, "sideways")
+            Keys.D -> continuousMove(4f * multiplier, "sideways")
+            Keys.W -> continuousMove(-4f * multiplier, "linear")
+            Keys.S -> continuousMove(4f * multiplier, "linear")
         }
         return super.keyDown(p0)
     }
@@ -93,6 +101,9 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
     override fun keyUp(p0: Int): Boolean {
         if(p0 == Keys.CONTROL_LEFT) {
             ctrlModifier = false
+            jobs.forEach {
+                if(it.value?.isActive == true) cancelMove(it.key)
+            }
         }
         if(p0 == Keys.Q || p0 == Keys.E) cancelMove("rotate")
         if(p0 == Keys.W || p0 == Keys.S) cancelMove("linear")

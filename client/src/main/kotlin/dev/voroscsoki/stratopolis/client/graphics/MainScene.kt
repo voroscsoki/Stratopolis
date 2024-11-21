@@ -80,7 +80,7 @@ class MainScene : ApplicationListener {
 
     //constants
     private val chunkSize = 5000
-    val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
+    private val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
@@ -99,12 +99,12 @@ class MainScene : ApplicationListener {
     override fun create() {
         environment = Environment().apply {
             set(ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f))
-            add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f))
+            add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, 0f, 0f))
         }
 
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
-            position.set(0f, 100f, 0f)
+            position.set(0f, 1000f, 0f)
             lookAt(0f, 0f, 0f)
             up.set(1f, 0f, 0f)
             near = 1f
