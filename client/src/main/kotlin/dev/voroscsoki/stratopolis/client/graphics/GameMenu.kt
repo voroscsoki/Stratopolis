@@ -55,7 +55,7 @@ class GameMenu(
             background = skin.getDrawable("default-rect")
         }
 
-        val settingsButton = TextButton("Request", skin).apply {
+        val requestButton = TextButton("Request", skin).apply {
             addListener(object : ClickListener() {
                 override fun clicked(event: InputEvent?, x: Float, y: Float) {
                     runBlocking {
@@ -64,7 +64,15 @@ class GameMenu(
                 }
             })
         }
-        settingsButton.pack()
+
+        val startStopButton = TextButton("Start", skin).apply {
+            addListener(object : ClickListener() {
+                override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                    scene.toggleSimulation()
+                    label.setText(if (label.text.toString() == "Start") "Stop" else "Start")
+                }
+            })
+        }
 
         val quitButton = TextButton("Quit", skin).apply {
             addListener(object : ClickListener() {
@@ -73,10 +81,9 @@ class GameMenu(
                 }
             })
         }
-        quitButton.pack()
 
-        panelTable.add(settingsButton).fillX().padBottom(10f).align(Align.center)
-        panelTable.row()
+        panelTable.add(requestButton).fillX().padBottom(10f).align(Align.center).row()
+        panelTable.add(startStopButton).fillX().padBottom(10f).align(Align.center).row()
         panelTable.add(quitButton).fillX().align(Align.center)
 
         return Container(panelTable).apply {
