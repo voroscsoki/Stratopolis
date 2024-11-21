@@ -21,11 +21,14 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.ShortArray
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.networking.BuildingRequest
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -142,6 +145,7 @@ class MainScene : ApplicationListener {
         spriteBatch = SpriteBatch()
         font = BitmapFont()
         this.showMenu()
+        requestBuildings()
     }
 
     override fun render() {
@@ -178,7 +182,13 @@ class MainScene : ApplicationListener {
     override fun dispose() {
         modelBatch.dispose()
         spriteBatch.dispose()
-        chunks.values.forEach { c -> c.values.forEach { it.instance.model.dispose() } }
+        chunks.values.forEach { c -> c.values.forEach {
+            try {
+                it.instance.model.dispose()
+            } catch (e: IllegalArgumentException) { //buffer may already be disposed
+                //TODO: log
+            }
+        }}
         popup?.dispose()
         menu?.dispose()
         font.dispose()
@@ -200,9 +210,17 @@ class MainScene : ApplicationListener {
 
     fun upsertBuilding(data: Building) {
         CoroutineScope(Dispatchers.IO).launch {
-            //if(chunks.values.any { it.containsKey(data.id) }) return@launch
             val model = data.toModel() ?: defaultBoxModel
-            val inst = ModelInstance(model)
+            var inst: ModelInstance? = null
+            for (i in 0..3) {
+                try {
+                    inst = ModelInstance(model)
+                    break
+                } catch (e: GdxRuntimeException) { //#iterator() cannot be used nested.
+                    //TODO: log
+                }
+            }
+            inst ?: return@launch
             val convertedCoords = data.coords.toSceneCoords(this@MainScene.baselineCoord)
             val validVec =
                 Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
@@ -352,7 +370,14 @@ class MainScene : ApplicationListener {
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
         if(popup?.isVisible == true) return
-        //TODO: if over menu, return
+        val menuBounds = menu?.getBoundaries()
+        //if click is within menu boundary, ignore as the building is covered
+        menuBounds?.let {
+            val invertedY = stage.height - coordY
+            if(coordX >= it.bLeft.x && coordX <= it.tRight.x
+                && invertedY >= it.bLeft.y && invertedY <= it.tRight.y
+            ) return
+        }
         popup = PopupWindow(stage, skin, building.apiData!!)
         popup!!.show()
     }
@@ -386,6 +411,13 @@ class MainScene : ApplicationListener {
                 println(caches.size)
             }
         }
+        menu?.loadingBar?.fadeOut()
+    }
+
+    fun requestBuildings() {
+        menu?.loadingBar?.fadeIn()
+        val source = cam.position?.toWorldCoords(baselineCoord)!!.copy(y = 0f)
+        runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.03f)) }
     }
 
     fun toggleSimulation() {
