@@ -5,14 +5,11 @@ import dev.voroscsoki.stratopolis.common.elements.SerializableNode
 import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import dev.voroscsoki.stratopolis.common.elements.SerializableWay
 import dev.voroscsoki.stratopolis.common.util.Vec3
-import dev.voroscsoki.stratopolis.common.util.tags
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Nodes
-import dev.voroscsoki.stratopolis.server.db.Ways
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
 import kotlinx.serialization.decodeFromString
 import net.mamoe.yamlkt.Yaml
-import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -31,11 +28,11 @@ class DatabaseAccess {
 
             transaction {
                 SchemaUtils.createMissingTablesAndColumns(
-                    Nodes, Ways, Buildings
+                    Buildings
                 )
             }
         }
-
+        //TODO: roads
         fun seedFromOsm(storage: OsmStorage) {
             /*storage.nodes.values.chunked(200000).forEach { chunk ->
                 println("Seeding chunk of nodes")
@@ -47,13 +44,12 @@ class DatabaseAccess {
                     }
                 }
             }*/
-            println("Seeding ways")
-            transaction {
+            /*println("Seeding ways")
                 Ways.batchUpsert(storage.ways.values, Ways.id) { way ->
                     this[Ways.id] = EntityID(way.id, Ways)
                     this[Ways.tags] = Yaml.encodeToString(way.tags.map { SerializableTag(it) })
                 }
-                /*storage.ways.values.forEach { way ->
+                storage.ways.values.forEach { way ->
                     way.nodeIds.forEach { node ->
                         Nodes.update({ Nodes.id eq node }) {
                             //update the way column
@@ -61,6 +57,7 @@ class DatabaseAccess {
                         }
                     }
                 }*/
+            transaction {
                 println("Seeding buildings")
                 Buildings.batchUpsert(storage.buildings, Buildings.id) { building ->
                     this[Buildings.id] = building.id
