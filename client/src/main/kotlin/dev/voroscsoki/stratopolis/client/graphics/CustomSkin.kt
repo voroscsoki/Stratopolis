@@ -18,7 +18,7 @@ class CustomSkin : Skin() {
     private val textColor = Color(0.92f, 0.92f, 0.92f, 1f)
 
     private val generator = FreeTypeFontGenerator(Gdx.files.internal("assets/fonts/Roboto-Regular.ttf"))
-    private val regularFontSize = 14
+    val regularFontSize = 14
     private val titleFontSize = 16
     private val normalText = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
         size = regularFontSize

@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
+import dev.voroscsoki.stratopolis.client.InstanceData
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.system.exitProcess
@@ -23,6 +24,7 @@ class GameMenu(
     private val skin: Skin,
     private val stageWidth: Float,
     private val stageHeight: Float,
+    private val instance: InstanceData,
     private val scene: MainScene
 ) : Group() {
     private val menuBar: Container<Table>
@@ -40,15 +42,15 @@ class GameMenu(
 
 
         val buttons = arrayOf(
-            createButton(
+            createImageButton(
                 upColor = Color(0.2f, 0.6f, 0.2f, 1f),
                 downColor = Color(0.1f, 0.4f, 0.1f, 1f),
                 hoverColor = Color(0.3f, 0.7f, 0.3f, 1f),
                 iconDrawable = loadDrawable
             ) {
-                scene.requestBuildings()
+                instance.requestBuildings()
             },
-            createButton(
+            createImageButton(
                 upColor = Color(0.2f, 0.2f, 0.6f, 1f),
                 downColor = Color(0.1f, 0.1f, 0.4f, 1f),
                 hoverColor = Color(0.3f, 0.3f, 0.7f, 1f),
@@ -56,7 +58,7 @@ class GameMenu(
             ) {
                 scene.showSettings()
             },
-            createButton(
+            createImageButton(
                 upColor = Color(0.6f, 0.2f, 0.2f, 1f),
                 downColor = Color(0.4f, 0.1f, 0.1f, 1f),
                 hoverColor = Color(0.7f, 0.3f, 0.3f, 1f),
@@ -79,7 +81,7 @@ class GameMenu(
     private fun loadAsset(filename: String) =
         TextureRegionDrawable(TextureRegion(Texture(Gdx.files.internal("assets/$filename"))))
 
-    private fun createButton(
+    private fun createImageButton(
         upColor: Color,
         downColor: Color,
         hoverColor: Color,
@@ -177,17 +179,6 @@ class GameMenu(
 
     fun dispose() {
         clear()
-    }
-
-    private fun createColoredDrawable(color: Color): TextureRegionDrawable {
-        val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888).apply {
-            setColor(color)
-            fill()
-        }
-        val texture = Texture(pixmap)
-        pixmap.dispose()
-
-        return TextureRegionDrawable(TextureRegion(texture))
     }
 
     private fun createSegmentedLoader(size: Int): Texture {

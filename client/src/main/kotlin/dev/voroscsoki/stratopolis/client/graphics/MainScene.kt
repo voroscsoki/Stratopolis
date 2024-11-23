@@ -20,21 +20,19 @@ import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Skin
-import com.badlogic.gdx.utils.GdxRuntimeException
 import com.badlogic.gdx.utils.ShortArray
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
-import dev.voroscsoki.stratopolis.common.networking.BuildingRequest
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
@@ -69,14 +67,14 @@ class MainScene : ApplicationListener {
     lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
-    private lateinit var defaultBoxModel: Model
+    lateinit var defaultBoxModel: Model
     private lateinit var arrowModel: Model
     private lateinit var environment: Environment
 
     private lateinit var stage: Stage
-    private lateinit var skin: Skin
+    private lateinit var skin: CustomSkin
     private var popup: PopupWindow? = null
-    private var menu: GameMenu? = null
+    var menu: GameMenu? = null
     private var settingsPage: SettingsPage? = null
 
     val isCameraMoveEnabled : Boolean
@@ -84,7 +82,6 @@ class MainScene : ApplicationListener {
 
     //constants
     private val chunkSize = 5000
-    private val baselineCoord = Vec3(48.2204f, 0f, 16.3797f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
@@ -149,7 +146,7 @@ class MainScene : ApplicationListener {
         spriteBatch = SpriteBatch()
         font = BitmapFont()
         this.showMenu()
-        requestBuildings()
+        CoroutineScope(Dispatchers.IO).launch { Main.instanceData.setupGame() }
     }
 
     override fun render() {
@@ -212,43 +209,18 @@ class MainScene : ApplicationListener {
         return "$x:$z"
     }
 
-    fun upsertBuilding(data: Building) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val model = data.toModel() ?: defaultBoxModel
-            var inst: ModelInstance? = null
-            for (i in 0..3) {
-                try {
-                    inst = ModelInstance(model)
-                    break
-                } catch (e: GdxRuntimeException) { //#iterator() cannot be used nested.
-                    //TODO: log
-                }
-            }
-            inst ?: return@launch
-            val convertedCoords = data.coords.toSceneCoords(this@MainScene.baselineCoord)
-            val validVec =
-                Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
-            inst.transform.setTranslation(validVec)
-            inst.materials.forEach { material ->
-                material.set(
-                    ColorAttribute.createDiffuse(
-                        when (data.tags.find { it.key == "building" }?.value) {
-                            "commercial" -> Color.BLUE
-                            "house" -> Color.GREEN
-                            "apartments" -> Color.GREEN
-                            "industrial" -> Color.YELLOW
-                            "office" -> Color.GRAY
-                            "public" -> Color.RED
-                            else -> Color.CYAN
-                        }
-                    )
-                )
-            }
-            chunks.getOrPut(
-                getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())
-            )
-            { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
-        }
+
+
+    fun putBuilding(
+        convertedCoords: Vec3,
+        data: Building, model: Model,
+        inst: ModelInstance?
+    ) {
+        inst ?: return
+        chunks.getOrPut(
+            getChunkKey(convertedCoords.x, convertedCoords.z)
+        )
+        { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
@@ -259,17 +231,17 @@ class MainScene : ApplicationListener {
         }
     }
 
-    private suspend fun Building.toModel(): Model? {
-        if (this.ways.isEmpty()) return null
-        val baseNodes = this.ways.first().nodes.map { node ->
-            val x = node.coords - this.coords
-            x.toSceneCoords(this@MainScene.baselineCoord, true)
+    suspend fun toModel(building: Building, baseline: Vec3): Model? {
+        if (building.ways.isEmpty()) return null
+        val baseNodes = building.ways.first().nodes.map { node ->
+            val x = node.coords - building.coords
+            x.toSceneCoords(baseline, true)
         }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
             .distinct() //the last node is repeated for closed loops!
         if (baseNodes.size < 3) return null
 
-        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
-            ?: this.tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
+        val height = building.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
+            ?: building.tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
             ?: 2f
         val topNodes = baseNodes.map { it.cpy().add(0f, height, 0f) }
 
@@ -335,7 +307,7 @@ class MainScene : ApplicationListener {
         return sum > 0
     }
 
-    suspend fun moveAgents(received: List<Agent>, time: Instant) {
+    /*suspend fun moveAgents(received: List<Agent>, time: Instant) {
         currentTime = time
         received.forEach { agent ->
             val prev = agents[agent.id]?.location?.toSceneCoords(this@MainScene.baselineCoord)
@@ -354,7 +326,7 @@ class MainScene : ApplicationListener {
                 }
             }
         }
-    }
+    }*/
 
     fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int): Pair<Float, GraphicalBuilding>? {
         //cast ray from screen coordinates
@@ -388,7 +360,7 @@ class MainScene : ApplicationListener {
 
     private fun showMenu() {
         if(menu?.isVisible == true) return
-        menu = GameMenu(stage, skin, stage.width, stage.height, this)
+        menu = GameMenu(stage, skin, stage.width, stage.height, Main.instanceData,this)
         menu!!.show()
     }
 
@@ -405,6 +377,13 @@ class MainScene : ApplicationListener {
         return bounds
     }
 
+    fun clearGraphicalData() {
+        chunks.clear()
+        caches.clear()
+        agents.clear()
+        arrows.clear()
+    }
+
     fun updateCaches() {
         runBlocking {
             chunks.keys.forEach { c ->
@@ -413,24 +392,13 @@ class MainScene : ApplicationListener {
                 val modelCache = cache.cache
                 val mutex = cache.lock
                 if (mutex.isLocked) return@forEach
-                mutex.lock()
-                modelCache.begin()
-                chunk.values.forEach { modelCache.add(it.instance) }
-                runOnRenderThread { modelCache.end() }
-                mutex.unlock()
-                println(caches.size)
+                mutex.withLock {
+                    modelCache.begin()
+                    chunk.values.forEach { modelCache.add(it.instance) }
+                    runOnRenderThread { modelCache.end() }
+                }
             }
         }
         menu?.loadingBar?.fadeOut()
     }
-
-    fun requestBuildings() {
-        menu?.loadingBar?.fadeIn()
-        val source = cam.position?.toWorldCoords(baselineCoord)!!.copy(y = 0f)
-        runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.15f)) }
-    }
-
-    fun toggleSimulation() {
-    }
-
 }
