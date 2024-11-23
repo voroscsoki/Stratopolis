@@ -3,20 +3,19 @@ package dev.voroscsoki.stratopolis.client.graphics
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.InputAdapter
-import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.Vector3
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
+class CustomCameraController(val scene: MainScene) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val mutex = Mutex()
 
-    private val zoomHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val zoomHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.translate(cam.direction.cpy().nor().scl(amount))
@@ -24,7 +23,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    private val rotateHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val rotateHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.rotateAround(cam.position, Vector3(0f, 1f, 0f), amount)
@@ -32,7 +31,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    private val linearHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val linearHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 // positive amount should reasonably move the camera up
@@ -42,7 +41,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    private val sidewaysHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val sidewaysHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.translate(Vector3(cam.up.cpy().rotate(Vector3(0f,1f,0f), 90f).scl(-amount)))
@@ -77,15 +76,25 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
     //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
+        if(!scene.isCameraMoveEnabled) return false
+
+        val multiplier = if(ctrlModifier) 4f else 1f
         when (p0) {
             Keys.ESCAPE -> Gdx.app.exit()
-            Keys.CONTROL_LEFT -> ctrlModifier = true
-            Keys.E -> continuousMove(5f, "rotate")
-            Keys.Q -> continuousMove(-5f, "rotate")
-            Keys.A -> continuousMove(-5f, "sideways")
-            Keys.D -> continuousMove(5f, "sideways")
-             Keys.W -> continuousMove(-5f, "linear")
-             Keys.S -> continuousMove(5f, "linear")
+            Keys.CONTROL_LEFT -> {
+                ctrlModifier = true
+                jobs.forEach {
+                    if(it.value?.isActive == true) cancelMove(it.key)
+                }
+                //TODO: janky
+            }
+
+            Keys.E -> continuousMove(0.5f * multiplier, "rotate")
+            Keys.Q -> continuousMove(-0.5f * multiplier, "rotate")
+            Keys.A -> continuousMove(-4f * multiplier, "sideways")
+            Keys.D -> continuousMove(4f * multiplier, "sideways")
+            Keys.W -> continuousMove(-4f * multiplier, "linear")
+            Keys.S -> continuousMove(4f * multiplier, "linear")
         }
         return super.keyDown(p0)
     }
@@ -93,6 +102,9 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
     override fun keyUp(p0: Int): Boolean {
         if(p0 == Keys.CONTROL_LEFT) {
             ctrlModifier = false
+            jobs.forEach {
+                if(it.value?.isActive == true) cancelMove(it.key)
+            }
         }
         if(p0 == Keys.Q || p0 == Keys.E) cancelMove("rotate")
         if(p0 == Keys.W || p0 == Keys.S) cancelMove("linear")

@@ -4,8 +4,6 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.graphics.MainScene
-import dev.voroscsoki.stratopolis.client.graphics.toWorldCoords
-import dev.voroscsoki.stratopolis.common.networking.BuildingRequest
 import dev.voroscsoki.stratopolis.common.networking.NodeRequest
 import dev.voroscsoki.stratopolis.common.networking.SimulationStartRequest
 import dev.voroscsoki.stratopolis.common.util.Vec3
@@ -19,11 +17,6 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
         if (keycode == 131) {
             runBlocking {
                 Main.socket.sendSocketMessage(NodeRequest(Vec3(47.4979f, 0f, 19.0402f))) }
-        }
-        if (keycode == 132) {
-            runBlocking {
-                val source = scene.cam.position?.toWorldCoords(scene.baselineCoord)!!.copy(y = 0f)
-                Main.socket.sendSocketMessage(BuildingRequest(source, 0.5f)) }
         }
         if (keycode == 133) {
             runBlocking {

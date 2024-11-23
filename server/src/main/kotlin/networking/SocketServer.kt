@@ -17,7 +17,9 @@ class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } },
         BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } },
-        SimulationStartRequest::class.java to { simu.tick { agents: List<Agent>, time: Instant -> socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } }
+        SimulationStartRequest::class.java to { simu.tick { agents: List<Agent>, time: Instant -> socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } },
+        EstablishBearingRequest::class.java to { msg -> runBlocking { sendSocketMessage(EstablishBearingResponse(ControlResult.OK, DatabaseAccess.getAverageCoords()))
+        } }
     )
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -36,7 +38,7 @@ class SocketServer {
     private fun handleBuildingRequest(msg: BuildingRequest) {
         scope.launch {
             DatabaseAccess.getBuildings(msg.baseCoord, msg.radius)
-                .chunked(10000)
+                .chunked(5000)
                 .forEach { chunk ->
                     launch {
                         sendSocketMessage(BuildingResponse(ControlResult.OK, chunk))
@@ -53,7 +55,7 @@ class SocketServer {
         handlerFunctions[msg::class.java]?.invoke(msg)
     }
 
-    fun sendSocketMessage(msg: ControlMessage) {
+    private fun sendSocketMessage(msg: ControlMessage) {
         println("Sending message: $msg")
         CoroutineScope(Dispatchers.IO).launch {
             connections.forEach { it.sendSerialized(msg) }

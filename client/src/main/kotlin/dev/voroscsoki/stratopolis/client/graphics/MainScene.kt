@@ -3,7 +3,6 @@ package dev.voroscsoki.stratopolis.client.graphics
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.VertexAttributes
@@ -21,9 +20,9 @@ import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.utils.ShortArray
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
@@ -33,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
@@ -42,34 +42,55 @@ import kotlin.coroutines.suspendCoroutine
 
 data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
 
+data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
+    fun checkVisibility(cam: PerspectiveCamera) {
+        val resolution = 32
+        for (x in 0..resolution) {
+            for (z in 0..resolution) {
+                val point = Vector3(
+                    startingCoords.x + (x.toFloat()/resolution) * size,
+                    startingCoords.y,
+                    startingCoords.z + (z.toFloat()/resolution) * size
+                )
+                if (cam.frustum.pointInFrustum(point)) {
+                    isVisible = true
+                    return
+                }
+            }
+        }
+        isVisible = false
+    }
+}
+
 class MainScene : ApplicationListener {
     //libGDX variables
     lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
-    private lateinit var defaultBoxModel: Model
+    lateinit var defaultBoxModel: Model
     private lateinit var arrowModel: Model
     private lateinit var environment: Environment
 
     private lateinit var stage: Stage
-    private lateinit var skin: Skin
+    private lateinit var skin: CustomSkin
     private var popup: PopupWindow? = null
+    var menu: GameMenu? = null
+    private var settingsPage: SettingsPage? = null
+
+    val isCameraMoveEnabled : Boolean
+        get() = settingsPage?.isVisible != true
 
     //constants
     private val chunkSize = 5000
-    val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
-    private val caches = ConcurrentHashMap<String, Pair<ModelCache, Mutex>>()
+    private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     private val arrows = ConcurrentHashMap<Long, ModelInstance>()
-    private var visibleChunks = mapOf<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
 
     //helper
-    private var renderCounter = 0
-    private val position = Vector3()
-    private val coroScope = CoroutineScope(Dispatchers.IO)
+    private var keyframeCounter = 0
 
     // text variables
     private var currentTime: Instant = Instant.fromEpochSeconds(0)
@@ -79,12 +100,12 @@ class MainScene : ApplicationListener {
     override fun create() {
         environment = Environment().apply {
             set(ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f))
-            add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f))
+            add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, 0f, 0f))
         }
 
         modelBatch = ModelBatch(DefaultShaderProvider()) { _, _ -> /*No sorting*/ }
         cam = PerspectiveCamera(67f, Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat()).apply {
-            position.set(0f, 100f, 0f)
+            position.set(0f, 1000f, 0f)
             lookAt(0f, 0f, 0f)
             up.set(1f, 0f, 0f)
             near = 1f
@@ -93,7 +114,7 @@ class MainScene : ApplicationListener {
         }
 
         stage = Stage(ScreenViewport())
-        skin = createDefaultGdxSkin()
+        skin = CustomSkin()
 
         modelBuilder = ModelBuilder()
         defaultBoxModel = modelBuilder.createBox(
@@ -112,7 +133,7 @@ class MainScene : ApplicationListener {
         chunks.getOrPut(getChunkKey(0f, 0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
 
         val multiplexer = InputMultiplexer().apply {
-            addProcessor(CustomCameraController(cam))
+            addProcessor(CustomCameraController(this@MainScene))
             addProcessor(UtilInput(this@MainScene))
             addProcessor(stage)
         }
@@ -124,20 +145,30 @@ class MainScene : ApplicationListener {
         // Initialize FPS counter
         spriteBatch = SpriteBatch()
         font = BitmapFont()
+        this.showMenu()
+        CoroutineScope(Dispatchers.IO).launch { Main.instanceData.setupGame() }
     }
 
     override fun render() {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
+        val isKeyframe = (keyframeCounter++ == 5).also {
+            if(it) keyframeCounter = 0
+        }
+
+        modelBatch.begin(cam)
         if(caches.isNotEmpty()) {
-            modelBatch.begin(cam)
-            caches.values.forEach { if(!it.second.isLocked) { modelBatch.render(it.first, environment) } }
+            caches.values.forEach {
+                if (it.lock.isLocked) return@forEach
+                if (isKeyframe) it.checkVisibility(cam)
+                if(it.isVisible) modelBatch.render(it.cache, environment)
+            }
             arrows.forEach { (_, instance) ->
                 modelBatch.render(instance, environment)
             }
-            modelBatch.end()
         }
+        modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
@@ -152,7 +183,15 @@ class MainScene : ApplicationListener {
     override fun dispose() {
         modelBatch.dispose()
         spriteBatch.dispose()
-        chunks.values.forEach { c -> c.values.forEach { it.instance.model.dispose() } }
+        chunks.values.forEach { c -> c.values.forEach {
+            try {
+                it.instance.model.dispose()
+            } catch (e: IllegalArgumentException) { //buffer may already be disposed
+                //TODO: log
+            }
+        }}
+        popup?.dispose()
+        menu?.dispose()
         font.dispose()
     }
 
@@ -170,35 +209,18 @@ class MainScene : ApplicationListener {
         return "$x:$z"
     }
 
-    fun upsertBuilding(data: Building) {
-        CoroutineScope(Dispatchers.IO).launch {
-            //if(chunks.values.any { it.containsKey(data.id) }) return@launch
-            val model = data.toModel() ?: defaultBoxModel
-            val inst = ModelInstance(model)
-            val convertedCoords = data.coords.toSceneCoords(this@MainScene.baselineCoord)
-            val validVec =
-                Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
-            inst.transform.setTranslation(validVec)
-            inst.materials.forEach { material ->
-                material.set(
-                    ColorAttribute.createDiffuse(
-                        when (data.tags.find { it.key == "building" }?.value) {
-                            "commercial" -> Color.BLUE
-                            "house" -> Color.GREEN
-                            "apartments" -> Color.GREEN
-                            "industrial" -> Color.YELLOW
-                            "office" -> Color.GRAY
-                            "public" -> Color.RED
-                            else -> Color.CYAN
-                        }
-                    )
-                )
-            }
-            chunks.getOrPut(
-                getChunkKey(convertedCoords.x.toFloat(), convertedCoords.z.toFloat())
-            )
-            { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
-        }
+
+
+    fun putBuilding(
+        convertedCoords: Vec3,
+        data: Building, model: Model,
+        inst: ModelInstance?
+    ) {
+        inst ?: return
+        chunks.getOrPut(
+            getChunkKey(convertedCoords.x, convertedCoords.z)
+        )
+        { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
@@ -209,17 +231,17 @@ class MainScene : ApplicationListener {
         }
     }
 
-    private suspend fun Building.toModel(): Model? {
-        if (this.ways.isEmpty()) return null
-        val baseNodes = this.ways.first().nodes.map { node ->
-            val x = node.coords - this.coords
-            x.toSceneCoords(this@MainScene.baselineCoord, true)
+    suspend fun toModel(building: Building, baseline: Vec3): Model? {
+        if (building.ways.isEmpty()) return null
+        val baseNodes = building.ways.first().nodes.map { node ->
+            val x = node.coords - building.coords
+            x.toSceneCoords(baseline, true)
         }.map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
             .distinct() //the last node is repeated for closed loops!
         if (baseNodes.size < 3) return null
 
-        val height = this.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
-            ?: this.tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
+        val height = building.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
+            ?: building.tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
             ?: 2f
         val topNodes = baseNodes.map { it.cpy().add(0f, height, 0f) }
 
@@ -275,11 +297,6 @@ class MainScene : ApplicationListener {
         }
     }
 
-    private fun isVisible(cam: Camera, instance: ModelInstance): Boolean {
-        instance.transform.getTranslation(position)
-        return cam.frustum.sphereInFrustum(position, 20f)
-    }
-
     private fun List<Vector3>.isClockwise(): Boolean {
         var sum = 0f
         for (i in indices) {
@@ -290,7 +307,7 @@ class MainScene : ApplicationListener {
         return sum > 0
     }
 
-    suspend fun moveAgents(received: List<Agent>, time: Instant) {
+    /*suspend fun moveAgents(received: List<Agent>, time: Instant) {
         currentTime = time
         received.forEach { agent ->
             val prev = agents[agent.id]?.location?.toSceneCoords(this@MainScene.baselineCoord)
@@ -309,7 +326,7 @@ class MainScene : ApplicationListener {
                 }
             }
         }
-    }
+    }*/
 
     fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int): Pair<Float, GraphicalBuilding>? {
         //cast ray from screen coordinates
@@ -328,8 +345,29 @@ class MainScene : ApplicationListener {
     }
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
+        if(popup?.isVisible == true || settingsPage?.isVisible == true) return
+        val menuBounds = menu?.getBoundaries()
+        //if click is within menu boundary, ignore as the building is covered
+        menuBounds?.let {
+            val invertedY = stage.height - coordY
+            if(coordX >= it.bLeft.x && coordX <= it.tRight.x
+                && invertedY >= it.bLeft.y && invertedY <= it.tRight.y
+            ) return
+        }
         popup = PopupWindow(stage, skin, building.apiData!!)
         popup!!.show()
+    }
+
+    private fun showMenu() {
+        if(menu?.isVisible == true) return
+        menu = GameMenu(stage, skin, stage.width, stage.height, Main.instanceData,this)
+        menu!!.show()
+    }
+
+    fun showSettings() {
+        if(settingsPage?.isVisible == true) return
+        settingsPage = SettingsPage(stage, skin)
+        settingsPage!!.show()
     }
 
     private fun ModelInstance.getTransformedBoundingBox(): BoundingBox {
@@ -339,21 +377,28 @@ class MainScene : ApplicationListener {
         return bounds
     }
 
+    fun clearGraphicalData() {
+        chunks.clear()
+        caches.clear()
+        agents.clear()
+        arrows.clear()
+    }
+
     fun updateCaches() {
         runBlocking {
             chunks.keys.forEach { c ->
                 val chunk = chunks[c] ?: return@forEach
-                val cache = caches.getOrPut(c) { ModelCache() to Mutex() }
-                val modelCache = cache.first
-                val mutex = cache.second
+                val cache = caches.getOrPut(c) { CacheObject(ModelCache(), Mutex(), c.split(":").let { Vector3(it[0].toFloat(), 0f, it[1].toFloat()) }, chunkSize ) }
+                val modelCache = cache.cache
+                val mutex = cache.lock
                 if (mutex.isLocked) return@forEach
-                mutex.lock()
-                modelCache.begin()
-                chunk.values.forEach { modelCache.add(it.instance) }
-                runOnRenderThread { modelCache.end() }
-                mutex.unlock()
+                mutex.withLock {
+                    modelCache.begin()
+                    chunk.values.forEach { modelCache.add(it.instance) }
+                    runOnRenderThread { modelCache.end() }
+                }
             }
         }
+        menu?.loadingBar?.fadeOut()
     }
-
 }
