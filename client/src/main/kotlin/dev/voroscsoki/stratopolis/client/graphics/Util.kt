@@ -1,15 +1,10 @@
 package dev.voroscsoki.stratopolis.client.graphics
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.Mesh
+import com.badlogic.gdx.graphics.VertexAttribute
 import com.badlogic.gdx.graphics.VertexAttributes.Usage
-import com.badlogic.gdx.graphics.g2d.TextureRegion
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.scenes.scene2d.ui.*
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import dev.voroscsoki.stratopolis.common.util.Vec3
 
 
@@ -174,102 +169,4 @@ fun copyMesh(meshToCopy: Mesh, isStatic: Boolean, removeDuplicates: Boolean, usa
     result.setVertices(vertices, 0, numVertices * newVertexSize)
     result.setIndices(indices)
     return result
-}
-
-
-fun createDefaultGdxSkin(): Skin {
-    val skin = Skin()
-
-    val primaryColor = Color(0.2f, 0.6f, 0.9f, 1f)
-    val accentColor = Color(0.95f, 0.5f, 0.2f, 1f)
-    val backgroundColor = Color(0.15f, 0.15f, 0.18f, 1f)
-    val surfaceColor = Color(0.2f, 0.2f, 0.24f, 1f)
-    val textColor = Color(0.92f, 0.92f, 0.92f, 1f)
-
-    val generator = FreeTypeFontGenerator(Gdx.files.internal("assets/fonts/Roboto-Regular.ttf"))
-    val normalText = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
-        size = 14
-        color = textColor
-        borderWidth = 0f
-    }
-    val normalFont = generator.generateFont(normalText)
-    skin.add("default-font", normalFont)
-
-    val titleText = FreeTypeFontGenerator.FreeTypeFontParameter().apply {
-        size = 16
-        color = textColor
-        borderWidth = 0f
-    }
-    val titleFont = generator.generateFont(titleText)
-    skin.add("title-font", titleFont)
-
-    //UI texture
-    val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888)
-    pixmap.setColor(Color.WHITE)
-    pixmap.fill()
-    val baseTexture = Texture(pixmap)
-    val baseRegion = TextureRegion(baseTexture)
-    val baseDrawable = TextureRegionDrawable(baseRegion)
-
-    fun createPaddedDrawable(color: Color, leftRight: Float = 12f, topBottom: Float = 8f): Drawable {
-        val drawable = TextureRegionDrawable(baseRegion).tint(color)
-        drawable.leftWidth = leftRight
-        drawable.rightWidth = leftRight
-        drawable.topHeight = topBottom
-        drawable.bottomHeight = topBottom
-        return drawable
-    }
-
-    val labelStyle = Label.LabelStyle().apply {
-        this.font = normalFont
-        this.fontColor = textColor
-    }
-    skin.add("default", labelStyle)
-
-    val buttonStyle = TextButton.TextButtonStyle().apply {
-        this.up = createPaddedDrawable(primaryColor)
-        this.down = createPaddedDrawable(primaryColor.cpy().mul(0.8f))
-        this.over = createPaddedDrawable(primaryColor.cpy().mul(1.2f))
-        this.font = normalFont
-        this.fontColor = textColor
-    }
-    skin.add("default", buttonStyle)
-
-    val accentButtonStyle = TextButton.TextButtonStyle(buttonStyle).apply {
-        this.up = baseDrawable.tint(accentColor)
-        this.down = baseDrawable.tint(accentColor.cpy().mul(0.8f))
-        this.over = baseDrawable.tint(accentColor.cpy().mul(1.2f))
-    }
-    skin.add("accent", accentButtonStyle)
-
-    val windowStyle = Window.WindowStyle().apply {
-        this.titleFont = titleFont  // Using larger font for window titles
-        this.background = baseDrawable.tint(surfaceColor)
-        this.titleFontColor = textColor
-
-        this.background.leftWidth = 16f
-        this.background.rightWidth = 16f
-        this.background.topHeight = 16f
-        this.background.bottomHeight = 16f
-    }
-    skin.add("default", windowStyle)
-
-    val textFieldStyle = TextField.TextFieldStyle().apply {
-        this.font = normalFont
-        this.fontColor = textColor
-        this.background = baseDrawable.tint(backgroundColor)
-        this.focusedBackground = baseDrawable.tint(backgroundColor.cpy().mul(1.2f))
-        this.cursor = baseDrawable.tint(primaryColor)
-        this.selection = baseDrawable.tint(primaryColor.cpy().mul(0.5f))
-
-        this.background.leftWidth = 8f
-        this.background.rightWidth = 8f
-        this.background.topHeight = 8f
-        this.background.bottomHeight = 8f
-    }
-    skin.add("default", textFieldStyle)
-
-    pixmap.dispose()
-    generator.dispose()
-    return skin
 }

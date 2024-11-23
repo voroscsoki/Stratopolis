@@ -2,17 +2,20 @@ package dev.voroscsoki.stratopolis.client.graphics
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Skin
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.scenes.scene2d.ui.TextField
-import com.badlogic.gdx.scenes.scene2d.ui.Window
+import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import dev.voroscsoki.stratopolis.client.Main
 
 class SettingsPage(stage: Stage, skin: Skin) : Window("Settings", skin) {
     init {
         setSize(stage.viewport.worldWidth * 0.8f, stage.viewport.worldHeight * 0.8f)
         top().left()
-        val serverAddress = TextField("ws://localhost:8085/control", skin).apply {
+
+        val addressLabel = Label("Server address: ", skin).apply {
+            this@SettingsPage.add(this).pad(50f)
+            pack()
+        }
+        val serverAddress = TextField(Main.socket.targetAddress, skin).apply {
             width = 400f
             this@SettingsPage.add(this).pad(50f).row()
             pack()

@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 
 class SocketClient(
     private val incomingHandler: (ControlMessage) -> Unit,
-    private val targetAddress: String = "ws://localhost:8085/control"
+    val targetAddress: String = "ws://localhost:8085/control"
 ) {
     private val client: HttpClient = HttpClient {
         install(WebSockets) {

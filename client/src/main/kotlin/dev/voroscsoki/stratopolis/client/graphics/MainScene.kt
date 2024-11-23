@@ -117,7 +117,7 @@ class MainScene : ApplicationListener {
         }
 
         stage = Stage(ScreenViewport())
-        skin = createDefaultGdxSkin()
+        skin = CustomSkin()
 
         modelBuilder = ModelBuilder()
         defaultBoxModel = modelBuilder.createBox(
