@@ -111,6 +111,8 @@ class InstanceData(val scene: MainScene) {
         buildings.clear()
         nodes.clear()
         scene.clearGraphicalData()
+        scene.cam.position.x = 0f
+        scene.cam.position.z = 0f
     }
 
     fun handleIncomingMessage(msg: ControlMessage) {

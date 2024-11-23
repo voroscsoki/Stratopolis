@@ -46,14 +46,13 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
             addListener(object : ClickListener() {
                 override fun clicked(event: InputEvent, x: Float, y: Float) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        if(Main.socket.targetAddress != addressField.text) {
+                        val changingAddress = Main.socket.targetAddress != addressField.text
                             val soc = SocketClient(Main.socket.incomingHandler, addressField.text)
                                 launch {
                                     if(soc.isWebSocketAvailable(soc.targetAddress)) soc.initializeWebSocket()
                                     Main.socket = soc
                                     Main.instanceData.setupGame()
                                 }
-                        }
                         hide()
                     }
                 }

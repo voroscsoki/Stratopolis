@@ -10,14 +10,13 @@ import dev.voroscsoki.stratopolis.server.db.Nodes
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
 import kotlinx.serialization.decodeFromString
 import net.mamoe.yamlkt.Yaml
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.batchUpsert
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
+import kotlin.random.Random
+import kotlin.sequences.Sequence
 
 class DatabaseAccess {
     companion object {
@@ -33,30 +32,12 @@ class DatabaseAccess {
             }
         }
         //TODO: roads
-        fun seedFromOsm(storage: OsmStorage) {
-            /*storage.nodes.values.chunked(200000).forEach { chunk ->
-                println("Seeding chunk of nodes")
-                transaction {
-                    Nodes.batchUpsert(chunk.map { SerializableNode(it) }, Nodes.id) { node ->
-                        this[Nodes.id] = EntityID(node.id, Nodes)
-                        this[Nodes.coords] = node.coords
-                        this[Nodes.tags] = Json.encodeToString(node.tags)
-                    }
-                }
-            }*/
-            /*println("Seeding ways")
-                Ways.batchUpsert(storage.ways.values, Ways.id) { way ->
-                    this[Ways.id] = EntityID(way.id, Ways)
-                    this[Ways.tags] = Yaml.encodeToString(way.tags.map { SerializableTag(it) })
-                }
-                storage.ways.values.forEach { way ->
-                    way.nodeIds.forEach { node ->
-                        Nodes.update({ Nodes.id eq node }) {
-                            //update the way column
-                            it[Nodes.way] = EntityID(way.id, Ways)
-                        }
-                    }
-                }*/
+        fun loadFromOsm(storage: OsmStorage) {
+            transaction {
+                println("Wiping old building data")
+                Buildings.deleteAll()
+            }
+
             transaction {
                 println("Seeding buildings")
                 Buildings.batchUpsert(storage.buildings, Buildings.id) { building ->
@@ -125,7 +106,10 @@ class DatabaseAccess {
         }
 
         fun getAverageCoords(): Vec3 {
-            return Vec3(48.21358f, 0f, 16.37675f)
+            return transaction {
+                val res = Buildings.select(Buildings.coords).sortedBy { Random.nextFloat() }.map { it[Buildings.coords] }.take(1000)
+                return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()
+            }
         }
     }
 }
