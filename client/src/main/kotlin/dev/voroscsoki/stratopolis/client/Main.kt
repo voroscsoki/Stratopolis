@@ -23,13 +23,13 @@ class Main {
                 asyncInit()
             }
         }
-        private suspend fun asyncInit() {
+        private fun asyncInit() {
 
             val config = Lwjgl3ApplicationConfiguration()
             config.setTitle("Stratopolis")
             config.setWindowedMode(3840,2160)
-            config.useVsync(false)
-            config.setForegroundFPS(120)
+            config.useVsync(true)
+            config.setForegroundFPS(500)
             Lwjgl3Application(appScene, config)
         }
     }

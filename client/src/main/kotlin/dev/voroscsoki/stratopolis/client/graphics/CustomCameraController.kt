@@ -3,20 +3,19 @@ package dev.voroscsoki.stratopolis.client.graphics
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.InputAdapter
-import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.Vector3
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
+class CustomCameraController(val scene: MainScene) : InputAdapter() {
     val invertedZoom = false
     var ctrlModifier = false
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val mutex = Mutex()
 
-    private val zoomHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val zoomHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.translate(cam.direction.cpy().nor().scl(amount))
@@ -24,7 +23,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    private val rotateHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val rotateHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.rotateAround(cam.position, Vector3(0f, 1f, 0f), amount)
@@ -32,7 +31,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    private val linearHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val linearHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 // positive amount should reasonably move the camera up
@@ -42,7 +41,7 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
             }
         }
     }
-    private val sidewaysHandler = SmoothMoveHandler(cam) { cam, amount ->
+    private val sidewaysHandler = SmoothMoveHandler(scene.cam) { cam, amount ->
         scope.launch {
             mutex.withLock {
                 cam.translate(Vector3(cam.up.cpy().rotate(Vector3(0f,1f,0f), 90f).scl(-amount)))
@@ -77,6 +76,8 @@ class CustomCameraController(cam: PerspectiveCamera) : InputAdapter() {
     //val zoomHandler = SmoothMoveHandler(cam) { cam, amount -> cam.translate(cam.direction.cpy().nor().scl(amount)) }
 
     override fun keyDown(p0: Int): Boolean {
+        if(!scene.isCameraMoveEnabled) return false
+
         val multiplier = if(ctrlModifier) 4f else 1f
         when (p0) {
             Keys.ESCAPE -> Gdx.app.exit()

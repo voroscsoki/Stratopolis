@@ -23,7 +23,7 @@ class Main {
 
         @JvmStatic
         fun reinitalizeDB() {
-            val storage = OsmStorage(File("budapest.osm.pbf"))
+            val storage = OsmStorage(File("Wien.osm.pbf"))
             DatabaseAccess.seedFromOsm(storage)
         }
     }

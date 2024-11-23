@@ -77,10 +77,14 @@ class MainScene : ApplicationListener {
     private lateinit var skin: Skin
     private var popup: PopupWindow? = null
     private var menu: GameMenu? = null
+    private var settingsPage: SettingsPage? = null
+
+    val isCameraMoveEnabled : Boolean
+        get() = settingsPage?.isVisible != true
 
     //constants
     private val chunkSize = 5000
-    private val baselineCoord = Vec3(47.472935f, 0f, 19.053410f)
+    private val baselineCoord = Vec3(48.2204f, 0f, 16.3797f)
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
@@ -132,7 +136,7 @@ class MainScene : ApplicationListener {
         chunks.getOrPut(getChunkKey(0f, 0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
 
         val multiplexer = InputMultiplexer().apply {
-            addProcessor(CustomCameraController(cam))
+            addProcessor(CustomCameraController(this@MainScene))
             addProcessor(UtilInput(this@MainScene))
             addProcessor(stage)
         }
@@ -369,7 +373,7 @@ class MainScene : ApplicationListener {
     }
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
-        if(popup?.isVisible == true) return
+        if(popup?.isVisible == true || settingsPage?.isVisible == true) return
         val menuBounds = menu?.getBoundaries()
         //if click is within menu boundary, ignore as the building is covered
         menuBounds?.let {
@@ -386,6 +390,12 @@ class MainScene : ApplicationListener {
         if(menu?.isVisible == true) return
         menu = GameMenu(stage, skin, stage.width, stage.height, this)
         menu!!.show()
+    }
+
+    fun showSettings() {
+        if(settingsPage?.isVisible == true) return
+        settingsPage = SettingsPage(stage, skin)
+        settingsPage!!.show()
     }
 
     private fun ModelInstance.getTransformedBoundingBox(): BoundingBox {
@@ -417,7 +427,7 @@ class MainScene : ApplicationListener {
     fun requestBuildings() {
         menu?.loadingBar?.fadeIn()
         val source = cam.position?.toWorldCoords(baselineCoord)!!.copy(y = 0f)
-        runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.03f)) }
+        runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.15f)) }
     }
 
     fun toggleSimulation() {

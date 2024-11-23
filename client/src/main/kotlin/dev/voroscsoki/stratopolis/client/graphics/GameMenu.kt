@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.system.exitProcess
 
 
 class GameMenu(
@@ -53,7 +54,7 @@ class GameMenu(
                 hoverColor = Color(0.3f, 0.3f, 0.7f, 1f),
                 iconDrawable = settingsDrawable
             ) {
-                println("Settings clicked")
+                scene.showSettings()
             },
             createButton(
                 upColor = Color(0.6f, 0.2f, 0.2f, 1f),
@@ -62,6 +63,7 @@ class GameMenu(
                 iconDrawable = exitDrawable
             ) {
                 Gdx.app.exit()
+                exitProcess(0)
             }
         )
         menuBarWidth = (buttonSize * buttons.size)
