@@ -39,4 +39,8 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     private fun length(): Float {
         return sqrt(x * x + y * y + z * z)
     }
+
+    infix operator fun div(amount: Float): Vec3 {
+        return Vec3(this.x / amount, this.y / amount, this.z / amount)
+    }
 }

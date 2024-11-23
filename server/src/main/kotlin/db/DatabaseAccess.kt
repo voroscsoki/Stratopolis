@@ -129,5 +129,9 @@ class DatabaseAccess {
                 }.firstOrNull()
             }
         }
+
+        fun getAverageCoords(): Vec3 {
+            return Vec3(48.21358f, 0f, 16.37675f)
+        }
     }
 }

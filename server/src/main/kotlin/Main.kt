@@ -16,14 +16,14 @@ class Main {
             DatabaseAccess.connect()
             println("Hello from the server!")
             //reinitalizeDB()
-            simu = Simulation()
+            //simu = Simulation()
 
             EngineMain.main(args)
         }
 
         @JvmStatic
         fun reinitalizeDB() {
-            val storage = OsmStorage(File("budapest.osm.pbf"))
+            val storage = OsmStorage(File("Wien.osm.pbf"))
             DatabaseAccess.seedFromOsm(storage)
         }
     }

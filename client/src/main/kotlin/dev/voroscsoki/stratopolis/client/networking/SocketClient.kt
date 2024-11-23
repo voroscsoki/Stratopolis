@@ -14,8 +14,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class SocketClient(
-    private val incomingHandler: (ControlMessage) -> Unit,
-    private val targetAddress: String = "ws://localhost:8085/control"
+    val incomingHandler: (ControlMessage) -> Unit,
+    val targetAddress: String = "ws://localhost:8085/control"
 ) {
     private val client: HttpClient = HttpClient {
         install(WebSockets) {
@@ -28,6 +28,7 @@ class SocketClient(
     private val _isConnected = MutableStateFlow(false)
 
     private suspend fun listen() {
+        if(!isWebSocketAvailable(targetAddress)) return
         client.webSocket(targetAddress) {
             _isConnected.value = true
 
@@ -57,8 +58,16 @@ class SocketClient(
         }
     }
 
-    suspend fun sendSocketMessage(msg: ControlMessage) {
-        sendQueue.send(msg)
+    fun disconnect() {
+        client.close()
+        _isConnected.value = false
+    }
+
+    suspend fun sendSocketMessage(msg: ControlMessage) : Boolean {
+        _isConnected.value.let {
+            if (it) sendQueue.send(msg)
+            return it
+        }
     }
 
     suspend fun initializeWebSocket() {
@@ -66,5 +75,22 @@ class SocketClient(
             listen()
         }
         _isConnected.first { it }
+    }
+
+    suspend fun isWebSocketAvailable(url: String): Boolean {
+        val testClient = HttpClient { install(WebSockets) {} }
+        return try {
+            testClient.webSocketSession(url) {}
+            true
+        } catch (e: Exception) {
+            println("WebSocket connection failed: ${e.message}")
+            false
+        } finally {
+            testClient.close()
+        }
+    }
+
+    fun copy(targetAddress: String?): SocketClient {
+        return SocketClient(incomingHandler, targetAddress ?: this.targetAddress)
     }
 }
