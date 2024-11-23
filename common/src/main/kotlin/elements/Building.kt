@@ -10,5 +10,4 @@ data class Building(
     val type: EntityType,
     val coords: Vec3 = Vec3(0f,0f,0f),
     val ways: List<SerializableWay>,
-    var occupancy: Int = 0,
 )
