@@ -39,8 +39,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 
-data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
-data class GraphicalArrow(var location: Vec3, val instance: ModelInstance)
+open class GraphicalObject(val instance: ModelInstance)
+class GraphicalBuilding(val apiData: Building?, instance: ModelInstance) : GraphicalObject(instance)
+class GraphicalArrow(var location: Vec3, instance: ModelInstance) : GraphicalObject(instance)
+class GraphicalRoad(instance: ModelInstance) : GraphicalObject(instance)
 
 data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
     fun checkVisibility(cam: PerspectiveCamera) {
@@ -84,7 +86,7 @@ class MainScene : ApplicationListener {
     private val chunkSize = 5000
 
     //updatables
-    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
+    private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalObject>>()
     private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     val arrows = ConcurrentHashMap<Long, GraphicalArrow>()
@@ -129,7 +131,7 @@ class MainScene : ApplicationListener {
         )
         val inst = ModelInstance(defaultBoxModel)
         //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
-        chunks.getOrPut(getChunkKey(0.0, 0.0)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
+        chunks.getOrPut(getChunkKey(0.0, 0.0)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, inst)
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(this@MainScene))
@@ -220,7 +222,7 @@ class MainScene : ApplicationListener {
         chunks.getOrPut(
             getChunkKey(convertedCoords.x, convertedCoords.z)
         )
-        { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, model, inst)
+        { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, inst)
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
@@ -314,7 +316,7 @@ class MainScene : ApplicationListener {
         Intersector.intersectRayPlane(ray, Plane(Vector3(0f, 1f, 0f), Vector3(0f,0f,0f)), inter)
 
         //check for intersection with buildings
-        return chunks[getChunkKey(inter.x.toDouble(), inter.z.toDouble())]?.values
+        return chunks[getChunkKey(inter.x.toDouble(), inter.z.toDouble())]?.values?.mapNotNull { it as? GraphicalBuilding }
             ?.mapNotNull { bldg ->
                 if (Intersector.intersectRayBounds(ray, bldg.instance.getTransformedBoundingBox(), null)) {
                     ray.origin.dst(bldg.instance.getTransformedBoundingBox().getCenter(Vector3())) to bldg
