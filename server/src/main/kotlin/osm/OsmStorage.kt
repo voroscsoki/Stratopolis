@@ -3,12 +3,10 @@ package dev.voroscsoki.stratopolis.server.osm
 import de.topobyte.osm4j.core.model.iface.*
 import de.topobyte.osm4j.pbf.seq.PbfIterator
 import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import dev.voroscsoki.stratopolis.common.elements.SerializableWay
-import dev.voroscsoki.stratopolis.common.util.Vec3
-import dev.voroscsoki.stratopolis.common.util.members
-import dev.voroscsoki.stratopolis.common.util.nodeIds
-import dev.voroscsoki.stratopolis.common.util.tags
+import dev.voroscsoki.stratopolis.common.util.*
 import java.io.File
 
 
@@ -18,12 +16,14 @@ class OsmStorage(
     val relations: MutableMap<Long, OsmRelation>
 ) {
     lateinit var buildings: HashSet<Building>
+    lateinit var roads: HashSet<Road>
 
 
     constructor(source: File) : this(mutableMapOf(), mutableMapOf(), mutableMapOf()) {
         val iter: Iterator<EntityContainer> = PbfIterator(source.inputStream(), true).iterator()
         processOsmEntities(iter)
         buildings = createBuildingSet()
+        roads = createRoadSet()
     }
 
     private fun createBuildingSet(): HashSet<Building> {
@@ -51,7 +51,17 @@ class OsmStorage(
         return output.toHashSet()
     }
 
-    //private fun createRoadSet(): HashSet<>
+    private fun createRoadSet(): HashSet<Road> {
+        val elements = ways.filter { it.value.isRoad() }
+        val output = mutableSetOf<Road>()
+
+        elements.forEach { way ->
+            output.add(Road(
+                way.key, way.value.tags.map { SerializableTag(it) }, listOf(SerializableWay(way.value, way.value.nodeIds.map { nodes[it]!! })))
+            )
+        }
+        return output.toHashSet()
+    }
 
     private fun processOsmEntities(iter: Iterator<EntityContainer>) {
         for (entity in iter) {

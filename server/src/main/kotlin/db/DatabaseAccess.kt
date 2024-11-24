@@ -1,12 +1,13 @@
 package dev.voroscsoki.stratopolis.server
 
 import dev.voroscsoki.stratopolis.common.elements.Building
-import dev.voroscsoki.stratopolis.common.elements.SerializableNode
+import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import dev.voroscsoki.stratopolis.common.elements.SerializableWay
 import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.getAverage
 import dev.voroscsoki.stratopolis.server.db.Buildings
-import dev.voroscsoki.stratopolis.server.db.Nodes
+import dev.voroscsoki.stratopolis.server.db.Roads
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
 import kotlinx.serialization.decodeFromString
 import net.mamoe.yamlkt.Yaml
@@ -27,18 +28,20 @@ class DatabaseAccess {
 
             transaction {
                 SchemaUtils.createMissingTablesAndColumns(
-                    Buildings
+                    Buildings, Roads
                 )
             }
         }
         //TODO: roads
         fun loadFromOsm(storage: OsmStorage) {
             transaction {
-                println("Wiping old building data")
+                println("Wiping old data")
                 Buildings.deleteAll()
+                Roads.deleteAll()
             }
 
             transaction {
+                //TODO: logger
                 println("Seeding buildings")
                 Buildings.batchUpsert(storage.buildings, Buildings.id) { building ->
                     this[Buildings.id] = building.id
@@ -48,24 +51,14 @@ class DatabaseAccess {
                     this[Buildings.ways] = Yaml.encodeToString(building.ways)
                 }
             }
-        }
 
-        fun getNodes(baseCoord: Vec3? = null, rangeDegrees: Double? = null): Sequence<SerializableNode> {
-            val resultRows = transaction {
-                Nodes.selectAll().iterator().asSequence()
-            }
-
-            return resultRows.mapNotNull { row ->
-                val buildingCoords = row[Nodes.coords]
-                val distance = baseCoord?.let { c -> buildingCoords.dist(c) } ?: 0.0
-
-                if (rangeDegrees == null || distance <= rangeDegrees) {
-                    SerializableNode(
-                        row[Nodes.id].value,
-                        emptyList(),
-                        row[Nodes.coords]
-                    )
-                } else null
+            transaction {
+                println("Seeding roads")
+                Roads.batchUpsert(storage.roads, Roads.id) { road ->
+                    this[Roads.id] = road.id
+                    this[Roads.tags] = Yaml.encodeToString(road.tags)
+                    this[Roads.ways] = Yaml.encodeToString(road.ways)
+                }
             }
         }
 
@@ -87,6 +80,28 @@ class DatabaseAccess {
                         coords = buildingCoords,
                         ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
                     )
+                } else null
+            }
+        }
+
+        fun getRoads(baseCoord: Vec3? = null, range: Double? = null): Sequence<Road> {
+            val resultRows = transaction {
+                Roads.selectAll().iterator().asSequence()
+            }
+
+            return resultRows.mapNotNull { row ->
+                val output = row.let {
+                    Road(
+                        it[Roads.id].value,
+                        Yaml.decodeFromString<List<SerializableTag>>(it[Roads.tags]),
+                        Yaml.decodeFromString<List<SerializableWay>>(it[Roads.ways])
+                    )
+                }
+                val coords = output.ways.flatMap { it.nodes }.getAverage()
+                val distance = baseCoord?.let { c -> coords.dist(c) } ?: 0.0
+
+                if (range == null || distance <= range) {
+                    output
                 } else null
             }
         }

@@ -307,27 +307,6 @@ class MainScene : ApplicationListener {
         return sum > 0
     }
 
-    /*suspend fun moveAgents(received: List<Agent>, time: Instant) {
-        currentTime = time
-        received.forEach { agent ->
-            val prev = agents[agent.id]?.location?.toSceneCoords(this@MainScene.baselineCoord)
-            agents[agent.id] = agent
-            val current = agent.location.toSceneCoords(this@MainScene.baselineCoord)
-            if (prev != null) {
-                runOnRenderThread {
-                    (arrows.putIfAbsent(agent.id, ModelInstance(arrowModel)) ?: arrows[agent.id])!!.apply {
-                        //transform to point from prev to current
-                        transform.setToTranslation(Vector3(prev.x.toFloat(), prev.y.toFloat(), prev.z.toFloat()))
-                        /*val angle = (current - prev).let {
-                            Math.toDegrees(asin(it.z/it.x)).toFloat()
-                        }
-                        transform.rotate(Vector3(0f, 1f, 0f), angle)*/
-                    }
-                }
-            }
-        }
-    }*/
-
     fun pickBuildingRay(screenCoordX: Int, screenCoordY: Int): Pair<Float, GraphicalBuilding>? {
         //cast ray from screen coordinates
         val inter = Vector3()
@@ -399,7 +378,6 @@ class MainScene : ApplicationListener {
                 }
             }
         }
-        menu?.loadingBar?.fadeOut()
     }
 
     suspend fun createArrow(): GraphicalArrow = GraphicalArrow(Vec3(0.0,0.0,0.0), runOnRenderThread { ModelInstance(defaultBoxModel).apply {

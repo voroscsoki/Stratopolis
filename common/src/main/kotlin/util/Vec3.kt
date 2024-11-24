@@ -40,7 +40,7 @@ data class Vec3(val x: Double, val y: Double, val z: Double) {
         return sqrt(x * x + y * y + z * z)
     }
 
-    infix operator fun div(amount: Float): Vec3 {
-        return Vec3(this.x / amount, this.y / amount, this.z / amount)
+    infix operator fun div(amount: Number): Vec3 {
+        return Vec3(this.x / amount.toDouble(), this.y / amount.toDouble(), this.z / amount.toDouble())
     }
 }
