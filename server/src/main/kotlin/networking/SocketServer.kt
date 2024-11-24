@@ -17,7 +17,7 @@ class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeRequest::class.java to { msg -> runBlocking { handleNodeRequest(msg as NodeRequest) } },
         BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } },
-        SimulationStartRequest::class.java to { simu.tick { agents: List<Agent>, time: Instant -> socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } },
+        SimulationStartRequest::class.java to { simu.tick { agents: List<Pair<Agent, Agent>>, time: Instant -> socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } },
         EstablishBearingRequest::class.java to { msg -> runBlocking { sendSocketMessage(EstablishBearingResponse(ControlResult.OK, DatabaseAccess.getAverageCoords()))
         } }
     )

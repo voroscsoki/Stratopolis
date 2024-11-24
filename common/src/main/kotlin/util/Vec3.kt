@@ -5,11 +5,11 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @Serializable
-data class Vec3(val x: Float, val y: Float, val z: Float) {
+data class Vec3(val x: Double, val y: Double, val z: Double) {
     companion object {
         fun fromString(str: String): Vec3 {
             val parts = str.split(",")
-            return Vec3(parts[0].toFloat(), parts[1].toFloat(), parts[2].toFloat())
+            return Vec3(parts[0].toDouble(), parts[1].toDouble(), parts[2].toDouble())
         }
     }
 
@@ -17,8 +17,8 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
         return "$x,$y,$z"
     }
 
-    infix fun dist(other: Vec3): Float {
-        return sqrt((other.x - this.x).pow(2f) + (other.y - this.y).pow(2f) + (other.z - this.z).pow(2f))
+    infix fun dist(other: Vec3): Double {
+        return sqrt((other.x - this.x).pow(2.0) + (other.y - this.y).pow(2.0) + (other.z - this.z).pow(2.0))
     }
     infix operator fun plus(other: Vec3): Vec3 {
         return Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
@@ -36,7 +36,7 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
         return Vec3(x / length(), y / length(), z / length())
     }
 
-    private fun length(): Float {
+    private fun length(): Double {
         return sqrt(x * x + y * y + z * z)
     }
 

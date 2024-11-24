@@ -17,14 +17,14 @@ fun OsmEntity.isRoad(): Boolean {
 
 fun List<OsmNode>.nodeAverage() : Vec3 {
     val coords = this.map { it.latitude to it.longitude }
-    val avgLat = coords.map { it.first }.average().toFloat()
-    val avgLon = coords.map { it.second }.average().toFloat()
-    return Vec3(avgLat,0f,avgLon)
+    val avgLat = coords.map { it.first }.average()
+    val avgLon = coords.map { it.second }.average()
+    return Vec3(avgLat,0.0,avgLon)
 }
 
 fun List<OsmWay>.wayAverage(nodes: Map<Long, OsmNode>) : Vec3 {
     val coords = this.map { way -> way.nodeIds.map { nodes[it]!! } }.flatten().map { it.latitude to it.longitude }
-    val avgLat = coords.map { it.first }.average().toFloat()
-    val avgLon = coords.map { it.second }.average().toFloat()
-    return Vec3(avgLat,0f,avgLon)
+    val avgLat = coords.map { it.first }.average()
+    val avgLon = coords.map { it.second }.average()
+    return Vec3(avgLat,0.0,avgLon)
 }

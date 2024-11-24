@@ -9,6 +9,7 @@ import dev.voroscsoki.stratopolis.client.graphics.MainScene
 import dev.voroscsoki.stratopolis.client.graphics.fadeIn
 import dev.voroscsoki.stratopolis.client.graphics.toSceneCoords
 import dev.voroscsoki.stratopolis.client.graphics.toWorldCoords
+import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.SerializableNode
 import dev.voroscsoki.stratopolis.common.networking.*
@@ -16,17 +17,51 @@ import dev.voroscsoki.stratopolis.common.util.MapChange
 import dev.voroscsoki.stratopolis.common.util.ObservableMap
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.datetime.toKotlinInstant
+import java.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 class InstanceData(val scene: MainScene) {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         NodeResponse::class.java to { msg -> handleNodes(msg as NodeResponse) },
         BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) },
         EstablishBearingResponse::class.java to { msg -> baselineCoord = (msg as EstablishBearingResponse).baselineCoord },
-        //AgentStateUpdate::class.java to { msg -> runBlocking { (msg as AgentStateUpdate).let { Main.appScene.moveAgents(it.agents, it.time) } }}
+        AgentStateUpdate::class.java to { msg -> runBlocking { handleAgentUpdate((msg as AgentStateUpdate)) }}
     )
+
+    private suspend fun handleAgentUpdate(it: AgentStateUpdate) {
+        it.agents.map { a -> agents.putIfAbsent(a.first.id, a.first)}
+        simulationQueue.send(it)
+    }
 
     private val nodes = ObservableMap<Long, SerializableNode>()
     private val buildings = ObservableMap<Long, Building>()
+    private val agents = ObservableMap<Long, Agent>()
+    private val simulationQueue = Channel<AgentStateUpdate>()
+    private val gameLoopJob = CoroutineScope(Dispatchers.IO).launch {
+        while(true) {
+            val currentUpdate = simulationQueue.receive()
+                val newAgents = currentUpdate.agents.map { it.second }.toList()
+                while(currentTime < currentUpdate.time) {
+                    val timeToCover = currentUpdate.time - currentTime
+                    currentTime += 1.seconds
+                    for (agent in agents) {
+                        val currPos = agent.value.location
+                        val targetPos = newAgents.firstOrNull { it.id == agent.key }?.location
+                        targetPos ?: continue
+
+                        val diff = (targetPos - currPos)/(timeToCover.inWholeSeconds.toFloat() + 1f).coerceAtLeast(1f)
+                        agent.value.location += diff
+                        scene.arrows.getOrPut(agent.key) { scene.createArrow() }.location = agents[agent.key]!!.location.toSceneCoords(baselineCoord!!)
+                        println(diff)
+                    }
+                    Thread.sleep(30)
+                }
+        }
+    }
+
+    var currentTime = Clock.systemDefaultZone().instant().toKotlinInstant()
     private var baselineCoord: Vec3? = null
     private var throttleJob: Job? = null
 
@@ -45,7 +80,10 @@ class InstanceData(val scene: MainScene) {
                 else -> {}
             }
         }
+        gameLoopJob.start()
     }
+
+
 
     private fun upsertBuilding(data: Building) {
         baselineCoord ?: return
@@ -63,7 +101,7 @@ class InstanceData(val scene: MainScene) {
             inst ?: return@launch
             val convertedCoords = data.coords.toSceneCoords(baselineCoord!!)
             val validVec =
-                Vector3(convertedCoords.x, convertedCoords.y, convertedCoords.z)
+                Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
             inst.transform.setTranslation(validVec)
             inst.materials.forEach { material ->
                 material.set(
@@ -86,16 +124,16 @@ class InstanceData(val scene: MainScene) {
 
     fun requestBuildings() {
         baselineCoord ?: return
-        val source = scene.cam.position?.toWorldCoords(baselineCoord!!)!!.copy(y = 0f)
+        val source = scene.cam.position?.toWorldCoords(baselineCoord!!)!!.copy(y = 0.0)
         runBlocking {
-            if(Main.socket.sendSocketMessage(BuildingRequest(source, 0.05f)))
+            if(Main.socket.sendSocketMessage(BuildingRequest(source, 0.05)))
                 scene.menu?.loadingBar?.fadeIn()
         }
     }
 
     suspend fun setupGame() {
         baselineCoord = null
-        clear()
+        clearGraphics()
         if(Main.socket.sendSocketMessage(EstablishBearingRequest())) {
             for(i in 0..<10) {
                 if (baselineCoord != null){
@@ -107,7 +145,7 @@ class InstanceData(val scene: MainScene) {
         }
     }
 
-    fun clear() {
+    fun clearGraphics() {
         buildings.clear()
         nodes.clear()
         scene.clearGraphicalData()

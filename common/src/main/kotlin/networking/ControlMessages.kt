@@ -25,7 +25,7 @@ class NodeRequest(val baseCoord: Vec3?) : ControlMessage()
 class NodeResponse(val res: ControlResult, val nodes: List<SerializableNode> = emptyList()) : ControlMessage()
 
 @Serializable
-class BuildingRequest(val baseCoord: Vec3?, val radius: Float? = null) : ControlMessage()
+class BuildingRequest(val baseCoord: Vec3?, val radius: Double? = null) : ControlMessage()
 
 @Serializable
 class BuildingResponse(val res: ControlResult, val buildings: List<Building> = emptyList()) : ControlMessage()
@@ -34,7 +34,7 @@ class BuildingResponse(val res: ControlResult, val buildings: List<Building> = e
 class SimulationStartRequest : ControlMessage()
 
 @Serializable
-class AgentStateUpdate(val agents: List<Agent>, val time: Instant) : ControlMessage()
+class AgentStateUpdate(val agents: List<Pair<Agent, Agent>>, val time: Instant) : ControlMessage()
 
 @Serializable
 class EstablishBearingRequest() : ControlMessage()

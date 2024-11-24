@@ -10,7 +10,7 @@ class Main {
     companion object {
         val appScene = MainScene()
         val instanceData = InstanceData(appScene)
-        var socket = SocketClient(instanceData::handleIncomingMessage, "ws://localhost:8085/controll")
+        var socket = SocketClient(instanceData::handleIncomingMessage, "ws://localhost:8085/control")
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -20,8 +20,8 @@ class Main {
                 val config = Lwjgl3ApplicationConfiguration()
                 config.setTitle("Stratopolis")
                 config.setWindowedMode(3840, 2160)
-                config.useVsync(true)
-                config.setForegroundFPS(500)
+                config.useVsync(false)
+                config.setForegroundFPS(200)
                 Lwjgl3Application(appScene, config)
             }
         }

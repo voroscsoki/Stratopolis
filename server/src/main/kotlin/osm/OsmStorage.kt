@@ -32,7 +32,7 @@ class OsmStorage(
         val relationRelated = relations.filter { it.value.isBuilding() }
         val output = mutableSetOf<Building>()
         default.forEach { node ->
-            output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Vec3(node.value.latitude.toFloat(), 0f, node.value.longitude.toFloat()), emptyList()))
+            output.add(Building(node.value.id, node.value.tags.map { SerializableTag(it) }, EntityType.Node, Vec3(node.value.latitude, 0.0, node.value.longitude), emptyList()))
         }
         wayRelated.forEach { way ->
             output.add(Building(way.value.id, way.value.tags.map { SerializableTag(it) }, EntityType.Way, way.value.nodeIds.map { nodes[it]!! }

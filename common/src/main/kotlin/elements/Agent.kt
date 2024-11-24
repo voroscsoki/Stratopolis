@@ -8,5 +8,7 @@ data class Agent(
     val id: Long,
     var atBuilding: Building,
     var targetBuilding: Building,
-    var location: Vec3
-)
+    var location: Vec3,
+    val speed: Float = 0.000000001f
+) {
+}

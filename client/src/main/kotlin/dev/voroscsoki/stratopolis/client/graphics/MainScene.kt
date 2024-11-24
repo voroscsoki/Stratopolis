@@ -33,7 +33,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Instant
 import org.lwjgl.opengl.GL40
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
@@ -41,6 +40,7 @@ import kotlin.coroutines.suspendCoroutine
 
 
 data class GraphicalBuilding(val apiData: Building?, val model: Model, val instance: ModelInstance)
+data class GraphicalArrow(var location: Vec3, val instance: ModelInstance)
 
 data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
     fun checkVisibility(cam: PerspectiveCamera) {
@@ -87,13 +87,12 @@ class MainScene : ApplicationListener {
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalBuilding>>()
     private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
-    private val arrows = ConcurrentHashMap<Long, ModelInstance>()
+    val arrows = ConcurrentHashMap<Long, GraphicalArrow>()
 
     //helper
     private var keyframeCounter = 0
 
     // text variables
-    private var currentTime: Instant = Instant.fromEpochSeconds(0)
     private lateinit var spriteBatch: SpriteBatch
     private lateinit var font: BitmapFont
 
@@ -118,8 +117,8 @@ class MainScene : ApplicationListener {
 
         modelBuilder = ModelBuilder()
         defaultBoxModel = modelBuilder.createBox(
-            1.6f, 0.8f, 1.6f,
-            Material(ColorAttribute.createDiffuse(Color.GREEN)),
+            2f, 2f, 2f,
+            Material(ColorAttribute.createDiffuse(Color.PURPLE)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
         arrowModel = modelBuilder.createArrow(
@@ -130,7 +129,7 @@ class MainScene : ApplicationListener {
         )
         val inst = ModelInstance(defaultBoxModel)
         //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
-        chunks.getOrPut(getChunkKey(0f, 0f)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
+        chunks.getOrPut(getChunkKey(0.0, 0.0)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, defaultBoxModel, inst)
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(this@MainScene))
@@ -164,15 +163,16 @@ class MainScene : ApplicationListener {
                 if (isKeyframe) it.checkVisibility(cam)
                 if(it.isVisible) modelBatch.render(it.cache, environment)
             }
-            arrows.forEach { (_, instance) ->
-                modelBatch.render(instance, environment)
+            arrows.forEach { (_, graphObj) ->
+                graphObj.instance.transform.setTranslation(graphObj.location.let { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) })
+                modelBatch.render(graphObj.instance, environment)
             }
         }
         modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
-        font.draw(spriteBatch, "Time: $currentTime", 10f, Gdx.graphics.height - 30f)
+        font.draw(spriteBatch, "Time: ${Main.instanceData.currentTime}", 10f, Gdx.graphics.height - 30f)
         spriteBatch.end()
 
         // Render UI
@@ -202,7 +202,7 @@ class MainScene : ApplicationListener {
     override fun pause() {}
 
 
-    private fun getChunkKey(xCoord: Float, zCoord: Float): String {
+    private fun getChunkKey(xCoord: Double, zCoord: Double): String {
         //floor to nearest multiple of CHUNK_SIZE
         val x = Math.floorDiv(xCoord.toInt(), chunkSize) * chunkSize
         val z = Math.floorDiv(zCoord.toInt(), chunkSize) * chunkSize
@@ -335,7 +335,7 @@ class MainScene : ApplicationListener {
         Intersector.intersectRayPlane(ray, Plane(Vector3(0f, 1f, 0f), Vector3(0f,0f,0f)), inter)
 
         //check for intersection with buildings
-        return chunks[getChunkKey(inter.x, inter.z)]?.values
+        return chunks[getChunkKey(inter.x.toDouble(), inter.z.toDouble())]?.values
             ?.mapNotNull { bldg ->
                 if (Intersector.intersectRayBounds(ray, bldg.instance.getTransformedBoundingBox(), null)) {
                     ray.origin.dst(bldg.instance.getTransformedBoundingBox().getCenter(Vector3())) to bldg
@@ -401,4 +401,9 @@ class MainScene : ApplicationListener {
         }
         menu?.loadingBar?.fadeOut()
     }
+
+    suspend fun createArrow(): GraphicalArrow = GraphicalArrow(Vec3(0.0,0.0,0.0), runOnRenderThread { ModelInstance(defaultBoxModel).apply {
+        this.transform.setToScaling(10f,10f,10f)
+    } })
 }
+
