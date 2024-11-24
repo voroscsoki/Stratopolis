@@ -4,6 +4,7 @@ import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
 
 class Simulation {
@@ -12,6 +13,14 @@ class Simulation {
     val agents = mutableListOf<Agent>()
 
     init {
+        val bldg = DatabaseAccess.getRandomBuildings(2000)
+        for (i in 0..1000) {
+            agents += Agent(Random.nextLong(),
+                bldg[i],
+                bldg[i + 1],
+                bldg[i].coords)
+            println(i)
+        }
         agents += Agent(1L,
             DatabaseAccess.getBuildingById(776062316L)!!,
             DatabaseAccess.getBuildingById(24726989L)!!,
@@ -22,9 +31,9 @@ class Simulation {
         clock += 1.minutes
         callback(agents.map { ag ->
             val oldCopy = ag.copy()
-            ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords) * (1 / 3f)
-            if (ag.location dist ag.targetBuilding.coords < 0.0001) {
-                ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
+            ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * (ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
+            if (ag.location == ag.targetBuilding.coords) {
+                ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }.also { ag.location = ag.atBuilding.coords }
             }
             oldCopy to ag.copy()
         }, clock)

@@ -111,5 +111,20 @@ class DatabaseAccess {
                 return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()
             }
         }
+
+        fun getRandomBuildings(count: Int, origin: Vec3? = null): List<Building> {
+            return transaction {
+                val ids = Buildings.selectAll().map { it[Buildings.id].value }.shuffled().take(count)
+                return@transaction Buildings.selectAll().where { Buildings.id inList ids }.map { row ->
+                    Building(
+                        row[Buildings.id].value,
+                        Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        type = row[Buildings.type],
+                        coords = row[Buildings.coords],
+                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                    )
+                }
+            }
+        }
     }
 }
