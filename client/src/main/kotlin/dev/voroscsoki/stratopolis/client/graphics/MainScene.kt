@@ -26,6 +26,7 @@ import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ import kotlin.coroutines.suspendCoroutine
 open class GraphicalObject(val instance: ModelInstance)
 class GraphicalBuilding(val apiData: Building?, instance: ModelInstance) : GraphicalObject(instance)
 class GraphicalArrow(var location: Vec3, instance: ModelInstance) : GraphicalObject(instance)
-class GraphicalRoad(instance: ModelInstance) : GraphicalObject(instance)
+class GraphicalRoad(val apiData: Road?, instance: ModelInstance) : GraphicalObject(instance)
 
 data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
     fun checkVisibility(cam: PerspectiveCamera) {
@@ -70,6 +71,7 @@ class MainScene : ApplicationListener {
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
     lateinit var defaultBoxModel: Model
+    lateinit var roadModel: Model
     private lateinit var arrowModel: Model
     private lateinit var environment: Environment
 
@@ -121,6 +123,11 @@ class MainScene : ApplicationListener {
         defaultBoxModel = modelBuilder.createBox(
             2f, 2f, 2f,
             Material(ColorAttribute.createDiffuse(Color.PURPLE)),
+            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
+        )
+        roadModel = modelBuilder.createBox(
+            1f, 0.1f, 1f,
+            Material(ColorAttribute.createDiffuse(Color.GRAY)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
         arrowModel = modelBuilder.createArrow(
@@ -223,6 +230,18 @@ class MainScene : ApplicationListener {
             getChunkKey(convertedCoords.x, convertedCoords.z)
         )
         { ConcurrentHashMap() }[data.id] = GraphicalBuilding(data, inst)
+    }
+
+    fun putRoad(
+        convertedCoords: Vec3,
+        data: Road,
+        inst: ModelInstance?
+    ) {
+        inst ?: return
+        chunks.getOrPut(
+            getChunkKey(convertedCoords.x, convertedCoords.z)
+        )
+        { ConcurrentHashMap() }[data.id] = GraphicalRoad(data, inst)
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
