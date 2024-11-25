@@ -22,7 +22,7 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
         val settingsTable = Table(skin).top().left()
 
         val label = Label("Server address: ", skin)
-        settingsTable.add(label).right().top().fillY().padRight(10f)
+        settingsTable.add(label).left().top().fillY().row()
 
         val addressField = TextField(Main.socket.targetAddress, skin)
         settingsTable.add(addressField).width(400f).expandX().fillX().left().padBottom(20f).padTop(5f)
@@ -59,7 +59,7 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
             })
         }
 
-        mainTable.add(closeButton).bottom().left().pad(20f)
+        mainTable.add(closeButton).bottom().pad(20f)
 
         setPosition(
             stage.viewport.worldWidth / 2 - width / 2,
