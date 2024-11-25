@@ -110,7 +110,7 @@ class InstanceData(val scene: MainScene) {
                     )
                 )
             }
-            scene.putBuilding(convertedCoords, data, model, inst)
+            scene.putBuilding(convertedCoords, data, inst)
         }
     }
 
@@ -162,6 +162,6 @@ class InstanceData(val scene: MainScene) {
 
     private fun handleRoads(msg: RoadResponse) {
         roads.putAll(msg.roads.map { it.id to it })
-        println(roads.size)
+
     }
 }

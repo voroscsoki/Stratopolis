@@ -222,8 +222,7 @@ class MainScene : ApplicationListener {
 
     fun putBuilding(
         convertedCoords: Vec3,
-        data: Building, model: Model,
-        inst: ModelInstance?
+        data: Building, inst: ModelInstance?
     ) {
         inst ?: return
         chunks.getOrPut(
