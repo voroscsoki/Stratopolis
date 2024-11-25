@@ -13,6 +13,7 @@ import dev.voroscsoki.stratopolis.common.elements.SerializableNode
 import dev.voroscsoki.stratopolis.common.networking.*
 import dev.voroscsoki.stratopolis.common.util.ObservableMap
 import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.getAverage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.datetime.toKotlinInstant
@@ -162,6 +163,19 @@ class InstanceData(val scene: MainScene) {
 
     private fun handleRoads(msg: RoadResponse) {
         roads.putAll(msg.roads.map { it.id to it })
-
+        msg.roads.forEach { road ->
+            val way = road.ways.first()
+            val model = scene.roadModel
+            val inst = ModelInstance(model)
+            val convertedCoords = way.nodes.getAverage().toSceneCoords(baselineCoord!!)
+            val validVec =
+                Vector3(convertedCoords.x.toFloat(), convertedCoords.y.toFloat(), convertedCoords.z.toFloat())
+            inst.transform.setTranslation(validVec)
+            scene.putRoad(convertedCoords, road, inst)
+        }
+        throttleRequest {
+            scene.updateCaches()
+            scene.menu?.loadingBar?.fadeOut()
+        }
     }
 }
