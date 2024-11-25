@@ -37,7 +37,7 @@ data object SimulationStartRequest : ControlMessage()
 class AgentStateUpdate(val agents: List<Pair<Agent, Agent>>, val time: Instant) : ControlMessage()
 
 @Serializable
-data object EstablishBearingRequest : ControlMessage()
+class EstablishBearingRequest : ControlMessage()
 
 @Serializable
 class EstablishBearingResponse(val res: ControlResult, val baselineCoord: Vec3) : ControlMessage()

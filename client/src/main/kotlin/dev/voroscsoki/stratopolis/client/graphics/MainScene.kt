@@ -28,6 +28,7 @@ import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.util.Vec3
+import dev.voroscsoki.stratopolis.common.util.getWayAverage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -312,6 +313,39 @@ class MainScene : ApplicationListener {
             } else {
                 builder.triangle(baseNodes.first(), baseNodes.last(), topNodes.last())
                 builder.triangle(baseNodes.first(), topNodes.last(), topNodes.first())
+            }
+            modelBuilder.end()
+        }
+    }
+
+    suspend fun toModel(data: Road, baseline: Vec3, width: Float = 3f): Model? {
+        if (data.ways.isEmpty()) return null
+        val baseNodes = data.ways.first().nodes.map { node ->
+            val x = node.coords - data.ways.getWayAverage()
+            x.toSceneCoords(baseline, true)
+        }
+        val prevailingDirection = (baseNodes[1] - baseNodes[0]).normalize()
+        val perpendicular = Vec3(-prevailingDirection.z, 0.0, prevailingDirection.x) * (width / 2)
+        val left = baseNodes.map { it + perpendicular }
+        val right = baseNodes.map { it - perpendicular }
+        val polygonalSeries = (left + right.reversed()).map { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) }
+
+        val floats = polygonalSeries.flatMap { listOf(it.x, it.z) }.toFloatArray()
+        val triangles: ShortArray
+        val triangulator = EarClippingTriangulator()
+        triangles = triangulator.computeTriangles(floats)
+
+        return runOnRenderThread {
+            val modelBuilder = ModelBuilder()
+            modelBuilder.begin()
+            val builder: MeshPartBuilder =
+                modelBuilder.part("road", GL40.GL_TRIANGLES, (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong(), Material(ColorAttribute.createDiffuse(Color.GRAY)))
+            polygonalSeries.let {
+                for (tri in 0..triangles.size - 2 step 3) {
+                    builder.triangle(
+                        it[triangles[tri].toInt()], it[triangles[tri + 1].toInt()], it[triangles[tri + 2].toInt()]
+                    )
+                }
             }
             modelBuilder.end()
         }

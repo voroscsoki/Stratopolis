@@ -5,7 +5,7 @@ import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import dev.voroscsoki.stratopolis.common.elements.SerializableWay
 import dev.voroscsoki.stratopolis.common.util.Vec3
-import dev.voroscsoki.stratopolis.common.util.getAverage
+import dev.voroscsoki.stratopolis.common.util.getNodeAverage
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Roads
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
@@ -97,7 +97,7 @@ class DatabaseAccess {
                         Yaml.decodeFromString<List<SerializableWay>>(it[Roads.ways])
                     )
                 }
-                val coords = output.ways.flatMap { it.nodes }.getAverage()
+                val coords = output.ways.flatMap { it.nodes }.getNodeAverage()
                 val distance = baseCoord?.let { c -> coords.dist(c) } ?: 0.0
 
                 if (range == null || distance <= range) {

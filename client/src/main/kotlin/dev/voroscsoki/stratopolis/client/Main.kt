@@ -19,9 +19,9 @@ class Main {
                 if(socket.isWebSocketAvailable(socket.targetAddress)) socket.initializeWebSocket()
                 val config = Lwjgl3ApplicationConfiguration()
                 config.setTitle("Stratopolis")
-                config.setWindowedMode(1920,1080)
+                config.setWindowedMode(1600,900)
                 config.useVsync(false)
-                config.setForegroundFPS(200)
+                config.setForegroundFPS(100)
                 Lwjgl3Application(appScene, config)
             }
         }
