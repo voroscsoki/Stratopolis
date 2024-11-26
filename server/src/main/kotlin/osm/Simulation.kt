@@ -13,7 +13,7 @@ class Simulation {
     val agents = mutableListOf<Agent>()
 
     init {
-        val count = 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+        val count = 1000
         val bldg = DatabaseAccess.getRandomBuildings(count * 2)
         for (i in 0..<count) {
             agents += Agent(Random.nextLong(),
@@ -34,9 +34,6 @@ class Simulation {
             val oldCopy = ag.copy()
             if(ag.id == 1L) println((ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat())))
             ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * (ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
-            if(ag.id == 1L) {
-                println("${ag.atBuilding.coords dist ag.location} -> ${ag.targetBuilding.coords dist ag.location} -> ${ag.location}")
-            }
             if (ag.location dist ag.targetBuilding.coords < 0.00000001) {
                 ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
                 ag.location = ag.atBuilding.coords

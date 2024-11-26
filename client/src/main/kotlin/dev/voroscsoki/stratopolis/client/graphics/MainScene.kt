@@ -123,7 +123,7 @@ class MainScene : ApplicationListener {
         modelBuilder = ModelBuilder()
         defaultBoxModel = modelBuilder.createBox(
             2f, 2f, 2f,
-            Material(ColorAttribute.createDiffuse(Color.PURPLE)),
+            Material(ColorAttribute.createEmissive(Color.ORANGE)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
         roadModel = modelBuilder.createBox(
@@ -177,7 +177,7 @@ class MainScene : ApplicationListener {
                 if(it.isVisible) modelBatch.render(it.cache, environment)
             }
             arrows.forEach { (_, graphObj) ->
-                graphObj.instance.transform.setTranslation(graphObj.location.let { Vector3(it.x.toFloat(), it.y.toFloat(), it.z.toFloat()) })
+                graphObj.instance.transform.setTranslation(graphObj.location.let { Vector3(it.x.toFloat(), it.y.toFloat() + 100f, it.z.toFloat()) })
                 modelBatch.render(graphObj.instance, environment)
             }
         }
