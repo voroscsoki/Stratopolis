@@ -13,7 +13,7 @@ class Simulation {
     val agents = mutableListOf<Agent>()
 
     init {
-        val count = 1
+        val count = 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
         val bldg = DatabaseAccess.getRandomBuildings(count * 2)
         for (i in 0..<count) {
             agents += Agent(Random.nextLong(),

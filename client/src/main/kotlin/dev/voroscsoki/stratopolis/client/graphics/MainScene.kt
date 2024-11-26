@@ -149,6 +149,9 @@ class MainScene : ApplicationListener {
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
         Gdx.gl.glCullFace(GL40.GL_BACK)
+        Gdx.gl.glDepthFunc(GL40.GL_LEQUAL)
+        Gdx.gl.glEnable(GL40.GL_DEPTH_TEST)
+        Gdx.gl.glDepthMask(true)
 
 
         // Initialize FPS counter
@@ -428,7 +431,8 @@ class MainScene : ApplicationListener {
                 mutex.withLock {
                     modelCache.begin()
                     chunk.values.partition { it is GraphicalBuilding }.let { parts ->
-                        parts.second.forEach { modelCache.add(it.instance) }
+                        parts.second.forEach {
+                            modelCache.add(it.instance) }
                         parts.first.forEach { modelCache.add(it.instance) }
                     }
                     runOnRenderThread { modelCache.end() }

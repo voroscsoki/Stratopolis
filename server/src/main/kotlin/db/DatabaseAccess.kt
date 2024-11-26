@@ -121,7 +121,7 @@ class DatabaseAccess {
         }
 
         fun getAverageCoords(): Vec3 {
-            val count = 500
+            val count = 250
             return transaction {
                 val res = Buildings.select(Buildings.coords).sortedBy { Random.nextFloat() }.map { it[Buildings.coords] }.take(count)
                 return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()

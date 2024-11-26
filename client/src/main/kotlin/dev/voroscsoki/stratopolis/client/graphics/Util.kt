@@ -12,12 +12,12 @@ import dev.voroscsoki.stratopolis.common.util.Vec3
 fun Vec3.toSceneCoords(baselineCoord: Vec3, scaleOnly: Boolean = false): Vec3 {
         if(scaleOnly) {
             val x = this.x * 100000
-            val y = this.y * 100000
+            val y = this.y
             val z = this.z * 100000
             return Vec3(x, y, z)
         }
         val x = (this.x - baselineCoord.x) * 100000
-        val y = (this.y - baselineCoord.y) * 100000
+        val y = (this.y - baselineCoord.y)
         val z = (this.z - baselineCoord.z) * 100000
         return Vec3(x, y, z)
     }
