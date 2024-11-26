@@ -421,9 +421,9 @@ class MainScene : ApplicationListener {
         runBlocking {
             chunks.keys.forEach { c ->
                 val chunk = chunks[c] ?: return@forEach
-                val cache = caches.getOrPut(c) { CacheObject(ModelCache(), Mutex(), c.split(":").let { Vector3(it[0].toFloat(), 0f, it[1].toFloat()) }, chunkSize ) }
-                val modelCache = cache.cache
-                val mutex = cache.lock
+                caches[c] = CacheObject(ModelCache(), Mutex(), c.split(":").let { Vector3(it[0].toFloat(), 0f, it[1].toFloat()) }, chunkSize )
+                val modelCache = caches[c]!!.cache
+                val mutex = caches[c]!!.lock
                 if (mutex.isLocked) return@forEach
                 mutex.withLock {
                     modelCache.begin()
