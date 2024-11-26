@@ -128,7 +128,7 @@ class InstanceData(val scene: MainScene) {
         baselineCoord = null
         clearGraphics()
         if(Main.socket.sendSocketMessage(EstablishBearingRequest())) {
-            for(i in 0..<10) {
+            for(i in 0..<100) {
                 if (baselineCoord != null){
                     requestBuildings()
                     break
@@ -167,6 +167,9 @@ class InstanceData(val scene: MainScene) {
             CoroutineScope(Dispatchers.IO).launch {
                 val model = scene.toModel(road, baselineCoord!!) ?: scene.roadModel
                 val inst = ModelInstance(model)
+                inst.transform.setTranslation(road.ways.getWayAverage().toSceneCoords(baselineCoord!!).let {
+                    Vector3(it.x.toFloat(), -5f, it.z.toFloat())
+                })
                 scene.putRoad(road.ways.getWayAverage().toSceneCoords(baselineCoord!!), road, inst)
             }
 
