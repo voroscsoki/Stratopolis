@@ -168,7 +168,7 @@ class InstanceData(val scene: MainScene) {
                 val model = scene.toModel(road, baselineCoord!!) ?: scene.roadModel
                 val inst = ModelInstance(model)
                 inst.transform.setTranslation(road.ways.getWayAverage().toSceneCoords(baselineCoord!!).let {
-                    Vector3(it.x.toFloat(), -5f, it.z.toFloat())
+                    Vector3(it.x.toFloat(), -50f, it.z.toFloat())
                 })
                 scene.putRoad(road.ways.getWayAverage().toSceneCoords(baselineCoord!!), road, inst)
             }

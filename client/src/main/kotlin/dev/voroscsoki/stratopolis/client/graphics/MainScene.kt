@@ -427,7 +427,10 @@ class MainScene : ApplicationListener {
                 if (mutex.isLocked) return@forEach
                 mutex.withLock {
                     modelCache.begin()
-                    chunk.values.forEach { modelCache.add(it.instance) }
+                    chunk.values.partition { it is GraphicalBuilding }.let { parts ->
+                        parts.second.forEach { modelCache.add(it.instance) }
+                        parts.first.forEach { modelCache.add(it.instance) }
+                    }
                     runOnRenderThread { modelCache.end() }
                 }
             }
