@@ -1,5 +1,6 @@
 package dev.voroscsoki.stratopolis.client.graphics
 
+import HeatmapOverlay
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -52,6 +53,7 @@ class MainScene : ApplicationListener {
 
     private lateinit var stage: Stage
     private lateinit var skin: CustomSkin
+    private lateinit var heatmap: HeatmapOverlay
     private var popup: PopupWindow? = null
     var menu: GameMenu? = null
     private var settingsPage: SettingsPage? = null
@@ -66,7 +68,6 @@ class MainScene : ApplicationListener {
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalObject>>()
     private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
-    val arrows = ConcurrentHashMap<Long, GraphicalArrow>()
     var isAltPressed = false
 
     //helper
@@ -133,7 +134,6 @@ class MainScene : ApplicationListener {
         val isKeyframe = (keyframeCounter++ == 5).also {
             if(it) keyframeCounter = 0
         }
-        updateArrowPositions()
 
         modelBatch.begin(cam)
 
@@ -148,7 +148,6 @@ class MainScene : ApplicationListener {
                 if(it.isVisible) modelBatch.render(it.cache, envCopy)
             }
         }
-        modelBatch.render(arrows.filter { it.value.isVisible(cam) }.map { it.value.instance }, environment)
         modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
@@ -213,15 +212,6 @@ class MainScene : ApplicationListener {
             getChunkKey(convertedCoords.x, convertedCoords.z)
         )
         { ConcurrentHashMap() }[data.id] = GraphicalRoad(data, inst)
-    }
-
-    fun updateArrowPositions() {
-        arrows.forEach { (_, arrow) ->
-            val newLocation = Vector3(arrow.location.x.toFloat(), arrow.location.y.toFloat() + 100f, arrow.location.z.toFloat())
-            if (newLocation != arrow.instance.transform.getTranslation(Vector3())) {
-                arrow.instance.transform.setTranslation(newLocation)
-            }
-        }
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
@@ -394,7 +384,6 @@ class MainScene : ApplicationListener {
         chunks.clear()
         caches.clear()
         agents.clear()
-        arrows.clear()
     }
 
     fun updateCaches() {
@@ -416,12 +405,6 @@ class MainScene : ApplicationListener {
                 }
             }
         }
-    }
-
-    suspend fun createArrow(coords: Vec3): GraphicalArrow {
-        return GraphicalArrow(coords, runOnRenderThread { ModelInstance(defaultBoxModel) }.apply {
-            this.transform.setToScaling(5f,5f,5f)
-        })
     }
 }
 
