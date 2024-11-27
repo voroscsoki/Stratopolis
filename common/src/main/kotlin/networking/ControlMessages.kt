@@ -16,7 +16,7 @@ enum class ControlResult {
 sealed class ControlMessage
 
 @Serializable
-class OsmLoadRequest(val path: String) : ControlMessage()
+class OsmLoadRequest(val file: ByteArray) : ControlMessage()
 
 @Serializable
 class BuildingRequest(val baseCoord: Vec3?, val radius: Double? = null) : ControlMessage()

@@ -1,19 +1,27 @@
 package dev.voroscsoki.stratopolis.client.graphics
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.networking.SocketClient
+import dev.voroscsoki.stratopolis.common.networking.OsmLoadRequest
+import games.spooky.gdx.nativefilechooser.NativeFileChooserCallback
+import games.spooky.gdx.nativefilechooser.NativeFileChooserConfiguration
+import games.spooky.gdx.nativefilechooser.desktop.DesktopFileChooser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.io.FilenameFilter
+
 
 class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
     init {
-        setSize(stage.viewport.worldWidth * 0.4f, stage.viewport.worldHeight * 0.4f)
+        setSize(stage.viewport.worldWidth * 0.6f, stage.viewport.worldHeight * 0.4f)
 
         val mainTable = Table(skin)
         mainTable.setFillParent(true)
@@ -36,8 +44,45 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
                 }
             }
         }
+        val loadServer = createTextButton("Load server", skin) { button ->
+            runBlocking {
+                val soc = SocketClient(Main.socket.incomingHandler, addressField.text)
+                if(soc.isWebSocketAvailable(soc.targetAddress)) soc.initializeWebSocket()
+                Main.socket = soc
+                Main.instanceData.setupGame()
+            }
+        }
         settingsTable.add(addressCheck).padLeft(10f)
+        settingsTable.add(loadServer).padLeft(10f)
         settingsTable.row()
+
+        val fileOpenButton = createTextButton("Open file", skin) { button ->
+            runBlocking {
+                val fileChooser = DesktopFileChooser()
+
+                // Configure
+                val conf = NativeFileChooserConfiguration()
+                conf.directory = Gdx.files.absolute(System.getProperty("user.home"))
+                conf.nameFilter = FilenameFilter { dir, name -> name.endsWith("pbf") }
+                conf.title = "Choose audio file"
+
+                fileChooser.chooseFile(conf, object : NativeFileChooserCallback {
+                    override fun onFileChosen(p0: FileHandle?) {
+                        val file = p0?.file()
+                        file?.let { runBlocking { Main.socket.sendSocketMessage(OsmLoadRequest(ByteArray(10))) } }
+                    }
+
+                    override fun onCancellation() {
+                        // Warn user how rude it can be to cancel developer's effort
+                    }
+
+                    override fun onError(exception: Exception) {
+                        // Handle error (hint: use exception type)
+                    }
+                })
+            }
+        }
+        settingsTable.add(fileOpenButton).padTop(20f).padBottom(20f).left()
 
         mainTable.add(settingsTable).expand().fill().pad(50f)
         mainTable.row()
@@ -46,13 +91,6 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
             addListener(object : ClickListener() {
                 override fun clicked(event: InputEvent, x: Float, y: Float) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val changingAddress = Main.socket.targetAddress != addressField.text
-                            val soc = SocketClient(Main.socket.incomingHandler, addressField.text)
-                                launch {
-                                    if(soc.isWebSocketAvailable(soc.targetAddress)) soc.initializeWebSocket()
-                                    Main.socket = soc
-                                    Main.instanceData.setupGame()
-                                }
                         hide()
                     }
                 }

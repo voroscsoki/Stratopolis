@@ -2,6 +2,7 @@ val mainName = "dev.voroscsoki.stratopolis.client.Main"
 val kotlinVersion = "2.3.12"
 val gdxVersion = "1.13.0"
 val ashleyVersion= "1.7.4"
+val gdxNativefilechooserVersion = "2.3.0"
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization") version "2.0.20"
@@ -23,6 +24,8 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop")
     implementation("com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop")
     implementation("com.badlogicgames.gdx:gdx-freetype:$gdxVersion")
+    implementation("games.spooky.gdx:gdx-nativefilechooser:$gdxNativefilechooserVersion")
+    implementation("games.spooky.gdx:gdx-nativefilechooser-desktop:$gdxNativefilechooserVersion")
 
     implementation("io.ktor:ktor-client-core")
     implementation("io.ktor:ktor-client-okhttp-jvm")
