@@ -11,6 +11,7 @@ import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.elements.SerializableNode
 import dev.voroscsoki.stratopolis.common.networking.*
+import dev.voroscsoki.stratopolis.common.util.MapChange
 import dev.voroscsoki.stratopolis.common.util.ObservableMap
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import dev.voroscsoki.stratopolis.common.util.getWayAverage
@@ -24,13 +25,16 @@ class InstanceData(val scene: MainScene) {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) },
         EstablishBearingResponse::class.java to { msg -> baselineCoord = (msg as EstablishBearingResponse).baselineCoord },
-        AgentStateUpdate::class.java to { msg -> runBlocking { handleAgentUpdate((msg as AgentStateUpdate)) }},
+        AgentStateUpdate::class.java to { msg -> runBlocking { simulationQueue.send(msg as AgentStateUpdate) }},
+        SimulationSetupResponse::class.java to { msg -> runBlocking { setupSimulation(msg as SimulationSetupResponse) }},
         RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) },
     )
 
-    private suspend fun handleAgentUpdate(it: AgentStateUpdate) {
-        it.agents.map { a -> agents.putIfAbsent(a.first.id, a.first)}
-        simulationQueue.send(it)
+    private fun setupSimulation(msg: SimulationSetupResponse) {
+        msg.agents.forEach { a ->
+            agents.putIfAbsent(a.id, a)
+            coroScope.launch { scene.arrows.putIfAbsent(a.id, scene.createArrow(a.location.toSceneCoords(baselineCoord!!))) }
+        }
     }
 
     private val nodes = ObservableMap<Long, SerializableNode>()
@@ -38,6 +42,18 @@ class InstanceData(val scene: MainScene) {
     private val roads = ObservableMap<Long, Road>()
     private val agents = ObservableMap<Long, Agent>()
     private val simulationQueue = Channel<AgentStateUpdate>()
+    private var setupJob: Job? = null
+    private val coroScope = CoroutineScope(Dispatchers.IO)
+
+    init {
+        buildings.listeners.add { change ->
+            when (change) {
+                is MapChange.Put -> upsertBuilding(change.newVal)
+                else -> {}
+            }
+        }
+    }
+
     private val gameLoopJob = CoroutineScope(Dispatchers.IO).launch {
         val timestep = 0.5
         while(true) {
@@ -46,16 +62,21 @@ class InstanceData(val scene: MainScene) {
                 while(currentTime < currentUpdate.time) {
                     val timeToCover = currentUpdate.time - currentTime
                     currentTime += timestep.seconds
-                    for (agent in agents) {
-                        val currPos = agent.value.location
-                        val targetPos = newAgents.firstOrNull { it.id == agent.key }?.location
-                        targetPos ?: continue
+                    coroutineScope {
+                        agents.map { (agentId, agent) ->
+                            launch {
+                                val currPos = agent.location
+                                val targetPos = newAgents.firstOrNull { it.id == agentId }?.location
+                                targetPos ?: return@launch
 
-                        val diff = (targetPos - currPos)/((timeToCover.inWholeSeconds.toDouble()/timestep + (1/timestep))).coerceAtLeast(1.0)
-                        agent.value.location += diff
-                        scene.arrows.getOrPut(agent.key) { scene.createArrow() }.location = agents[agent.key]!!.location.toSceneCoords(baselineCoord!!)
+                                val diff = (targetPos - currPos)/((timeToCover.inWholeSeconds.toDouble()/timestep + (1/timestep))).coerceAtLeast(1.0)
+                                scene.arrows[agentId]?.location = agent.location.toSceneCoords(baselineCoord!!)
+                                agent.location += diff
+                            }
+                        }
                     }
-                    Thread.sleep((10/timestep).toLong())
+
+                    delay((10/timestep).toLong())
                 }
         }
     }
@@ -65,10 +86,10 @@ class InstanceData(val scene: MainScene) {
     private var throttleJob: Job? = null
 
     private fun throttleRequest(action: () -> Unit) {
-        throttleJob?.cancel() // Cancel any previous timer
-        throttleJob = CoroutineScope(Dispatchers.Default).launch {
-            delay(4000) // Wait for the specified delay
-            action() // Execute the action if no further calls reset the timer
+        throttleJob?.cancel()
+        throttleJob = CoroutineScope(Dispatchers.IO).launch {
+            delay(1000)
+            action()
         }
     }
 
@@ -116,27 +137,23 @@ class InstanceData(val scene: MainScene) {
     }
 
     fun requestBuildings() {
-        baselineCoord ?: return
-        val source = scene.cam.position?.toWorldCoords(baselineCoord!!)!!.copy(y = 0.0)
-        runBlocking {
-            if(Main.socket.sendSocketMessage(BuildingRequest(source, 0.15)))
-                scene.menu?.loadingBar?.fadeIn()
+        baselineCoord?.let {
+            val source = scene.cam.position?.toWorldCoords(it)!!.copy(y = 0.0)
+            runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.15)) }
+        } ?: run {
+            Thread.sleep(500)
+            requestBuildings()
         }
     }
 
-    suspend fun setupGame() {
+    fun setupGame() {
         baselineCoord = null
         clearGraphics()
-        if(Main.socket.sendSocketMessage(EstablishBearingRequest())) {
-            for(i in 0..<100) {
-                if (baselineCoord != null){
-                    requestBuildings()
-                    Main.socket.sendSocketMessage(RoadRequest(baselineCoord, 0.15))
-                    break
-                }
-                delay(1000)
-            }
-        }
+        scene.menu?.loadingBar?.fadeIn()
+        setupJob?.cancel()
+        runBlocking { Main.socket.sendSocketMessage(EstablishBearingRequest()) }
+        runBlocking { requestBuildings() }
+        runBlocking { Main.socket.sendSocketMessage(SimulationSetupRequest()) }
     }
 
     fun clearGraphics() {
@@ -153,8 +170,7 @@ class InstanceData(val scene: MainScene) {
     }
 
     private fun handleBuildings(msg: BuildingResponse) {
-        buildings.putAll(msg.buildings.map { it.id to it })
-        msg.buildings.forEach { upsertBuilding(it) }
+        msg.buildings.map { buildings.putIfAbsent(it.id, it)}
 
         throttleRequest {
             scene.updateCaches()
@@ -175,9 +191,9 @@ class InstanceData(val scene: MainScene) {
             }
 
         }
-        throttleRequest {
+        /*throttleRequest {
             scene.updateCaches()
             scene.menu?.loadingBar?.fadeOut()
-        }
+        }*/
     }
 }

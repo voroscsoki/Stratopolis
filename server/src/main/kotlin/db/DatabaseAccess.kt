@@ -46,7 +46,7 @@ class DatabaseAccess {
                 Buildings.batchUpsert(storage.buildings, Buildings.id) { building ->
                     this[Buildings.id] = building.id
                     this[Buildings.coords] = building.coords
-                    this[Buildings.type] = building.type
+                    this[Buildings.type] = building.osmType
                     this[Buildings.tags] = Yaml.encodeToString(building.tags)
                     this[Buildings.ways] = Yaml.encodeToString(building.ways)
                 }
@@ -76,7 +76,7 @@ class DatabaseAccess {
                     Building(
                         row[Buildings.id].value,
                         Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
-                        type = row[Buildings.type],
+                        osmType = row[Buildings.type],
                         coords = buildingCoords,
                         ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
                     )
@@ -112,7 +112,7 @@ class DatabaseAccess {
                     Building(
                         row[Buildings.id].value,
                         Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
-                        type = row[Buildings.type],
+                        osmType = row[Buildings.type],
                         coords = row[Buildings.coords],
                         ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
                     )
@@ -121,7 +121,7 @@ class DatabaseAccess {
         }
 
         fun getAverageCoords(): Vec3 {
-            val count = 250
+            val count = 100
             return transaction {
                 val res = Buildings.select(Buildings.coords).sortedBy { Random.nextFloat() }.map { it[Buildings.coords] }.take(count)
                 return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()
@@ -135,7 +135,21 @@ class DatabaseAccess {
                     Building(
                         row[Buildings.id].value,
                         Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
-                        type = row[Buildings.type],
+                        osmType = row[Buildings.type],
+                        coords = row[Buildings.coords],
+                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                    )
+                }
+            }
+        }
+
+        fun getBuildingsByType(type: String, location: Vec3): List<Building> {
+            return transaction {
+                Buildings.selectAll().where { Buildings.tags like "%$type%" }.map { row ->
+                    Building(
+                        row[Buildings.id].value,
+                        Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        osmType = row[Buildings.type],
                         coords = row[Buildings.coords],
                         ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
                     )

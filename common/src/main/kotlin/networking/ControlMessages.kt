@@ -31,7 +31,13 @@ class RoadRequest(val baseCoord: Vec3?, val radius: Double? = null) : ControlMes
 class RoadResponse(val res: ControlResult, val roads: List<Road> = emptyList()) : ControlMessage()
 
 @Serializable
-data object SimulationStartRequest : ControlMessage()
+class SimulationSetupRequest() : ControlMessage()
+
+@Serializable
+class SimulationSetupResponse(val agents: List<Agent>): ControlMessage()
+
+@Serializable
+class TickRequest :  ControlMessage()
 
 @Serializable
 class AgentStateUpdate(val agents: List<Pair<Agent, Agent>>, val time: Instant) : ControlMessage()

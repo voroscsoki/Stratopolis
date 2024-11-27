@@ -5,7 +5,7 @@ import com.badlogic.gdx.InputAdapter
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.graphics.MainScene
 import dev.voroscsoki.stratopolis.common.networking.RoadRequest
-import dev.voroscsoki.stratopolis.common.networking.SimulationStartRequest
+import dev.voroscsoki.stratopolis.common.networking.TickRequest
 import dev.voroscsoki.stratopolis.common.util.getMemoryUsage
 import kotlinx.coroutines.runBlocking
 
@@ -20,7 +20,7 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
         //F3
         if (keycode == 133) {
             runBlocking {
-                Main.socket.sendSocketMessage(SimulationStartRequest) }
+                Main.socket.sendSocketMessage(TickRequest()) }
         }
 
         //print app memory usage

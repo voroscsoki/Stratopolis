@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.seconds
 
 class SocketClient(
     val incomingHandler: (ControlMessage) -> Unit,
@@ -26,55 +27,76 @@ class SocketClient(
     }
     private val sendQueue = Channel<ControlMessage>(Channel.UNLIMITED)
     private val _isConnected = MutableStateFlow(false)
+    private val socketScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private suspend fun listen() {
-        if(!isWebSocketAvailable(targetAddress)) return
-        client.webSocket(targetAddress) {
-            _isConnected.value = true
-
-            coroutineScope {
-                val receiveJob = launch {
-                    for (frame in incoming) {
-                        if (frame is Frame.Text) {
-                            val msg = try {
-                                Json.decodeFromString<ControlMessage>(frame.readText())
-                            } catch (e: SerializationException) { null }
-                            msg?.let { incomingHandler.invoke(it) }
-                        }
-                    }
-                }
-
-                val sendJob = launch {
-                    while (isActive) {
-                        val item = sendQueue.receive()
-                        outgoing.send(Frame.Text(Json.encodeToString(item)))
-                    }
-                }
-
-                joinAll(receiveJob, sendJob)
+        try {
+            if (!isWebSocketAvailable(targetAddress)) {
+                delay(5.seconds)
             }
 
+            client.webSocket(targetAddress) {
+                _isConnected.value = true
+
+                coroutineScope {
+                    val receiveJob = launch {
+                        for (frame in incoming) {
+                            if (frame is Frame.Text) {
+                                val msg = try {
+                                    Json.decodeFromString<ControlMessage>(frame.readText())
+                                } catch (e: SerializationException) {
+                                    null
+                                }
+                                msg?.let { incomingHandler.invoke(it) }
+                            }
+                        }
+                    }
+
+                    val sendJob = launch {
+                        while (isActive) {
+                            val item = sendQueue.receive()
+                            outgoing.send(Frame.Text(Json.encodeToString(item)))
+                        }
+                    }
+
+                    joinAll(receiveJob, sendJob)
+                }
+
+                _isConnected.value = false
+            }
+        }
+        catch (e: Exception) {
+            println("WebSocket connection error: ${e.message}")
+            delay(5.seconds)
+        } finally {
             _isConnected.value = false
+            disconnect()
         }
     }
 
     fun disconnect() {
+        socketScope.cancel()
         client.close()
         _isConnected.value = false
     }
 
-    suspend fun sendSocketMessage(msg: ControlMessage) : Boolean {
-        _isConnected.value.let {
-            if (it) sendQueue.send(msg)
-            return it
+    suspend fun sendSocketMessage(msg: ControlMessage): Boolean {
+        return try {
+            if (_isConnected.value) {
+                sendQueue.send(msg)
+                true
+            } else false
+        } catch (e: Exception) {
+            println("Error sending message: ${e.message}")
+            false
         }
     }
 
     suspend fun initializeWebSocket() {
-        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-            listen()
+        socketScope.launch { listen() }
+        withTimeout(10.seconds) {
+            _isConnected.first { it }
         }
-        _isConnected.first { it }
     }
 
     suspend fun isWebSocketAvailable(url: String): Boolean {

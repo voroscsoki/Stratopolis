@@ -1,31 +1,41 @@
 package dev.voroscsoki.stratopolis.server.networking
 
-import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.networking.*
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
-import dev.voroscsoki.stratopolis.server.Main.Companion.simu
-import dev.voroscsoki.stratopolis.server.Main.Companion.socketServer
+import dev.voroscsoki.stratopolis.server.Main
 import io.ktor.server.websocket.*
 import io.ktor.util.collections.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 
 class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
+        TickRequest::class.java to { Main.simu.tick { agents, time -> Main.socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } },
+        SimulationSetupRequest::class.java to { handleSimuSetup() },
+        EstablishBearingRequest::class.java to { msg -> runBlocking {
+            val res = DatabaseAccess.getAverageCoords()
+            sendSocketMessage(EstablishBearingResponse(ControlResult.OK, res)) }},
         BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } },
-        SimulationStartRequest::class.java to { simu.tick { agents: List<Pair<Agent, Agent>>, time: Instant -> socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } },
-        EstablishBearingRequest::class.java to { msg -> runBlocking { sendSocketMessage(EstablishBearingResponse(ControlResult.OK, DatabaseAccess.getAverageCoords())) }},
         RoadRequest::class.java to { msg -> runBlocking { handleRoadRequest(msg as RoadRequest) } },
     )
+
+    private fun handleSimuSetup() {
+        scope.launch {
+            Main.simu.agents.chunked(1000).forEach {
+                Main.socketServer.sendSocketMessage(SimulationSetupResponse(it))
+            }
+        }
+
+    }
+
     private val scope = CoroutineScope(Dispatchers.Default)
 
     private fun handleBuildingRequest(msg: BuildingRequest) {
         scope.launch {
             DatabaseAccess.getBuildings(msg.baseCoord, msg.radius)
-                .chunked(20000)
+                .chunked(30000)
                 .forEach { chunk ->
                     launch {
                         sendSocketMessage(BuildingResponse(ControlResult.OK, chunk))
@@ -37,7 +47,7 @@ class SocketServer {
     private fun handleRoadRequest(msg: RoadRequest) {
         scope.launch {
             DatabaseAccess.getRoads(msg.baseCoord, msg.radius)
-                .chunked(20000)
+                .chunked(30000)
                 .forEach { chunk ->
                     launch {
                         sendSocketMessage(RoadResponse(ControlResult.OK, chunk))
@@ -54,7 +64,7 @@ class SocketServer {
         handlerFunctions[msg::class.java]?.invoke(msg)
     }
 
-    private fun sendSocketMessage(msg: ControlMessage) {
+    fun sendSocketMessage(msg: ControlMessage) {
         println("Sending message: $msg")
         CoroutineScope(Dispatchers.IO).launch {
             connections.forEach { it.sendSerialized(msg) }

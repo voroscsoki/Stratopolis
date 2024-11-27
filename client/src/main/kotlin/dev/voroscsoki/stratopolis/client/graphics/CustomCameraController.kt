@@ -19,7 +19,7 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
         scope.launch {
             mutex.withLock {
                 cam.translate(cam.direction.cpy().nor().scl(amount))
-                cam.update()
+                //cam.update()
             }
         }
     }
@@ -79,8 +79,10 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
         if(!scene.isCameraMoveEnabled) return false
 
         val multiplier = if(ctrlModifier) 4f else 1f
+
         when (p0) {
             Keys.ESCAPE -> Gdx.app.exit()
+            Keys.ALT_LEFT -> scene.isAltPressed = true
             Keys.CONTROL_LEFT -> {
                 ctrlModifier = true
                 jobs.forEach {
@@ -106,6 +108,7 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
                 if(it.value?.isActive == true) cancelMove(it.key)
             }
         }
+        if(p0 == Keys.ALT_LEFT) scene.isAltPressed = false
         if(p0 == Keys.Q || p0 == Keys.E) cancelMove("rotate")
         if(p0 == Keys.W || p0 == Keys.S) cancelMove("linear")
         if(p0 == Keys.A || p0 == Keys.D) cancelMove("sideways")

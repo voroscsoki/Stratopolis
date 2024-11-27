@@ -15,8 +15,9 @@ class Main {
         fun main(args: Array<String>) {
             DatabaseAccess.connect()
             //reinitalizeDB()
-            println("Hello from the server!")
             simu = Simulation()
+            System.gc()
+            println("Hello from the server!")
 
             EngineMain.main(args)
         }

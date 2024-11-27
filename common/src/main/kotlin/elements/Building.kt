@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class Building(
     val id: Long,
     val tags: List<SerializableTag>,
-    val type: EntityType,
+    val osmType: EntityType,
     val coords: Vec3 = Vec3(0.0,0.0,0.0),
     val ways: List<SerializableWay>,
+    val buildingType: String? = tags.firstOrNull { it.key == "building" }?.value
 )

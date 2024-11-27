@@ -41,39 +41,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 
-open class GraphicalObject(val instance: ModelInstance)
-class GraphicalBuilding(val apiData: Building?, instance: ModelInstance) : GraphicalObject(instance)
-class GraphicalArrow(var location: Vec3, instance: ModelInstance) : GraphicalObject(instance)
-class GraphicalRoad(val apiData: Road?, instance: ModelInstance) : GraphicalObject(instance)
-
-data class CacheObject(val cache: ModelCache, val lock: Mutex, val startingCoords: Vector3, val size: Int, var isVisible: Boolean = false) {
-    fun checkVisibility(cam: PerspectiveCamera) {
-        val resolution = 32
-        for (x in 0..resolution) {
-            for (z in 0..resolution) {
-                val point = Vector3(
-                    startingCoords.x + (x.toFloat()/resolution) * size,
-                    startingCoords.y,
-                    startingCoords.z + (z.toFloat()/resolution) * size
-                )
-                if (cam.frustum.pointInFrustum(point)) {
-                    isVisible = true
-                    return
-                }
-            }
-        }
-        isVisible = false
-    }
-}
-
 class MainScene : ApplicationListener {
     //libGDX variables
     lateinit var cam: PerspectiveCamera
     private lateinit var modelBatch: ModelBatch
     private lateinit var modelBuilder: ModelBuilder
-    lateinit var defaultBoxModel: Model
     lateinit var roadModel: Model
-    private lateinit var arrowModel: Model
+    lateinit var defaultBoxModel: Model
     private lateinit var environment: Environment
 
     private lateinit var stage: Stage
@@ -86,13 +60,14 @@ class MainScene : ApplicationListener {
         get() = settingsPage?.isVisible != true
 
     //constants
-    private val chunkSize = 5000
+    private val chunkSize = 2000
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalObject>>()
     private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     val arrows = ConcurrentHashMap<Long, GraphicalArrow>()
+    var isAltPressed = false
 
     //helper
     private var keyframeCounter = 0
@@ -103,7 +78,6 @@ class MainScene : ApplicationListener {
 
     override fun create() {
         environment = Environment().apply {
-            set(ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f))
             add(DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, 0f, 0f))
         }
 
@@ -121,9 +95,9 @@ class MainScene : ApplicationListener {
         skin = CustomSkin()
 
         modelBuilder = ModelBuilder()
-        defaultBoxModel = modelBuilder.createBox(
-            2f, 2f, 2f,
-            Material(ColorAttribute.createEmissive(Color.ORANGE)),
+        defaultBoxModel = ModelBuilder().createBox(
+            10f, 10f, 10f,
+            Material(ColorAttribute.createDiffuse(Color.ORANGE)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
         roadModel = modelBuilder.createBox(
@@ -131,15 +105,6 @@ class MainScene : ApplicationListener {
             Material(ColorAttribute.createDiffuse(Color.GRAY)),
             (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
         )
-        arrowModel = modelBuilder.createArrow(
-            Vector3(0f, 100f, 0f),
-            Vector3(20f, 100f, 0f),
-            Material(ColorAttribute.createDiffuse(Color.RED)),
-            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        )
-        val inst = ModelInstance(defaultBoxModel)
-        //inst.transform.setTranslation(Vector3(0.4f, 0f, 0.4f))
-        chunks.getOrPut(getChunkKey(0.0, 0.0)) { ConcurrentHashMap() }[0] = GraphicalBuilding(null, inst)
 
         val multiplexer = InputMultiplexer().apply {
             addProcessor(CustomCameraController(this@MainScene))
@@ -168,19 +133,22 @@ class MainScene : ApplicationListener {
         val isKeyframe = (keyframeCounter++ == 5).also {
             if(it) keyframeCounter = 0
         }
+        updateArrowPositions()
 
         modelBatch.begin(cam)
+
+        val ambientIntensity = if (isAltPressed) 0.1f else 0.4f
+
         if(caches.isNotEmpty()) {
+            val envCopy = environment
+            envCopy.set(ColorAttribute(ColorAttribute.AmbientLight, ambientIntensity, ambientIntensity, ambientIntensity, 1f))
             caches.values.forEach {
                 if (it.lock.isLocked) return@forEach
                 if (isKeyframe) it.checkVisibility(cam)
-                if(it.isVisible) modelBatch.render(it.cache, environment)
-            }
-            arrows.forEach { (_, graphObj) ->
-                graphObj.instance.transform.setTranslation(graphObj.location.let { Vector3(it.x.toFloat(), it.y.toFloat() + 100f, it.z.toFloat()) })
-                modelBatch.render(graphObj.instance, environment)
+                if(it.isVisible) modelBatch.render(it.cache, envCopy)
             }
         }
+        modelBatch.render(arrows.filter { it.value.isVisible(cam) }.map { it.value.instance }, environment)
         modelBatch.end()
         // Render FPS counter
         spriteBatch.begin()
@@ -245,6 +213,15 @@ class MainScene : ApplicationListener {
             getChunkKey(convertedCoords.x, convertedCoords.z)
         )
         { ConcurrentHashMap() }[data.id] = GraphicalRoad(data, inst)
+    }
+
+    fun updateArrowPositions() {
+        arrows.forEach { (_, arrow) ->
+            val newLocation = Vector3(arrow.location.x.toFloat(), arrow.location.y.toFloat() + 100f, arrow.location.z.toFloat())
+            if (newLocation != arrow.instance.transform.getTranslation(Vector3())) {
+                arrow.instance.transform.setTranslation(newLocation)
+            }
+        }
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
@@ -441,8 +418,10 @@ class MainScene : ApplicationListener {
         }
     }
 
-    suspend fun createArrow(): GraphicalArrow = GraphicalArrow(Vec3(0.0,0.0,0.0), runOnRenderThread { ModelInstance(defaultBoxModel).apply {
-        this.transform.setToScaling(10f,10f,10f)
-    } })
+    suspend fun createArrow(coords: Vec3): GraphicalArrow {
+        return GraphicalArrow(coords, runOnRenderThread { ModelInstance(defaultBoxModel) }.apply {
+            this.transform.setToScaling(5f,5f,5f)
+        })
+    }
 }
 
