@@ -33,7 +33,6 @@ class InstanceData(val scene: MainScene) {
     private fun setupSimulation(msg: SimulationSetupResponse) {
         msg.agents.forEach { a ->
             agents.putIfAbsent(a.id, a)
-            coroScope.launch { scene.arrows.putIfAbsent(a.id, scene.createArrow(a.location.toSceneCoords(baselineCoord!!))) }
         }
     }
 
@@ -70,8 +69,8 @@ class InstanceData(val scene: MainScene) {
                                 targetPos ?: return@launch
 
                                 val diff = (targetPos - currPos)/((timeToCover.inWholeSeconds.toDouble()/timestep + (1/timestep))).coerceAtLeast(1.0)
-                                scene.arrows[agentId]?.location = agent.location.toSceneCoords(baselineCoord!!)
                                 agent.location += diff
+                                scene.heatmap.updateChunkNumber((currPos.x - currPos.x % 100f).toFloat(), (currPos.z - currPos.z % 100f).toFloat(), 10)
                             }
                         }
                     }

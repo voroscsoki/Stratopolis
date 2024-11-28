@@ -46,7 +46,7 @@ class Simulation {
     }
 
     init {
-        val count = 50000
+        val count = 1000
         val bldg = DatabaseAccess.getRandomBuildings(count * 2)
         for (i in 0..<count) {
             agents += Agent(Random.nextLong().absoluteValue,

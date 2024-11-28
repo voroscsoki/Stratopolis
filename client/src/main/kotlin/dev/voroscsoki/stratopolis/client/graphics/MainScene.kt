@@ -53,7 +53,7 @@ class MainScene : ApplicationListener {
 
     private lateinit var stage: Stage
     private lateinit var skin: CustomSkin
-    private lateinit var heatmap: HeatmapOverlay
+    lateinit var heatmap: HeatmapOverlay
     private var popup: PopupWindow? = null
     var menu: GameMenu? = null
     private var settingsPage: SettingsPage? = null
@@ -69,6 +69,7 @@ class MainScene : ApplicationListener {
     private val caches = ConcurrentHashMap<String, CacheObject>()
     private val agents = ConcurrentHashMap<Long, Agent>()
     var isAltPressed = false
+    var forceHeatmap = false
 
     //helper
     private var keyframeCounter = 0
@@ -112,6 +113,8 @@ class MainScene : ApplicationListener {
             addProcessor(UtilInput(this@MainScene))
             addProcessor(stage)
         }
+        heatmap = HeatmapOverlay()
+        heatmap.init(modelBatch, 100f)
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
         Gdx.gl.glCullFace(GL40.GL_BACK)
@@ -134,7 +137,7 @@ class MainScene : ApplicationListener {
         val isKeyframe = (keyframeCounter++ == 5).also {
             if(it) keyframeCounter = 0
         }
-
+        cam.update()
         modelBatch.begin(cam)
 
         val ambientIntensity = if (isAltPressed) 0.1f else 0.4f
@@ -149,6 +152,8 @@ class MainScene : ApplicationListener {
             }
         }
         modelBatch.end()
+        if(isAltPressed) heatmap.renderChunks(cam)
+        forceHeatmap = false
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)

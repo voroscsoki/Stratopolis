@@ -82,7 +82,10 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
 
         when (p0) {
             Keys.ESCAPE -> Gdx.app.exit()
-            Keys.ALT_LEFT -> scene.isAltPressed = true
+            Keys.ALT_LEFT -> {
+                scene.isAltPressed = true
+                scene.forceHeatmap = true
+            }
             Keys.CONTROL_LEFT -> {
                 ctrlModifier = true
                 jobs.forEach {
