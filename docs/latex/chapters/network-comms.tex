@@ -6,6 +6,9 @@ Websocket communication is usually started by a client pinging a target address,
 
 Two important rules came up during the project: there can only ever be one "connecting" socket between any given pair of machines, and sockets may fail. The latter requires a periodically retrying the connection. It's worth to keep in mind that a failed socket may drop data. If the link breaks, text in transit will not be re-sent. "Connecting" sockets are not yet ready for data, but usually don't need manual overrides, as a badly configured socket will eventually fail.
 
-Since the standard is based on HTTP(S), only text or binary data may be sent. Arbitrary data may be serialised~\ref{serialise} to a data interchange format, such as JSON (JavaScript Object Notation) or YAML (Yet Another Markup Language). As text is highly compressible, a surprising amount of in-memory information can be transmitted in a short space of time.
+Each packet, called a frame in this context, may be a data frame or a control frame. Control frames include "ping", "pong" and "close. Data frames may can be used to transit text or binary data. The main noticeable difference from a standard TCP endpoint is the URI scheme: "ws://" in this case. Arbitrary data may be serialised~\ref{serialise} to a data interchange format, such as JSON (JavaScript Object Notation) or YAML (Yet Another Markup Language). As text is highly compressible, a surprising amount of in-memory information can be transmitted in a short space of time.
+
+Websockets have several advantages: they're connections that are easy to keep alive, they don't require manual pinging and may transfer data in large batches.
+%TODO: why is it good for this project
 
 \section{Ktor-specific solutions}
