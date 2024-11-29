@@ -1,0 +1,24 @@
+\chapter{The current state of the transit modelling industry}
+The purpose of modelling public transit systems is two-fold: evaluating current service patterns and discovering new routes are equally as important. The overall task is usually treated as a datamining exercise. As such, data collection is paramount, with presentation being of secondary concern. Just like in politics, a smaller but well-rounded dataset can allow us to make predictions and conclusions about the whole of a system.
+
+Throughout this section, I'll introduce state of the art data collection and modelling solutions. Wherever appropriate, I will also show examples pertaining to my home city, Budapest.
+
+\section{Data collection}
+\subsection{Traditional, in-person method}
+
+Up until the mid-2010s, the main method of collecting information was passenger counting. Employees could often be seen at bus stops or train stations with a clipboard, tracking the flow of commuters throughout the day, often at multiple stops along a single line. This allowed the recorded numbers to be imported into spreadsheet software, resulting in charts that show passenger density or even their distribution when considering age groups.
+Additional data can be collected by asking individual travellers, but this is obviously difficult to do.
+
+Despite its limited scope, this approach has a few advantages. Data is rarely faulty as there is nothing in the loop that could technically malfunction. By hand-picking the numbers to record, it's possible to analyse an interchange in-depth; for example, to find out the amount of people boarding trains after leaving a specific underpass exit.
+
+The downsides however, are easy to see. The ongoing costs may be high due to employee compensation. It's also nearly impossible to cover a sufficiently large percentage of the system, lots of extrapolation is needed, which affects accuracy. In 2024, in-person counting has taken on an auxiliary role, only to be used in places of extreme importance.
+
+\subsection{Physical counting}
+
+In 1983, the Budapest Transport Privately Held Corporation (BKV Zrt.) purchased simple computers from the Austrian Knorr-Bremse company, capable of measuring and interpreting the pressure placed on a bus' hydraulic system.\cite{ik260_article} With known baseline values, the current passenger count could be guessed with decent precision when travelling between any two stops. The numbers could then be used when planning new timetable assignments -- to increase or decrease headway between subsequent vehicles. The computers have mostly gone, as a result of local modernisation efforts.
+
+Road vehicles, including cars and bicycles can be tallied using traffic induction loops. In use since the 1960s, these are simple circuits including an insulated wire placed into the road surface by sawing or otherwise cutting the asphalt. Whenever a vehicle drives over the wire, the inductivity changes. By attaching a simple processor, the frequency and length of signals can be mapped to different vehicle classes -- a semi truck and family sedan have entirely different signatures.
+
+Budapest has around seven hundred induction loops that give a comprehensive, near-realtime picture of the city's traffic. Around fifty cameras provide a visual aid.
+
+\subsection{Visual counting}
