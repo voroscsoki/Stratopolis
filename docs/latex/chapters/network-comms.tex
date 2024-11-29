@@ -1,0 +1,11 @@
+\chapter{Network communications}
+The application was built in such a way that any current and future communication between the server and client can be made using an RFC 6455-compliant\cite{RFC6455} WebSocket provided by the server. This allows asynchronous, thread-safe communication between the two parties without being bound by packet timing. This approach also supports a "multiple clients, single server" architechture.
+
+\section{Websocket usage}
+Websocket communication is usually started by a client pinging a target address, where a server resides. The initiating message is a handshake that must contain the host, port, resource name, and a flag showing whether the connection is secure. Secure connections must also include a TLS handshake. If the server replies, a TCP connection is established -- a two-way tunnel for sending further messages with low delay. The connection has a set of possible states.
+
+Two important rules came up during the project: there can only ever be one "connecting" socket between any given pair of machines, and sockets may fail. The latter requires a periodically retrying the connection. It's worth to keep in mind that a failed socket may drop data. If the link breaks, text in transit will not be re-sent. "Connecting" sockets are not yet ready for data, but usually don't need manual overrides, as a badly configured socket will eventually fail.
+
+Since the standard is based on HTTP(S), only text or binary data may be sent. Arbitrary data may be serialised~\ref{serialise} to a data interchange format, such as JSON (JavaScript Object Notation) or YAML (Yet Another Markup Language). As text is highly compressible, a surprising amount of in-memory information can be transmitted in a short space of time.
+
+\section{Ktor-specific solutions}

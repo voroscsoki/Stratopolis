@@ -16,7 +16,7 @@ The downsides however, are easy to see. The ongoing costs may be high due to emp
 
 In 1983, the Budapest Transport Privately Held Corporation (BKV Zrt.) purchased simple computers from the Austrian Knorr-Bremse company, capable of measuring and interpreting the pressure placed on a bus' hydraulic system.\cite{ik260_article} With known baseline values, the current passenger count could be guessed with decent precision when travelling between any two stops. The numbers could then be used when planning new timetable assignments -- to increase or decrease headway between subsequent vehicles. The computers have mostly gone, as a result of local modernisation efforts.
 
-Road vehicles, including cars and bicycles can be tallied using traffic induction loops. In use since the 1960s, these are simple circuits including an insulated wire placed into the road surface by sawing or otherwise cutting the asphalt. Whenever a vehicle drives over the wire, the inductivity changes. By attaching a simple processor, the frequency and length of signals can be mapped to different vehicle classes -- a semi truck and family sedan have entirely different signatures.
+Road vehicles, including cars and bicycles can be tallied using traffic induction loops.\cite{fhwaLoop} In use since the 1960s, these are simple circuits including an insulated wire placed into the road surface by sawing or otherwise cutting the asphalt. Whenever a vehicle drives over the wire, the inductivity changes. By attaching a simple processor, the frequency and length of signals can be mapped to different vehicle classes -- a semi truck and family sedan have entirely different signatures.
 
 Budapest has around seven hundred induction loops that give a comprehensive, near-realtime picture of the city's traffic. Around fifty cameras provide a visual aid.\cite{BkkDataCollection}
 
@@ -26,3 +26,10 @@ Camera picture analysis reveals a lot about an junction's dominant flow directio
 Many cities around the world currently use automated passenger counting to inform decisions. Examples include London (TfL), Berlin (BVG) and Chicage (CTA). The usual solution includes infrared sensors mounted above the doors of certain vehicles. These detectors can count boarding and disembarking people in real time, and upload this information to a central database.
 
 Aside from the already mentioned purpose of timetable planning, this data can be used to handle overcrowding events -- such as a football match or live show -- by deploying more vehicles to increase capacity. As the devices are hooked into the vehicle's onboard computer, the numbers can be correlated with the location and time. CCTV cameras often act as a secondary source or means of verification for these schemes.
+
+
+\section{City modelling}
+
+While processing passenger numbers is usually a fairly conventional process (using spreadsheets, graphing the data, or utilising some form of machine learning), designing roads, transport lines and vehicles that fulfil the needs of a city usually requires specialist software; althought it is technically possible to use a generalist piece of software, such as Blender. 
+
+ %TODO CONTINUE
