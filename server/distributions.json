@@ -1,0 +1,49 @@
+{
+    "ageToType": {
+        "CHILD": {
+            "school": 0.5,
+            "playground": 0.5
+        },
+        "TEEN": {
+            "school": 0.5,
+            "playground": 0.5
+        },
+        "ADULT": {
+            "work": 0.5,
+            "restaurant": 0.5
+        },
+        "ELDERLY": {
+            "hospital": 0.5,
+            "park": 0.5
+        }
+    },
+    "typeToTime": {
+        "apartments": [
+            {
+                "start": 8,
+                "end": 16,
+                "chance": 0.5
+            },
+            {
+                "start": 16,
+                "end": 8,
+                "chance": 0.5
+            }
+        ],
+        "residential": [
+
+        ],
+        "commercial": [
+
+        ],
+        "industrial": [
+
+        ],
+        "office": [
+
+        ],
+        "public": [
+
+        ]
+    }
+}

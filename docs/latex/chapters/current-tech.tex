@@ -6,12 +6,11 @@ Throughout this section, I'll introduce state of the art data collection and mod
 \section{Data collection}
 \subsection{Traditional, in-person method}
 
-Up until the mid-2010s, the main method of collecting information was passenger counting. Employees could often be seen at bus stops or train stations with a clipboard, tracking the flow of commuters throughout the day, often at multiple stops along a single line. This allowed the recorded numbers to be imported into spreadsheet software, resulting in charts that show passenger density or even their distribution when considering age groups.
-Additional data can be collected by asking individual travellers, but this is obviously difficult to do.
+Up until the mid-2010s, the main method of collecting information was passenger counting. Employees could often be seen at bus stops or train stations with a clipboard, tracking the flow of commuters throughout the day, often at multiple stops along a single line. This allowed the recorded numbers to be imported into spreadsheet software, resulting in charts that show passenger density or even their distribution according to certain parameters.
 
-Despite its limited scope, this approach has a few advantages. Data is rarely faulty as there is nothing in the loop that could technically malfunction. By hand-picking the numbers to record, it's possible to analyse an interchange in-depth; for example, to find out the amount of people boarding trains after leaving a specific underpass exit.
+Despite its limited scope, this approach has a few advantages. Data is rarely faulty as there is nothing in the loop that could technically malfunction. By hand-picking the numbers to record, it's possible to analyse an interchange in-depth; for example, to find out the amount of people boarding trains after leaving a specific underpass exit. More specific data can also be recorded about transit users, such as their age, gender and carried luggage.
 
-The downsides however, are easy to see. The ongoing costs may be high due to employee compensation. It's also nearly impossible to cover a sufficiently large percentage of the system, lots of extrapolation is needed, which affects accuracy. In 2024, in-person counting has taken on an auxiliary role, only to be used in places of extreme importance.
+The downsides however, are easy to see. The ongoing costs may be high due to employee compensation. It's also nearly impossible to cover a sufficiently large percentage of the system, lots of extrapolation is needed, which affects accuracy. In 2024, in-person counting has taken on an auxiliary role, only used as an additional measure or in technically challenging situations.
 
 \subsection{Physical counting}
 
@@ -19,6 +18,11 @@ In 1983, the Budapest Transport Privately Held Corporation (BKV Zrt.) purchased 
 
 Road vehicles, including cars and bicycles can be tallied using traffic induction loops. In use since the 1960s, these are simple circuits including an insulated wire placed into the road surface by sawing or otherwise cutting the asphalt. Whenever a vehicle drives over the wire, the inductivity changes. By attaching a simple processor, the frequency and length of signals can be mapped to different vehicle classes -- a semi truck and family sedan have entirely different signatures.
 
-Budapest has around seven hundred induction loops that give a comprehensive, near-realtime picture of the city's traffic. Around fifty cameras provide a visual aid.
+Budapest has around seven hundred induction loops that give a comprehensive, near-realtime picture of the city's traffic. Around fifty cameras provide a visual aid.\cite{BkkDataCollection}
 
 \subsection{Visual counting}
+Camera picture analysis reveals a lot about an junction's dominant flow direction. Accurate numbers exist on a per-lane basis. This field is exciting in its own right, as data sanitisation, object detection and machine inference is highly applicable here.
+
+Many cities around the world currently use automated passenger counting to inform decisions. Examples include London (TfL), Berlin (BVG) and Chicage (CTA). The usual solution includes infrared sensors mounted above the doors of certain vehicles. These detectors can count boarding and disembarking people in real time, and upload this information to a central database.
+
+Aside from the already mentioned purpose of timetable planning, this data can be used to handle overcrowding events -- such as a football match or live show -- by deploying more vehicles to increase capacity. As the devices are hooked into the vehicle's onboard computer, the numbers can be correlated with the location and time. CCTV cameras often act as a secondary source or means of verification for these schemes.

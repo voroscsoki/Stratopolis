@@ -166,11 +166,11 @@ INPUT C:\Users\Lili\AppData\Roaming\MiKTeX\tex\latex\natbib\natbib.sty
 INPUT C:\Users\Lili\AppData\Roaming\MiKTeX\tex\latex\natbib\natbib.sty
 INPUT C:\Program Files\MiKTeX\tex\latex\tools\xspace.sty
 INPUT C:\Program Files\MiKTeX\tex\latex\tools\xspace.sty
-INPUT .\include\thesis-hu.tex
-INPUT .\include\thesis-hu.tex
-INPUT .\include\thesis-hu.tex
-INPUT .\include\thesis-hu.tex
-INPUT include\thesis-hu.tex
+INPUT .\include\thesis-en.tex
+INPUT .\include\thesis-en.tex
+INPUT .\include\thesis-en.tex
+INPUT .\include\thesis-en.tex
+INPUT include\thesis-en.tex
 INPUT .\include\preamble.tex
 INPUT .\include\preamble.tex
 INPUT .\include\preamble.tex
@@ -185,6 +185,12 @@ INPUT C:\Program Files\MiKTeX\tex\latex\l3backend\l3backend-pdftex.def
 INPUT .\thesis.aux
 INPUT .\thesis.aux
 INPUT thesis.aux
+INPUT .\include\guideline.aux
+INPUT .\include\guideline.aux
+INPUT include\guideline.aux
+INPUT .\include\project.aux
+INPUT .\include\project.aux
+INPUT include\project.aux
 INPUT .\include\titlepage.aux
 INPUT .\include\titlepage.aux
 INPUT include\titlepage.aux
@@ -197,6 +203,9 @@ INPUT content\abstract.aux
 INPUT .\chapters\technologies.aux
 INPUT .\chapters\technologies.aux
 INPUT chapters\technologies.aux
+INPUT .\chapters\data-source.aux
+INPUT .\chapters\data-source.aux
+INPUT chapters\data-source.aux
 INPUT .\chapters\graphics.aux
 INPUT .\chapters\graphics.aux
 INPUT chapters\graphics.aux
@@ -225,6 +234,65 @@ INPUT .\thesis.out
 INPUT .\thesis.out
 OUTPUT thesis.out
 INPUT C:\Program Files\MiKTeX\tex\latex\base\report.cls
+INPUT .\include\guideline.tex
+INPUT .\include\guideline.tex
+OUTPUT include\guideline.aux
+INPUT .\include\guideline.tex
+INPUT .\include\guideline.tex
+INPUT include\guideline.tex
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr9.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr12.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmbx12.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmbx12.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\ot1lmr.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\ot1lmr.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\ot1lmr.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr9.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr6.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr5.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omllmm.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omllmm.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omllmm.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi9.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi6.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi5.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omslmsy.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omslmsy.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omslmsy.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy9.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy6.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy5.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omxlmex.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omxlmex.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\omxlmex.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmex10.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsa.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsa.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsa.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam7.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam5.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsb.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsb.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsb.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm7.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm5.tfm
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr6.tfm
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\ts1lmr.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\ts1lmr.fd
+INPUT C:\Program Files\MiKTeX\tex\latex\lm\ts1lmr.fd
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ts1-lmr9.tfm
+INPUT C:\Users\Lili\AppData\Local\MiKTeX\fonts\map\pdftex\pdftex.map
+INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-ec.enc
+INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-ts1.enc
+INPUT .\include\project.tex
+INPUT .\include\project.tex
+OUTPUT include\project.aux
+INPUT .\include\project.tex
+INPUT .\include\project.tex
+INPUT include\project.tex
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmri10.tfm
 INPUT .\include\titlepage.tex
 INPUT .\include\titlepage.tex
 OUTPUT include\titlepage.aux
@@ -242,44 +310,16 @@ INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr17.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmbx12.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmcsc10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmcsc10.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\ot1lmr.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\ot1lmr.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\ot1lmr.fd
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr8.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr6.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omllmm.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omllmm.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omllmm.fd
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi8.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi6.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omslmsy.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omslmsy.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omslmsy.fd
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy8.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy6.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omxlmex.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omxlmex.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\omxlmex.fd
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmex10.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsa.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsa.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsa.fd
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam7.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsb.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsb.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\amsfonts\umsb.fd
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm7.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmri10.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr12.tfm
-INPUT C:\Users\Lili\AppData\Local\MiKTeX\fonts\map\pdftex\pdftex.map
-INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-ec.enc
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr17.tfm
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmbx12.tfm
 INPUT .\thesis.toc
@@ -327,7 +367,6 @@ OUTPUT include\declaration.aux
 INPUT .\include\declaration.tex
 INPUT .\include\declaration.tex
 INPUT include\declaration.tex
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmbx12.tfm
 INPUT .\content\abstract.tex
 INPUT .\content\abstract.tex
 OUTPUT content\abstract.aux
@@ -342,28 +381,11 @@ INPUT .\chapters\technologies.tex
 INPUT .\chapters\technologies.tex
 INPUT chapters\technologies.tex
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr12.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmbx12.tfm
 INPUT .\images\kotlin_logo.png
 INPUT .\images\kotlin_logo.png
 INPUT .\images\kotlin_logo.png
 INPUT .\images\kotlin_logo.png
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr9.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr9.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\rm-lmr5.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi9.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmmi5.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy9.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\lmsy5.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam5.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm5.tfm
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmr6.tfm
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\ts1lmr.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\ts1lmr.fd
-INPUT C:\Program Files\MiKTeX\tex\latex\lm\ts1lmr.fd
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ts1-lmr10.tfm
-INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-ts1.enc
 INPUT .\images\opengl_logo.png
 INPUT .\images\opengl_logo.png
 INPUT .\images\opengl_logo.png
@@ -384,6 +406,20 @@ INPUT .\images\ktor_logo.png
 INPUT .\images\ktor_logo.png
 INPUT .\images\ktor_logo.png
 INPUT .\images\ktor_logo.png
+INPUT .\chapters\data-source.tex
+INPUT .\chapters\data-source.tex
+OUTPUT chapters\data-source.aux
+INPUT .\chapters\data-source.tex
+INPUT .\chapters\data-source.tex
+INPUT chapters\data-source.tex
+INPUT .\images\scee_example.jpg
+INPUT .\images\scee_example.jpg
+INPUT .\images\scee_example.jpg
+INPUT .\images\scee_example.jpg
+INPUT .\images\scee_example.jpg
+INPUT .\images\scee_example.jpg
+INPUT .\images\scee_example.jpg
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmtl10.tfm
 INPUT .\chapters\graphics.tex
 INPUT .\chapters\graphics.tex
 OUTPUT chapters\graphics.aux
@@ -392,6 +428,13 @@ INPUT .\chapters\graphics.tex
 INPUT chapters\graphics.tex
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmtl10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-mathit.enc
+INPUT .\images\main_graphics_view.png
+INPUT .\images\main_graphics_view.png
+INPUT .\images\main_graphics_view.png
+INPUT .\images\main_graphics_view.png
+INPUT .\images\main_graphics_view.png
+INPUT .\images\main_graphics_view.png
+INPUT .\images\main_graphics_view.png
 INPUT .\content\acknowledgement.tex
 INPUT .\content\acknowledgement.tex
 OUTPUT content\acknowledgement.aux
@@ -422,6 +465,12 @@ INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-mathsy.enc
 INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-mathex.enc
 OUTPUT thesis.thm
 INPUT thesis.aux
+INPUT .\include\guideline.aux
+INPUT .\include\guideline.aux
+INPUT include\guideline.aux
+INPUT .\include\project.aux
+INPUT .\include\project.aux
+INPUT include\project.aux
 INPUT .\include\titlepage.aux
 INPUT .\include\titlepage.aux
 INPUT include\titlepage.aux
@@ -434,6 +483,9 @@ INPUT content\abstract.aux
 INPUT .\chapters\technologies.aux
 INPUT .\chapters\technologies.aux
 INPUT chapters\technologies.aux
+INPUT .\chapters\data-source.aux
+INPUT .\chapters\data-source.aux
+INPUT chapters\data-source.aux
 INPUT .\chapters\graphics.aux
 INPUT .\chapters\graphics.aux
 INPUT chapters\graphics.aux
