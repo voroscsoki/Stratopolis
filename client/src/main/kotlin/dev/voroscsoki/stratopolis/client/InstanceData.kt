@@ -57,26 +57,36 @@ class InstanceData(val scene: MainScene) {
         val timestep = 0.5
         while(true) {
             val currentUpdate = simulationQueue.receive()
-                val newAgents = currentUpdate.agents.map { it.second }.toList()
-                while(currentTime < currentUpdate.time) {
-                    val timeToCover = currentUpdate.time - currentTime
-                    currentTime += timestep.seconds
-                    coroutineScope {
-                        agents.map { (agentId, agent) ->
-                            launch {
-                                val currPos = agent.location
-                                val targetPos = newAgents.firstOrNull { it.id == agentId }?.location
-                                targetPos ?: return@launch
+            val newAgents = currentUpdate.agents.map { it.second }.toList()
 
-                                val diff = (targetPos - currPos)/((timeToCover.inWholeSeconds.toDouble()/timestep + (1/timestep))).coerceAtLeast(1.0)
-                                agent.location += diff
-                                scene.heatmap.updateChunkNumber((currPos.x - currPos.x % 100f).toFloat(), (currPos.z - currPos.z % 100f).toFloat(), 10)
-                            }
+            while(currentTime < currentUpdate.time) {
+                println("Time: $currentTime")
+                println("Current update time: ${currentUpdate.time}")
+                coroutineScope {
+                    agents.map { (agentId, agent) ->
+                        launch {
+                            val currPos = agent.location
+                            val targetPos = newAgents.firstOrNull { it.id == agentId }?.location
+                            targetPos ?: return@launch
+
+                            val timeToCover = currentUpdate.time - currentTime
+                            val diff = (targetPos - currPos) / ((timeToCover.inWholeSeconds.toDouble()/timestep + (1/timestep))).coerceAtLeast(1.0)
+                            agent.location += diff
+
+                            val currPosConverted = currPos.toSceneCoords(baselineCoord!!)
+                            scene.heatmap.updateFrequency(
+                                (currPosConverted.x - (currPosConverted.x % scene.heatmap.cellSize)).toFloat(),
+                                (currPosConverted.z - (currPosConverted.z % scene.heatmap.cellSize)).toFloat()
+                            )
                         }
                     }
-
-                    delay((10/timestep).toLong())
                 }
+                //scene.heatmap.decay()
+
+                // Increment time after processing all agents
+                currentTime += timestep.seconds
+                delay((10/timestep).toLong())
+            }
         }
     }
 

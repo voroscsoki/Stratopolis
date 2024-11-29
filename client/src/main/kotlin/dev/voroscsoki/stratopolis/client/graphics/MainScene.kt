@@ -113,8 +113,7 @@ class MainScene : ApplicationListener {
             addProcessor(UtilInput(this@MainScene))
             addProcessor(stage)
         }
-        heatmap = HeatmapOverlay()
-        heatmap.init(modelBatch, 100f)
+        heatmap = HeatmapOverlay(1000, 50f)
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
         Gdx.gl.glCullFace(GL40.GL_BACK)
@@ -134,13 +133,14 @@ class MainScene : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
-        val isKeyframe = (keyframeCounter++ == 5).also {
+        val isKeyframe = (keyframeCounter++ == 20).also {
             if(it) keyframeCounter = 0
         }
+
         cam.update()
         modelBatch.begin(cam)
 
-        val ambientIntensity = if (isAltPressed) 0.1f else 0.4f
+        val ambientIntensity = if (isAltPressed) 0.01f else 0.4f
 
         if(caches.isNotEmpty()) {
             val envCopy = environment
@@ -152,7 +152,10 @@ class MainScene : ApplicationListener {
             }
         }
         modelBatch.end()
-        if(isAltPressed) heatmap.renderChunks(cam)
+        if(isAltPressed) {
+            if(isKeyframe) heatmap.compile()
+            heatmap.render(cam.combined)
+        }
         forceHeatmap = false
         // Render FPS counter
         spriteBatch.begin()

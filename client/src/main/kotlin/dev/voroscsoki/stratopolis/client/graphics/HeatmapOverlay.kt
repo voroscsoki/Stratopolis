@@ -1,146 +1,155 @@
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.Mesh
+import com.badlogic.gdx.graphics.VertexAttribute
 import com.badlogic.gdx.graphics.VertexAttributes
-import com.badlogic.gdx.graphics.g3d.Material
-import com.badlogic.gdx.graphics.g3d.Model
-import com.badlogic.gdx.graphics.g3d.ModelBatch
-import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
-import com.badlogic.gdx.math.Vector3
-import org.lwjgl.opengl.GL40
-import java.util.concurrent.ConcurrentHashMap
+import com.badlogic.gdx.graphics.glutils.ShaderProgram
+import com.badlogic.gdx.math.Matrix4
+import kotlin.math.ceil
 
-class HeatmapOverlay {
-    private val chunks = ConcurrentHashMap<String, DynamicNumberedChunk>()
+class HeatmapOverlay(
+    private val gridSize: Int,      // Number of cells per row/column
+    val cellSize: Float,    // Size of each grid cell
+    private val chunkSize: Int = 32 // Size of each chunk (e.g., 32x32 cells)
+) {
+    private val grid = Array(gridSize) { IntArray(gridSize) } // Frequency grid
+    private val meshes = mutableListOf<Mesh>()               // List of sub-meshes
+    private var needsUpdate = true                           // Whether meshes need to be updated
+    private val absoluteMax = 100
 
-    private val modelBuilder = ModelBuilder()
-    private lateinit var modelBatch: ModelBatch
-    private lateinit var chunkModel: Model
-    private var chunkSize = 100f
+    private val vertexShader = """
+        #version 330 core
+        in vec3 a_position;
+        in vec4 a_color;
 
-    private val tempColor = Color(Color.RED)
-    private val tempVector = Vector3()
+        uniform mat4 u_projTrans;
 
-    // Caching opacity calculations
-    private val opacityCache = mutableMapOf<Int, Float>()
+        out vec4 v_color;
 
-    data class DynamicNumberedChunk(
-        val id: String,
-        var number: Int,
-        val modelInstance: ModelInstance,
-        val position: Vector3
-    ) {
-        var needsMaterialUpdate = true
-    }
-
-    fun init(modelBatch: ModelBatch, chunkSize: Float = 100f) {
-        this.modelBatch = modelBatch
-        this.chunkSize = chunkSize
-        val initialMaterial = createChunkMaterial(0)
-
-        this.chunkModel = modelBuilder.createBox(
-            chunkSize, 1f, chunkSize,
-            initialMaterial,
-            (VertexAttributes.Usage.Position or VertexAttributes.Usage.Normal).toLong()
-        )
-    }
-
-    fun addChunk(x: Float, z: Float, initialNumber: Int) {
-        val chunkId = "$x:$z"
-
-        chunks[chunkId]?.let { existingChunk ->
-            existingChunk.number = initialNumber
-            existingChunk.needsMaterialUpdate = true
-            return
+        void main() {
+            v_color = a_color;
+            gl_Position = u_projTrans * vec4(a_position, 1.0);
         }
 
-        val modelInstance = ModelInstance(chunkModel)
-        modelInstance.transform.setToTranslation(x, 100f, z)
+    """.trimIndent()
+    private val fragmentShader = """
+        #version 330 core
+        in vec4 v_color;
 
-        val res = DynamicNumberedChunk(chunkId, initialNumber, modelInstance, Vector3(x, 0f, z))
-        updateChunkModelMaterial(res)
-        chunks[chunkId] = res
-    }
+        out vec4 fragColor;
 
-    private fun createChunkMaterial(number: Int): Material {
-        val opacity = calculateOpacity(number)
-        return Material(
-            BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA, opacity),
-            ColorAttribute(ColorAttribute.Diffuse, Color.RED)
-        )
-    }
-
-    private fun calculateOpacity(number: Int): Float {
-        // Use cached opacity to reduce redundant calculations
-        return opacityCache.getOrPut(number) {
-            (0.1f + (number.coerceIn(0, 10) / 10f)).coerceIn(0.1f, 0.8f)
+        void main() {
+            fragColor = v_color;
         }
+
+    """.trimIndent()
+
+    private val shader: ShaderProgram = ShaderProgram(
+        vertexShader,
+        fragmentShader
+    )
+
+    fun updateFrequency(x: Float, z: Float) {
+        val gridX = ((x / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
+        val gridZ = ((z / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
+        grid[gridX][gridZ]++
+        needsUpdate = true
     }
 
-    fun updateChunkNumber(x: Float, z: Float, newNumber: Int) {
-        if(!chunks.contains("$x:$z")) {
-            addChunk(x, z, newNumber)
-            return
-        }
-        val chunkId = "$x:$z"
-        chunks[chunkId]?.let { chunk ->
-            if (chunk.number != newNumber) {
-                chunk.number = newNumber
-                chunk.needsMaterialUpdate = true
+    fun compile() {
+        if (!needsUpdate) return
+        needsUpdate = false
+
+        meshes.forEach { it.dispose() }
+        meshes.clear()
+
+        val maxFrequency = grid.maxOfOrNull { it.maxOrNull() ?: 0 } ?: 1
+
+        val chunksPerRow = ceil(gridSize / chunkSize.toFloat()).toInt()
+        for (chunkX in 0 until chunksPerRow) {
+            for (chunkZ in 0 until chunksPerRow) {
+                val vertices = mutableListOf<Float>()
+                val indices = mutableListOf<Short>()
+                var vertexCount = 0
+
+                for (x in 0 until chunkSize) {
+                    for (z in 0 until chunkSize) {
+                        val globalX = chunkX * chunkSize + x
+                        val globalZ = chunkZ * chunkSize + z
+
+                        if (globalX >= gridSize || globalZ >= gridSize) continue
+
+                        val freq = grid[globalX][globalZ]
+                        if(freq == 0) continue
+                        println(freq)
+                        val opacity = (freq.toFloat() / maxFrequency.coerceAtMost(absoluteMax)).coerceIn(0f, 1f)
+
+                        val worldX = (globalX - gridSize / 2) * cellSize
+                        val worldZ = (globalZ - gridSize / 2) * cellSize
+                        val color = listOf(opacity, 1-opacity, 0f, 1f) // Red with varying opacity
+
+                        //build quad
+                        vertices.addAll(
+                            listOf(
+                                worldX, 0f, worldZ, color[0], color[1], color[2], color[3],
+                                worldX + cellSize, 0f, worldZ, color[0], color[1], color[2], color[3],
+                                worldX + cellSize, 0f, worldZ + cellSize, color[0], color[1], color[2], color[3],
+                                worldX, 0f, worldZ + cellSize, color[0], color[1], color[2], color[3]
+                            )
+                        )
+
+                        indices.addAll(
+                            listOf(
+                                (vertexCount + 0).toShort(),
+                                (vertexCount + 1).toShort(),
+                                (vertexCount + 2).toShort(),
+                                (vertexCount + 2).toShort(),
+                                (vertexCount + 3).toShort(),
+                                (vertexCount + 0).toShort()
+                            )
+                        )
+
+                        vertexCount += 4
+                    }
+                }
+
+                if (vertices.isEmpty()) continue
+
+                val mesh = Mesh(
+                    true,
+                    vertices.size / 7,
+                    indices.size,
+                    VertexAttributes(
+                        VertexAttribute.Position(),
+                        VertexAttribute.ColorUnpacked()
+                    )
+                )
+                mesh.setVertices(vertices.toFloatArray())
+                mesh.setIndices(indices.toShortArray())
+                meshes.add(mesh)
             }
         }
     }
 
-    fun renderChunks(camera: PerspectiveCamera) {
-        // Early exit if no chunks
-        if (chunks.isEmpty()) return
+    fun render(cameraMatrix: Matrix4) {
+        if (meshes.isEmpty()) return
 
-        val visibleChunks = chunks.values.filter { isChunkVisible(it, camera) }
-        println(visibleChunks)
-        visibleChunks
-                .filter { it.needsMaterialUpdate }
-                .map { updateChunkModelMaterial(it) }
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
-        Gdx.gl.glEnable(GL40.GL_BLEND)
-        Gdx.gl.glBlendFunc(GL40.GL_SRC_ALPHA, GL40.GL_ONE_MINUS_SRC_ALPHA)
+        shader.bind()
+        shader.setUniformMatrix("u_projTrans", cameraMatrix)
 
-        modelBatch.begin(camera)
-        modelBatch.render(visibleChunks.map { it.modelInstance })
-        modelBatch.end()
-    }
-
-    private fun isChunkVisible(chunk: DynamicNumberedChunk, camera: PerspectiveCamera): Boolean {
-        tempVector.set(chunk.position.x, 100f, chunk.position.z)
-        return camera.frustum.sphereInFrustum(tempVector, chunkSize)
-    }
-
-    private fun updateChunkModelMaterial(chunk: DynamicNumberedChunk) {
-        val newOpacity = calculateOpacity(chunk.number)
-
-        chunk.modelInstance.materials.forEach { material ->
-            material.get(BlendingAttribute.Type)?.let { blendingAttr ->
-                (blendingAttr as BlendingAttribute).opacity = newOpacity
-            }
+        meshes.forEach { mesh ->
+            mesh.render(shader, GL20.GL_TRIANGLES)
         }
-        chunk.needsMaterialUpdate = false
+
+        Gdx.gl.glDisable(GL20.GL_BLEND)
     }
 
     fun dispose() {
-        // Dispose of the shared model
-        chunkModel.dispose()
-
-        chunks.clear()
-        opacityCache.clear()
-    }
-
-    fun bulkUpdateChunks(updates: Map<Pair<Float, Float>, Int>) {
-        updates.forEach { (coords, number) ->
-            updateChunkNumber(coords.first, coords.second, number)
-        }
+        meshes.forEach { it.dispose() }
+        shader.dispose()
     }
 }
