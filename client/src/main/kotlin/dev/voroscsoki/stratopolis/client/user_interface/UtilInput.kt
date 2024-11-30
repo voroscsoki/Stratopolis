@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.graphics.MainScene
+import dev.voroscsoki.stratopolis.common.SimulationData
 import dev.voroscsoki.stratopolis.common.networking.RoadRequest
 import dev.voroscsoki.stratopolis.common.networking.SimulationRequest
 import dev.voroscsoki.stratopolis.common.util.getMemoryUsage
@@ -26,8 +27,10 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
                 Main.appScene.clearHeatmap()
                 val startTime = Clock.systemDefaultZone().instant().toKotlinInstant()
                 val endTime = startTime + 60.minutes
+                val simulationData = SimulationData(
+                    startTime, endTime, 10000)
                 Main.instanceData.reset(startTime)
-                Main.socket.sendSocketMessage(SimulationRequest(startTime, endTime, 10000))
+                Main.socket.sendSocketMessage(SimulationRequest(simulationData))
             }
         }
 

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.GdxRuntimeException
 import dev.voroscsoki.stratopolis.client.graphics.*
+import dev.voroscsoki.stratopolis.common.SimulationData
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.Road
@@ -19,7 +20,6 @@ import kotlinx.coroutines.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import java.time.Clock
-import kotlin.time.Duration.Companion.seconds
 
 class InstanceData(val scene: MainScene) {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
@@ -27,11 +27,7 @@ class InstanceData(val scene: MainScene) {
         EstablishBearingResponse::class.java to { msg ->
             baselineCoord = (msg as EstablishBearingResponse).baselineCoord
         },
-        AgentStateUpdate::class.java to { msg -> runBlocking {
-            (msg as AgentStateUpdate).let {
-                simulationQueue[it.sequence] = it
-                println(it.sequence)
-            }} },
+        SimulationResult::class.java to { msg -> runBlocking { setupHeatmap((msg as SimulationResult).data) } },
         RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) },
     )
 
@@ -39,7 +35,7 @@ class InstanceData(val scene: MainScene) {
     private val buildings = ObservableMap<Long, Building>()
     private val roads = ObservableMap<Long, Road>()
     private val agents = ObservableMap<Long, Agent>()
-    private val simulationQueue = mutableMapOf<Int, AgentStateUpdate>()
+    private val simulationQueue = mutableMapOf<Int, SimulationResult>()
     private var setupJob: Job? = null
     private val coroScope = CoroutineScope(Dispatchers.IO)
     var sequence = 0
@@ -53,44 +49,6 @@ class InstanceData(val scene: MainScene) {
         }
     }
 
-    private val gameLoopJob = CoroutineScope(Dispatchers.IO).launch {
-        val timestep = 2
-        while (true) {
-            val currentUpdate = simulationQueue[sequence]
-            if (currentUpdate == null) {
-                Thread.sleep(200)
-                continue
-            }
-            simulationQueue.remove(sequence++)
-            currentUpdate.agents.forEach { agents.putIfAbsent(it.key, it.value.first) }
-            val timeDelta = currentUpdate.time - currentTime
-
-            agents.map { (agentId, agent) ->
-                coroScope.launch {
-                    val allCoords = mutableListOf<Pair<Float, Float>>()
-                    for (i in 0 until timeDelta.inWholeSeconds / timestep) {
-                        val currPos = agent.location
-                        val targetPos = currentUpdate.agents[agentId]?.second?.location
-                        targetPos ?: return@launch
-
-                        val timeToCover = timeDelta - ((i * timestep).seconds)
-                        val diff =
-                            (targetPos - currPos) / ((timeToCover.inWholeSeconds.toDouble() / timestep + (1 / timestep))).coerceAtLeast(1.0)
-                        agent.location += diff
-
-                        val currPosConverted = currPos.toSceneCoords(baselineCoord!!)
-                        allCoords.add(
-                            (currPosConverted.x - (currPosConverted.x % scene.heatmap.cellSize)).toFloat() to
-                                    (currPosConverted.z - (currPosConverted.z % scene.heatmap.cellSize)).toFloat()
-                        )
-                    }
-
-                    scene.heatmap.updateFrequency(allCoords)
-                }
-            }
-            currentTime = currentUpdate.time
-        }
-    }
 
     var currentTime = Clock.systemDefaultZone().instant().toKotlinInstant()
     var baselineCoord: Vec3? = null
@@ -104,11 +62,13 @@ class InstanceData(val scene: MainScene) {
         }
     }
 
-    init {
-        gameLoopJob.start()
+
+    private fun setupHeatmap(data: SimulationData) {
+        //scene.clearHeatmap()
+        data.heatmapSquares.forEach {
+            println(it)
+        }
     }
-
-
 
     private fun upsertBuilding(data: Building) {
         baselineCoord ?: return

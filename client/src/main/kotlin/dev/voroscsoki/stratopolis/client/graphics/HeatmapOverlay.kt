@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.VertexAttribute
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
 import com.badlogic.gdx.math.Matrix4
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlin.math.ceil
 
 class HeatmapOverlay(
@@ -50,12 +51,10 @@ class HeatmapOverlay(
         fragmentShader
     )
 
-    fun updateFrequency(coords: List<Pair<Float, Float>>) {
-        coords.forEach { (x, z) ->
-            val gridX = ((x / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
-            val gridZ = ((z / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
-            grid[gridX][gridZ]++
-        }
+    fun updateFrequency(coords: Vec3) {
+        val gridX = ((coords.x / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
+        val gridZ = ((coords.z / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
+        grid[gridX][gridZ]++
         needsUpdate = true
     }
 

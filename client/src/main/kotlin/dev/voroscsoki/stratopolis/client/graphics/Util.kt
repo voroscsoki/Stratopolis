@@ -24,10 +24,18 @@ fun Vec3.toSceneCoords(baselineCoord: Vec3, scaleOnly: Boolean = false): Vec3 {
 
 fun Vector3.toWorldCoords(baselineCoord: Vec3): Vec3 {
     val x = this.x / 100000 + baselineCoord.x
-    val y = this.y / 100000 + baselineCoord.y
+    val y = this.y + baselineCoord.y
     val z = this.z / 100000 + baselineCoord.z
     return Vec3(x, y, z)
 }
+
+fun Vec3.toWorldCoords(baselineCoord: Vec3): Vec3 {
+    val x = this.x / 100000 + baselineCoord.x
+    val y = this.y + baselineCoord.y
+    val z = this.z / 100000 + baselineCoord.z
+    return Vec3(x, y, z)
+}
+
 
 fun createColoredDrawable(color: Color): TextureRegionDrawable {
     val pixmap = Pixmap(1, 1, Pixmap.Format.RGBA8888).apply {

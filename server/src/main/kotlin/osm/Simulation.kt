@@ -1,12 +1,13 @@
 package dev.voroscsoki.stratopolis.server.osm
 
+import dev.voroscsoki.stratopolis.common.SimulationData
 import dev.voroscsoki.stratopolis.common.elements.AgeGroup
 import dev.voroscsoki.stratopolis.common.elements.Agent
-import dev.voroscsoki.stratopolis.common.networking.AgentStateUpdate
+import dev.voroscsoki.stratopolis.common.networking.SimulationResult
+import dev.voroscsoki.stratopolis.common.util.Vec3
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.Main
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -61,9 +62,10 @@ class Simulation {
         }
     }
 
-    fun tick(callback: (Map<Long, Pair<Agent, Agent>>, Instant) -> Unit) {
+    fun tick(callback: (Vec3) -> Unit) {
         clock += 1.minutes
-        callback(agents.map { ag ->
+        agents.map { ag ->
+
             val oldCopy = ag.copy()
             if(ag.id == 1L) println((ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat())))
             ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * (ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
@@ -72,15 +74,22 @@ class Simulation {
                 ag.location = ag.atBuilding.coords
             }
             oldCopy to ag.copy()
-        }.associateBy { it.first.id }, clock)
+            callback(ag.location)
+        }
     }
 
-    fun startSimulation(startTime: Instant, endTime: Instant, agentCount: Int) {
-        setup(agentCount)
-        clock = startTime
-        var i = 0
-        while (clock < endTime) {
-            tick { agents, time -> Main.socketServer.sendSocketMessage(AgentStateUpdate(agents, time, i++)) }
+    fun startSimulation(startingData: SimulationData) {
+        val res = startingData.copy()
+        setup(res.agentCount)
+        clock = res.startTime
+        while (clock < startingData.endTime) {
+            tick { }
         }
+        for (i in -5000 until 5000 step 50) {
+            for (j in -5000 until 5000 step 50) {
+                if(Random.nextBoolean()) res.heatmapSquares["$i,$j"] = SimulationData.HeatmapSquare("$i,$j", Random.nextInt(0, 100))
+            }
+        }
+        Main.socketServer.sendSocketMessage(SimulationResult(res))
     }
 }

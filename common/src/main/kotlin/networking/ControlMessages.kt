@@ -1,9 +1,8 @@
 package dev.voroscsoki.stratopolis.common.networking
-import dev.voroscsoki.stratopolis.common.elements.Agent
+import dev.voroscsoki.stratopolis.common.SimulationData
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.util.Vec3
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 enum class ControlResult {
@@ -31,10 +30,10 @@ class RoadRequest(val baseCoord: Vec3?, val radius: Double? = null) : ControlMes
 class RoadResponse(val res: ControlResult, val roads: List<Road> = emptyList()) : ControlMessage()
 
 @Serializable
-class SimulationRequest(val startTime: Instant, val endTime: Instant, val agentCount: Int) : ControlMessage()
+class SimulationRequest(val starterData: SimulationData) : ControlMessage()
 
 @Serializable
-class AgentStateUpdate(val agents: Map<Long, Pair<Agent, Agent>>, val time: Instant, val sequence: Int) : ControlMessage()
+class SimulationResult(val data: SimulationData) : ControlMessage()
 
 @Serializable
 class EstablishBearingRequest : ControlMessage()
