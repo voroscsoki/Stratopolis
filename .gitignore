@@ -17,10 +17,10 @@
 *.thm
 *.toc
 *.pdf
+*_latexmk
 *.fls
 *.synctex.gz
-*.fdb_latexmk
+*.pbf
 
 #database
 *.db
-*.pbf

@@ -203,9 +203,15 @@ INPUT content\abstract.aux
 INPUT .\chapters\technologies.aux
 INPUT .\chapters\technologies.aux
 INPUT chapters\technologies.aux
+INPUT .\chapters\state-of-the-art.aux
+INPUT .\chapters\state-of-the-art.aux
+INPUT chapters\state-of-the-art.aux
 INPUT .\chapters\data-source.aux
 INPUT .\chapters\data-source.aux
 INPUT chapters\data-source.aux
+INPUT .\chapters\network-comms.aux
+INPUT .\chapters\network-comms.aux
+INPUT chapters\network-comms.aux
 INPUT .\chapters\graphics.aux
 INPUT .\chapters\graphics.aux
 INPUT chapters\graphics.aux
@@ -406,6 +412,12 @@ INPUT .\images\ktor_logo.png
 INPUT .\images\ktor_logo.png
 INPUT .\images\ktor_logo.png
 INPUT .\images\ktor_logo.png
+INPUT .\chapters\state-of-the-art.tex
+INPUT .\chapters\state-of-the-art.tex
+OUTPUT chapters\state-of-the-art.aux
+INPUT .\chapters\state-of-the-art.tex
+INPUT .\chapters\state-of-the-art.tex
+INPUT chapters\state-of-the-art.tex
 INPUT .\chapters\data-source.tex
 INPUT .\chapters\data-source.tex
 OUTPUT chapters\data-source.aux
@@ -420,14 +432,20 @@ INPUT .\images\scee_example.jpg
 INPUT .\images\scee_example.jpg
 INPUT .\images\scee_example.jpg
 INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmtl10.tfm
+INPUT .\chapters\network-comms.tex
+INPUT .\chapters\network-comms.tex
+OUTPUT chapters\network-comms.aux
+INPUT .\chapters\network-comms.tex
+INPUT .\chapters\network-comms.tex
+INPUT chapters\network-comms.tex
 INPUT .\chapters\graphics.tex
 INPUT .\chapters\graphics.tex
 OUTPUT chapters\graphics.aux
 INPUT .\chapters\graphics.tex
 INPUT .\chapters\graphics.tex
 INPUT chapters\graphics.tex
-INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmtl10.tfm
 INPUT C:\Program Files\MiKTeX\fonts\enc\dvips\lm\lm-mathit.enc
+INPUT C:\Program Files\MiKTeX\fonts\tfm\public\lm\ec-lmtl10.tfm
 INPUT .\images\main_graphics_view.png
 INPUT .\images\main_graphics_view.png
 INPUT .\images\main_graphics_view.png
@@ -483,9 +501,15 @@ INPUT content\abstract.aux
 INPUT .\chapters\technologies.aux
 INPUT .\chapters\technologies.aux
 INPUT chapters\technologies.aux
+INPUT .\chapters\state-of-the-art.aux
+INPUT .\chapters\state-of-the-art.aux
+INPUT chapters\state-of-the-art.aux
 INPUT .\chapters\data-source.aux
 INPUT .\chapters\data-source.aux
 INPUT chapters\data-source.aux
+INPUT .\chapters\network-comms.aux
+INPUT .\chapters\network-comms.aux
+INPUT chapters\network-comms.aux
 INPUT .\chapters\graphics.aux
 INPUT .\chapters\graphics.aux
 INPUT chapters\graphics.aux
