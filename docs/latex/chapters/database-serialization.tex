@@ -1,5 +1,7 @@
 \chapter{Data storage considerations}
 \section{The database}
 
+Any read PBF is data is stored in the app's database if applicable. This reduces the server's overall memory usage, but increases response times due to the disproportionately high number of disk accesses. Overall, this approach helped the project's runtime stability.
+
 \label{serialise}
 \section{Serialisation}
