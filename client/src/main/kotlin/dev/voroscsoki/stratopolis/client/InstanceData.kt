@@ -17,6 +17,7 @@ import dev.voroscsoki.stratopolis.common.util.Vec3
 import dev.voroscsoki.stratopolis.common.util.getWayAverage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import java.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -26,23 +27,17 @@ class InstanceData(val scene: MainScene) {
         BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) },
         EstablishBearingResponse::class.java to { msg -> baselineCoord = (msg as EstablishBearingResponse).baselineCoord },
         AgentStateUpdate::class.java to { msg -> runBlocking { simulationQueue.send(msg as AgentStateUpdate) }},
-        SimulationSetupResponse::class.java to { msg -> runBlocking { setupSimulation(msg as SimulationSetupResponse) }},
         RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) },
     )
-
-    private fun setupSimulation(msg: SimulationSetupResponse) {
-        msg.agents.forEach { a ->
-            agents.putIfAbsent(a.id, a)
-        }
-    }
 
     private val nodes = ObservableMap<Long, SerializableNode>()
     private val buildings = ObservableMap<Long, Building>()
     private val roads = ObservableMap<Long, Road>()
     private val agents = ObservableMap<Long, Agent>()
-    private val simulationQueue = Channel<AgentStateUpdate>()
+    private val simulationQueue = Channel<AgentStateUpdate>(Channel.UNLIMITED)
     private var setupJob: Job? = null
     private val coroScope = CoroutineScope(Dispatchers.IO)
+    var sequence = 0
 
     init {
         buildings.listeners.add { change ->
@@ -54,15 +49,19 @@ class InstanceData(val scene: MainScene) {
     }
 
     private val gameLoopJob = CoroutineScope(Dispatchers.IO).launch {
-        val timestep = 0.5
+        val timestep = 2
         while(true) {
             val currentUpdate = simulationQueue.receive()
+            if(currentUpdate.sequence != sequence) {
+                simulationQueue.send(currentUpdate)
+                continue
+            }
+            sequence++
             val newAgents = currentUpdate.agents.map { it.second }.toList()
+            newAgents.forEach { agents.putIfAbsent(it.id, it) }
 
             while(currentTime < currentUpdate.time) {
-                println("Time: $currentTime")
-                println("Current update time: ${currentUpdate.time}")
-                coroutineScope {
+                coroScope.launch {
                     agents.map { (agentId, agent) ->
                         launch {
                             val currPos = agent.location
@@ -85,7 +84,6 @@ class InstanceData(val scene: MainScene) {
 
                 // Increment time after processing all agents
                 currentTime += timestep.seconds
-                delay((10/timestep).toLong())
             }
         }
     }
@@ -162,7 +160,6 @@ class InstanceData(val scene: MainScene) {
         setupJob?.cancel()
         runBlocking { Main.socket.sendSocketMessage(EstablishBearingRequest()) }
         runBlocking { requestBuildings() }
-        runBlocking { Main.socket.sendSocketMessage(SimulationSetupRequest()) }
     }
 
     fun clearGraphics() {
@@ -204,5 +201,11 @@ class InstanceData(val scene: MainScene) {
             scene.updateCaches()
             scene.menu?.loadingBar?.fadeOut()
         }*/
+    }
+
+    fun reset(startTime: Instant) {
+        currentTime = startTime
+        sequence = 0
+        agents.clear()
     }
 }

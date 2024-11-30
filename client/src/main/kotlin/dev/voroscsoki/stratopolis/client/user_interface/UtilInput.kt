@@ -5,9 +5,12 @@ import com.badlogic.gdx.InputAdapter
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.graphics.MainScene
 import dev.voroscsoki.stratopolis.common.networking.RoadRequest
-import dev.voroscsoki.stratopolis.common.networking.TickRequest
+import dev.voroscsoki.stratopolis.common.networking.SimulationRequest
 import dev.voroscsoki.stratopolis.common.util.getMemoryUsage
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinInstant
+import java.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 class UtilInput(val scene: MainScene) : InputAdapter() {
     override fun keyDown(keycode: Int): Boolean {
@@ -20,7 +23,12 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
         //F3
         if (keycode == 133) {
             runBlocking {
-                Main.socket.sendSocketMessage(TickRequest()) }
+                Main.appScene.clearHeatmap()
+                val startTime = Clock.systemDefaultZone().instant().toKotlinInstant()
+                val endTime = startTime + 3.minutes
+                Main.instanceData.reset(startTime)
+                Main.socket.sendSocketMessage(SimulationRequest(startTime, endTime, 50000))
+            }
         }
 
         //print app memory usage

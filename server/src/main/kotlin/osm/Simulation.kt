@@ -2,9 +2,12 @@ package dev.voroscsoki.stratopolis.server.osm
 
 import dev.voroscsoki.stratopolis.common.elements.AgeGroup
 import dev.voroscsoki.stratopolis.common.elements.Agent
-import dev.voroscsoki.stratopolis.common.elements.Building
+import dev.voroscsoki.stratopolis.common.networking.AgentStateUpdate
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
-import kotlinx.datetime.*
+import dev.voroscsoki.stratopolis.server.Main
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -45,47 +48,17 @@ class Simulation {
         else Distributions()
     }
 
-    init {
-        val count = 10000
+    private fun setup(count: Int) {
+        agents.clear()
         val bldg = DatabaseAccess.getRandomBuildings(count * 2)
         for (i in 0..<count) {
-            agents += Agent(Random.nextLong().absoluteValue,
+            agents += Agent(
+                Random.nextLong().absoluteValue,
                 bldg[i],
                 bldg[i + 1],
                 bldg[i].coords)
             println(i)
         }
-        agents += Agent(1L,
-            DatabaseAccess.getBuildingById(776062316L)!!,
-            DatabaseAccess.getBuildingById(24726989L)!!,
-            DatabaseAccess.getBuildingById(776062316L)!!.coords)
-    }
-
-    fun Agent.pickNextBuilding(): Building? {
-        val combinedChances = distributions.getDistribution(this.ageGroup, this@Simulation.clock.toLocalDateTime(TimeZone.currentSystemDefault()))
-        //pick a random type weighted by the distribution
-        // Calculate total weight
-        val totalWeight = combinedChances.values.sum()
-
-        // Generate a random value between 0 and total weight
-        val randomValue = Random.nextDouble(0.0, totalWeight)
-
-        // Accumulate weights to find the selected building type
-        var accumulatedWeight = 0.0
-        lateinit var type: String
-        for ((buildingType, chance) in combinedChances) {
-            accumulatedWeight += chance
-            if (randomValue <= accumulatedWeight) {
-                type = buildingType
-            }
-        }
-        if(type == this.atBuilding.buildingType) return null
-        val buildings = DatabaseAccess.getBuildingsByType(type, this.location)
-        if (buildings.isNotEmpty()) {
-            this.targetBuilding = buildings.shuffled().first()
-            return this.targetBuilding
-        }
-        return null
     }
 
     fun tick(callback: (List<Pair<Agent, Agent>>, Instant) -> Unit) {
@@ -100,5 +73,14 @@ class Simulation {
             }
             oldCopy to ag.copy()
         }, clock)
+    }
+
+    fun startSimulation(startTime: Instant, endTime: Instant, agentCount: Int) {
+        setup(agentCount)
+        clock = startTime
+        var i = 0
+        while (clock < endTime) {
+            tick { agents, time -> Main.socketServer.sendSocketMessage(AgentStateUpdate(agents, time, i++)) }
+        }
     }
 }

@@ -222,6 +222,11 @@ class MainScene : ApplicationListener {
         { ConcurrentHashMap() }[data.id] = GraphicalRoad(data, inst)
     }
 
+    fun clearHeatmap() {
+        heatmap.dispose()
+        heatmap = HeatmapOverlay(1000, 50f)
+    }
+
     private suspend fun <T> runOnRenderThread(block: () -> T): T {
         return suspendCoroutine { continuation ->
             Gdx.app.postRunnable {

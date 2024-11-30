@@ -12,8 +12,7 @@ import kotlinx.coroutines.runBlocking
 
 class SocketServer {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
-        TickRequest::class.java to { Main.simu.tick { agents, time -> Main.socketServer.sendSocketMessage(AgentStateUpdate(agents, time)) } },
-        SimulationSetupRequest::class.java to { handleSimuSetup() },
+        SimulationRequest::class.java to { msg -> handleSimulationStart(msg as SimulationRequest) },
         EstablishBearingRequest::class.java to { msg -> runBlocking {
             val res = DatabaseAccess.getAverageCoords()
             sendSocketMessage(EstablishBearingResponse(ControlResult.OK, res)) }},
@@ -21,13 +20,8 @@ class SocketServer {
         RoadRequest::class.java to { msg -> runBlocking { handleRoadRequest(msg as RoadRequest) } },
     )
 
-    private fun handleSimuSetup() {
-        scope.launch {
-            Main.simu.agents.chunked(1000).forEach {
-                Main.socketServer.sendSocketMessage(SimulationSetupResponse(it))
-            }
-        }
-
+    private fun handleSimulationStart(msg: SimulationRequest) {
+        Main.simu.startSimulation(msg.startTime, msg.endTime, msg.agentCount)
     }
 
     private val scope = CoroutineScope(Dispatchers.Default)
