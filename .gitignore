@@ -17,3 +17,6 @@
 *.thm
 *.toc
 *.pdf
+*_latexmk
+*.fls
+*.synctex.gz
