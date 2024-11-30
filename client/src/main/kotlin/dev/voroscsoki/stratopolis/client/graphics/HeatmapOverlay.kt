@@ -51,10 +51,10 @@ class HeatmapOverlay(
         fragmentShader
     )
 
-    fun updateFrequency(coords: Vec3) {
+    fun updateFrequency(coords: Vec3, value: Int) {
         val gridX = ((coords.x / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
         val gridZ = ((coords.z / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
-        grid[gridX][gridZ]++
+        grid[gridX][gridZ] = value
         needsUpdate = true
     }
 

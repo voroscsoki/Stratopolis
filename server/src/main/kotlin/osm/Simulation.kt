@@ -66,15 +66,16 @@ class Simulation {
         clock += 1.minutes
         agents.map { ag ->
 
-            val oldCopy = ag.copy()
-            if(ag.id == 1L) println((ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat())))
-            ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * (ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
-            if (ag.location dist ag.targetBuilding.coords < 0.00000001) {
-                ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
-                ag.location = ag.atBuilding.coords
+            repeat(60) {
+                if(ag.id == 1L) println((ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat())))
+                ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * (ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
+                if (ag.location dist ag.targetBuilding.coords < 0.00000001) {
+                    ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
+                    ag.location = ag.atBuilding.coords
+                }
+                callback(ag.location)
             }
-            oldCopy to ag.copy()
-            callback(ag.location)
+
         }
     }
 
@@ -83,11 +84,8 @@ class Simulation {
         setup(res.agentCount)
         clock = res.startTime
         while (clock < startingData.endTime) {
-            tick { }
-        }
-        for (i in -5000 until 5000 step 50) {
-            for (j in -5000 until 5000 step 50) {
-                if(Random.nextBoolean()) res.heatmapSquares["$i,$j"] = SimulationData.HeatmapSquare("$i,$j", Random.nextInt(0, 100))
+            tick {
+                res.addFrequency(it)
             }
         }
         Main.socketServer.sendSocketMessage(SimulationResult(res))

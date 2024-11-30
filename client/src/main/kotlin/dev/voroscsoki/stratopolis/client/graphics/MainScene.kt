@@ -63,6 +63,7 @@ class MainScene : ApplicationListener {
 
     //constants
     private val chunkSize = 2000
+    val heatmapCellSize = 50f
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalObject>>()
@@ -113,7 +114,7 @@ class MainScene : ApplicationListener {
             addProcessor(UtilInput(this@MainScene))
             addProcessor(stage)
         }
-        heatmap = HeatmapOverlay(1000, 50f)
+        heatmap = HeatmapOverlay(1000, heatmapCellSize)
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
         Gdx.gl.glCullFace(GL40.GL_BACK)
@@ -224,7 +225,7 @@ class MainScene : ApplicationListener {
 
     fun clearHeatmap() {
         heatmap.dispose()
-        heatmap = HeatmapOverlay(1000, 50f)
+        heatmap = HeatmapOverlay(1000, heatmapCellSize)
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {

@@ -65,8 +65,11 @@ class InstanceData(val scene: MainScene) {
 
     private fun setupHeatmap(data: SimulationData) {
         //scene.clearHeatmap()
-        data.heatmapSquares.forEach {
-            println(it)
+        data.frequencies.forEach { freq ->
+            val vec = freq.key.split(",").let { Vec3(it[0].toDouble(), 0.0, it[1].toDouble()) }
+                .toSceneCoords(baselineCoord!!).roundToNearestInt()
+            println(vec)
+            scene.heatmap.updateFrequency(vec, freq.value.toInt())
         }
     }
 
