@@ -87,7 +87,7 @@ class HeatmapOverlay(
 
                         val worldX = (globalX - gridSize / 2) * cellSize
                         val worldZ = (globalZ - gridSize / 2) * cellSize
-                        val color = listOf(opacity, 1-opacity, 0f, 1f) // Red with varying opacity
+                        val color = listOf(opacity, 1-opacity, 0f, 0.5f) // Red with varying opacity
 
                         //build quad
                         vertices.addAll(
