@@ -86,9 +86,5 @@ For libGDX scenes, it is possible to inject a single input processing adapter ob
 I created my own camera and menu functions based on the public InputAdapter interface. The viewing angle is locked, the user can inspect the image made from backend-sourced data from a fixed top-down perspective. Moving exploits the need for updating the camera every frame; by pressing a navigational button, a certain target amount is added to the handler responsible for the given axis. This number reduces by a certain percentage each frame, zeroing out the value once it gets below a certain threshold.
 
 This results in smooth speed handling, which avoids robotic, sudden direction changes. Since multiple commands may be executed at once, every function that changes the camera's position must be under a mutex (mutually exclusive) lock. Without this, multiple camera location changes cause the currently rendered frame to flicker.
-% TODO code section
 
-\
- Egy komplexum, de akár az azt határoló vonalak által leírt poligon is lehet konkáv, így a teljes modellek felépítéséhez a fülvágó algoritmust használtam.
-
-A backend-ről származó adatokból természetesen nem csak az entitások pozíciója, formája lényeges, az OpenStreetMap adathalmaz alapján csoportosíthatók és színezhetők  
+%TODO: more info about the scenes
