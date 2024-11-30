@@ -34,7 +34,7 @@ class RoadResponse(val res: ControlResult, val roads: List<Road> = emptyList()) 
 class SimulationRequest(val startTime: Instant, val endTime: Instant, val agentCount: Int) : ControlMessage()
 
 @Serializable
-class AgentStateUpdate(val agents: List<Pair<Agent, Agent>>, val time: Instant, val sequence: Int) : ControlMessage()
+class AgentStateUpdate(val agents: Map<Long, Pair<Agent, Agent>>, val time: Instant, val sequence: Int) : ControlMessage()
 
 @Serializable
 class EstablishBearingRequest : ControlMessage()

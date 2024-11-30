@@ -16,7 +16,6 @@ import dev.voroscsoki.stratopolis.common.util.ObservableMap
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import dev.voroscsoki.stratopolis.common.util.getWayAverage
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import java.time.Clock
@@ -25,8 +24,14 @@ import kotlin.time.Duration.Companion.seconds
 class InstanceData(val scene: MainScene) {
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         BuildingResponse::class.java to { msg -> handleBuildings(msg as BuildingResponse) },
-        EstablishBearingResponse::class.java to { msg -> baselineCoord = (msg as EstablishBearingResponse).baselineCoord },
-        AgentStateUpdate::class.java to { msg -> runBlocking { simulationQueue.send(msg as AgentStateUpdate) }},
+        EstablishBearingResponse::class.java to { msg ->
+            baselineCoord = (msg as EstablishBearingResponse).baselineCoord
+        },
+        AgentStateUpdate::class.java to { msg -> runBlocking {
+            (msg as AgentStateUpdate).let {
+                simulationQueue[it.sequence] = it
+                println(it.sequence)
+            }} },
         RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) },
     )
 
@@ -34,7 +39,7 @@ class InstanceData(val scene: MainScene) {
     private val buildings = ObservableMap<Long, Building>()
     private val roads = ObservableMap<Long, Road>()
     private val agents = ObservableMap<Long, Agent>()
-    private val simulationQueue = Channel<AgentStateUpdate>(Channel.UNLIMITED)
+    private val simulationQueue = mutableMapOf<Int, AgentStateUpdate>()
     private var setupJob: Job? = null
     private val coroScope = CoroutineScope(Dispatchers.IO)
     var sequence = 0
@@ -50,41 +55,40 @@ class InstanceData(val scene: MainScene) {
 
     private val gameLoopJob = CoroutineScope(Dispatchers.IO).launch {
         val timestep = 2
-        while(true) {
-            val currentUpdate = simulationQueue.receive()
-            if(currentUpdate.sequence != sequence) {
-                simulationQueue.send(currentUpdate)
+        while (true) {
+            val currentUpdate = simulationQueue[sequence]
+            if (currentUpdate == null) {
+                Thread.sleep(200)
                 continue
             }
-            sequence++
-            val newAgents = currentUpdate.agents.map { it.second }.toList()
-            newAgents.forEach { agents.putIfAbsent(it.id, it) }
+            simulationQueue.remove(sequence++)
+            currentUpdate.agents.forEach { agents.putIfAbsent(it.key, it.value.first) }
+            val timeDelta = currentUpdate.time - currentTime
 
-            while(currentTime < currentUpdate.time) {
+            agents.map { (agentId, agent) ->
                 coroScope.launch {
-                    agents.map { (agentId, agent) ->
-                        launch {
-                            val currPos = agent.location
-                            val targetPos = newAgents.firstOrNull { it.id == agentId }?.location
-                            targetPos ?: return@launch
+                    val allCoords = mutableListOf<Pair<Float, Float>>()
+                    for (i in 0 until timeDelta.inWholeSeconds / timestep) {
+                        val currPos = agent.location
+                        val targetPos = currentUpdate.agents[agentId]?.second?.location
+                        targetPos ?: return@launch
 
-                            val timeToCover = currentUpdate.time - currentTime
-                            val diff = (targetPos - currPos) / ((timeToCover.inWholeSeconds.toDouble()/timestep + (1/timestep))).coerceAtLeast(1.0)
-                            agent.location += diff
+                        val timeToCover = timeDelta - ((i * timestep).seconds)
+                        val diff =
+                            (targetPos - currPos) / ((timeToCover.inWholeSeconds.toDouble() / timestep + (1 / timestep))).coerceAtLeast(1.0)
+                        agent.location += diff
 
-                            val currPosConverted = currPos.toSceneCoords(baselineCoord!!)
-                            scene.heatmap.updateFrequency(
-                                (currPosConverted.x - (currPosConverted.x % scene.heatmap.cellSize)).toFloat(),
-                                (currPosConverted.z - (currPosConverted.z % scene.heatmap.cellSize)).toFloat()
-                            )
-                        }
+                        val currPosConverted = currPos.toSceneCoords(baselineCoord!!)
+                        allCoords.add(
+                            (currPosConverted.x - (currPosConverted.x % scene.heatmap.cellSize)).toFloat() to
+                                    (currPosConverted.z - (currPosConverted.z % scene.heatmap.cellSize)).toFloat()
+                        )
                     }
-                }
-                //scene.heatmap.decay()
 
-                // Increment time after processing all agents
-                currentTime += timestep.seconds
+                    scene.heatmap.updateFrequency(allCoords)
+                }
             }
+            currentTime = currentUpdate.time
         }
     }
 

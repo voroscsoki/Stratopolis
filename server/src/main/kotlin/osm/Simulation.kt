@@ -61,7 +61,7 @@ class Simulation {
         }
     }
 
-    fun tick(callback: (List<Pair<Agent, Agent>>, Instant) -> Unit) {
+    fun tick(callback: (Map<Long, Pair<Agent, Agent>>, Instant) -> Unit) {
         clock += 1.minutes
         callback(agents.map { ag ->
             val oldCopy = ag.copy()
@@ -72,7 +72,7 @@ class Simulation {
                 ag.location = ag.atBuilding.coords
             }
             oldCopy to ag.copy()
-        }, clock)
+        }.associateBy { it.first.id }, clock)
     }
 
     fun startSimulation(startTime: Instant, endTime: Instant, agentCount: Int) {

@@ -25,9 +25,9 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
             runBlocking {
                 Main.appScene.clearHeatmap()
                 val startTime = Clock.systemDefaultZone().instant().toKotlinInstant()
-                val endTime = startTime + 3.minutes
+                val endTime = startTime + 60.minutes
                 Main.instanceData.reset(startTime)
-                Main.socket.sendSocketMessage(SimulationRequest(startTime, endTime, 50000))
+                Main.socket.sendSocketMessage(SimulationRequest(startTime, endTime, 10000))
             }
         }
 

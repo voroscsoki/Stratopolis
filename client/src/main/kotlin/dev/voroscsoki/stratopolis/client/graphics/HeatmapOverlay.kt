@@ -50,10 +50,12 @@ class HeatmapOverlay(
         fragmentShader
     )
 
-    fun updateFrequency(x: Float, z: Float) {
-        val gridX = ((x / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
-        val gridZ = ((z / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
-        grid[gridX][gridZ]++
+    fun updateFrequency(coords: List<Pair<Float, Float>>) {
+        coords.forEach { (x, z) ->
+            val gridX = ((x / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
+            val gridZ = ((z / cellSize).toInt() + gridSize / 2).coerceIn(0, gridSize - 1)
+            grid[gridX][gridZ]++
+        }
         needsUpdate = true
     }
 
@@ -82,7 +84,6 @@ class HeatmapOverlay(
 
                         val freq = grid[globalX][globalZ]
                         if(freq == 0) continue
-                        println(freq)
                         val opacity = (freq.toFloat() / maxFrequency.coerceAtMost(absoluteMax)).coerceIn(0f, 1f)
 
                         val worldX = (globalX - gridSize / 2) * cellSize
