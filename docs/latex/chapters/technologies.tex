@@ -5,7 +5,7 @@ I worked using tools from the JVM-ecosystem, focusing on the problem description
 
 \section{Kotlin \raisebox{-1ex}{\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/kotlin_logo.png}}}
 
-Kotlin is a multiplatform, statically typed, multi-paradigm programming language. Its specification is publicly accessible and updated regularly by JetBrains employees.~\cite{KotlinSpec} The first prototype was release in 2011, and the code was open sourced just a year later. The first full release of the language was published in 2016; since 2017, Android officially supports the it, and Android development has been code-first since 2019.~\cite{KotlinPast}
+Kotlin is a multiplatform, statically typed, multi-paradigm programming language. Its specification is publicly accessible and updated regularly by JetBrains employees.~\cite{KotlinSpec} The first prototype was release in 2011, and the code was open sourced just a year later. The first full release of the language was published in 2016; since 2017, Android officially supports it, and Android development has been code-first since 2019.~\cite{KotlinPast}
 
 Most of its popularity can be attributed to its intuitive syntax and near-perfect compatibility with JVM\footnote{JVM: \@Java Virtual Machine, a fully specified runtime currently owned by Oracle, mainly intended to run programs written in Java}. Any Java code can be referenced in a Kotlin program, allowing the use of countless Java community libraries. There is no restriction on the ratio of source files written in the two languages. It is worth noting however, that this compatibility is unidirectional -- Java code can not call Kotlin code.
 
@@ -46,4 +46,4 @@ Ktor is a Kotlin-based framework for creating asynchronous web applications or s
 
 \section{Gradle {\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/gradle_logo.png}}}
 
-Gradle is a build automation tool, making 
+Gradle is a build automation tool, making JVM and C++ programs far easier to create, bundle and work system-agnostically.\cite{GradleDocs} First released in 2008, it is on its ninth main version currently, with features and improvements added every year. Most IDEs have built-in support for the tool, making it a favourite for IntelliJ Idea and Android Studio users for its easy to automate nature. Build scripts may be written in Groovy -- a language less popular today -- or Kotlin, using a Domain Specific Language (DSL) to define individual tasks and required dependencies. Gradle can also be leveraged to write documentation, run tests, or automate software deployment.

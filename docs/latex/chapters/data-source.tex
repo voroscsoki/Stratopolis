@@ -6,7 +6,7 @@ OpenStreetMap (OSM) is a collaborative community project to create a full, edita
 
 \subsection{Why OpenStreetMap?}
 
-As my intentions with this thesis project included following free and open source software guidelines\ref{licensing}, OSM was a perfect match to allow for further potential derivate works. Its widespread use also makes it easy to find and import arbitrary cities' datasets into the program, practically removing the limit on the area covered.
+As my intentions with this thesis project included following free and open source software guidelines (see~\ref{licensing}), OSM was a perfect match to allow for further potential derivate works. Its widespread use also makes it easy to find and import arbitrary cities' datasets into the program, practically removing the limit on the area covered.
 
 The sheer amount of data stored on the platform can be difficult to work with; strong inferences can be made on anything from building height trends to bus route frequencies. This is mostly thanks to easy to use uploading tools, such as the web editor iD or the mobile app StreetComplete (see~\ref{scee}).
 
@@ -24,7 +24,7 @@ OpenStreetMap data is made up of elements -- nodes, ways and relations -- each d
 
 The simplest element is a node. They represent objects that can not or should not be described with as a complicated surface. For instance, a bench or newsstand would be difficult to represent as anything other than a point. Over nine billion of these nodes exist, with 64-bit integer identification numbers and seven decimal places of precision for their latitude and longitude. Declaring elevation above sea level is optional.
 
-A way can combine multiple nodes into a polyline, a connected chain of points. This may be used to add a building outline or a road. The accuracy can depend on the author, as there is no curve interpolation; the more sparse the contained nodes are, the more jagged the way becomes. Over a billion ways exist, and they may be open (the last and first point is not connected) or closed. Buildings usually fall into the latter category.
+A way can combine multiple nodes into a polyline, a connected chain of points. This may be used to add a building outline or a road. The accuracy can depend on the author, as there is no curve interpolation; the more sparse the contained nodes are, the more jagged the way becomes. There are more than one billion ways, and they may be open (the last and first point is not connected) or closed. Buildings usually fall into the latter category.
 
 Relations are catch-all elements and may represent anything more complex than a single way -- in fact, they're lists of nodes and ways with metadata added through tags. A complicated building may be treated as a relation, just as an intercity bus route is a connection of highways and streets. Child elements can have roles: for example, outer and inner building walls, or the main and side streams of a river.
 

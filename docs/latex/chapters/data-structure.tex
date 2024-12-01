@@ -1,0 +1,11 @@
+\chapter{Data storage considerations}
+\section{The database}
+
+I chose SQLite as my database engine. It's lightweight, decently fast, and self-contained. The theory is that the file may be used like a writeable game save in the future, as making deep copies is only limited by disk space and I/O speed. This is the main difference when compared to a traditional SQL server. The engine adds no redundancy -- small amounts of data loss are not a problem as rebuilding the database is very quick. However, for transactions, the standard ACID (atomicity, consistency, isolation, durability) principles are followed. Exposed provides a DSL-specific transaction block, which runs all contained code in a database context, automatically dropping changes if any errors are raised.
+
+The database is created when loading a new PBF dataset, and can be read unlimited times until a new file is presented. Nodes, ways and relations are first processed on the CPU, with buildings and roads being selected and inserted into the database. 
+
+\label{serialise}
+\section{Serialisation}
+
+\subsection{Custom vec3}
