@@ -18,6 +18,7 @@ object Buildings : IdTable<Long>("buildings") {
     val type = enumeration<EntityType>("type").default(EntityType.Node)
     val tags = Buildings.text("tags")
     val ways = Buildings.text("ways")
+    val capacity = Buildings.uinteger("capacity")
 }
 
 object Roads : IdTable<Long>("roads") {

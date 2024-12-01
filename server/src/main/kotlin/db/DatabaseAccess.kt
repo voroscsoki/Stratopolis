@@ -32,7 +32,6 @@ class DatabaseAccess {
                 )
             }
         }
-        //TODO: roads
         fun loadFromOsm(storage: OsmStorage) {
             transaction {
                 println("Wiping old data")
@@ -49,6 +48,7 @@ class DatabaseAccess {
                     this[Buildings.type] = building.osmType
                     this[Buildings.tags] = Yaml.encodeToString(building.tags)
                     this[Buildings.ways] = Yaml.encodeToString(building.ways)
+                    this[Buildings.capacity] = building.capacity()
                 }
             }
 

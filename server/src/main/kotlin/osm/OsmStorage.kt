@@ -8,6 +8,7 @@ import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import dev.voroscsoki.stratopolis.common.elements.SerializableWay
 import dev.voroscsoki.stratopolis.common.util.*
 import java.io.File
+import kotlin.math.pow
 
 
 class OsmStorage(

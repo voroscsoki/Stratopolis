@@ -245,9 +245,7 @@ class MainScene : ApplicationListener {
             .distinct() //the last node is repeated for closed loops!
         if (baseNodes.size < 3) return null
 
-        val height = building.tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
-            ?: building.tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
-            ?: 2f
+        val height = building.height()
         val topNodes = baseNodes.map { it.cpy().add(0f, height, 0f) }
 
         val floats = baseNodes.flatMap { listOf(it.x, it.z) }.toFloatArray()
