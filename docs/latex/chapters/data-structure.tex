@@ -3,9 +3,25 @@
 
 I chose SQLite as my database engine. It's lightweight, decently fast, and self-contained. The theory is that the file may be used like a writeable game save in the future, as making deep copies is only limited by disk space and I/O speed. This is the main difference when compared to a traditional SQL server. The engine adds no redundancy -- small amounts of data loss are not a problem as rebuilding the database is very quick. However, for transactions, the standard ACID (atomicity, consistency, isolation, durability) principles are followed. Exposed provides a DSL-specific transaction block, which runs all contained code in a database context, automatically dropping changes if any errors are raised.
 
-The database is created when loading a new PBF dataset, and can be read unlimited times until a new file is presented. Nodes, ways and relations are first processed on the CPU, with buildings and roads being selected and inserted into the database. 
+The database is created when loading a new PBF dataset, and can be read unlimited times until a new file is presented. The program spawns a PBF iterator from the osm4j library and reads every element. Nodes and ways are read unconditionally, as relations must reference them to hold any meaningful data. Out of every category, elements with the \verb|highway| or \verb|building| tag are collected, their child elements retrieved and dumped into the database. After this process, the on-CPU storage object is purposefully thrown away due to the high number of unused nodes.
+
+I ended up going with a very simple data structure of just two tables, Buildings and Roads. Both tables have osm\_id, tags and ways columns, and buildings include additional information about their location, OSM element type, as well as a capacity, calculated as a function of their area and height. Some buildings have a "height" tag that's specified in meters, or a "levels" tag counting its floors. If none of these is present, I calculate the value as if there was only one floor. Capacity is used by the random selection algorithm while simulating to weigh the options.
 
 \label{serialise}
 \section{Serialisation}
 
-\subsection{Custom vec3}
+For storing three-dimensional vectors in the database, I created a higher precision Vec3 class with Doubles instead of Floats -- I use it throughout the program to avoid adding a dependency on the full libGDX library to the backend, as well as keeping more significant figures when communicating coordinates over the websocket. I implemented basic arithmetic methods, but not dot or cross products as they're not required aside from the render layer, which is forced to use the already existing Vector3 class. Exposed supports custom columns, which I used to convert these vectors to a VARCHAR\footnote{variable length character array, it can store arbitrary text up to its length limit, only using the necessary number of bytes} type in SQL. This is type-safe when reading or writing, conversion happens automatically.
+\begin{lstlisting}[caption=Custom column type in JetBrains Exposed]
+    object Vec3ColumnType : ColumnType<Vec3>() {
+    override fun sqlType(): String = "VARCHAR(50)"
+    override fun valueFromDB(value: Any): Vec3 {
+        return when (value) {
+            is String -> Vec3.fromString(value)
+            else -> ...}} ... }
+\end{lstlisting}
+
+Since the key-value pairs are unique most of the time, I found no real gains in creating a foreign key structure for the lists of tags and ways. I used a YAML serialiser, which saves a few characters per record over JSON. Later editions of the software could use a hybrid solution: a lookup table for common values, and simple string storage for all others.
+
+\section{Data access}
+
+Database communication is handled by the DatabaseAccess singleton. All methods are independent of the engine being used, so the database string could be swapped for any other scheme supported by Exposed. Queries are serialisable transactions, which mostly prevents reading incomplete buildings or roads. There is a simple helper function to take an in-memory storage object and simply overwrite the database with it, to be used when a new PBF file is loaded. Kotlin natively supports Sequences, a list type that can produce items while it's being iterated. I made use of this to send building data to the socket in smaller chunks, before the whole transaction is done. If the transaction block would ever freeze, incomplete data may be sent, but the program does not crash.
