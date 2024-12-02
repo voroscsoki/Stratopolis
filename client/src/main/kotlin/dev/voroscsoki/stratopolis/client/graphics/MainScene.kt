@@ -57,6 +57,7 @@ class MainScene : ApplicationListener {
     private var popup: PopupWindow? = null
     var menu: GameMenu? = null
     private var settingsPage: SettingsPage? = null
+    private var simuDialog: SimulationDialog? = null
 
     val isCameraMoveEnabled : Boolean
         get() = settingsPage?.isVisible != true
@@ -127,7 +128,7 @@ class MainScene : ApplicationListener {
         spriteBatch = SpriteBatch()
         font = BitmapFont()
         this.showMenu()
-        CoroutineScope(Dispatchers.IO).launch { Main.instanceData.setupGame() }
+        CoroutineScope(Dispatchers.IO).launch { Main.instanceData.setupGame(true) }
     }
 
     override fun render() {
@@ -161,7 +162,7 @@ class MainScene : ApplicationListener {
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
-        font.draw(spriteBatch, "Time: ${Main.instanceData.currentTime}", 10f, Gdx.graphics.height - 30f)
+        //font.draw(spriteBatch, "Time: ${Main.instanceData.currentTime}", 10f, Gdx.graphics.height - 30f)
         spriteBatch.end()
 
         // Render UI
@@ -186,7 +187,14 @@ class MainScene : ApplicationListener {
 
     override fun resume() {}
 
-    override fun resize(width: Int, height: Int) {}
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
+        menu?.screenResized(width.toFloat(), height.toFloat())
+
+        cam.viewportWidth = width.toFloat()
+        cam.viewportHeight = height.toFloat()
+        cam.update()
+    }
 
     override fun pause() {}
 
@@ -360,7 +368,7 @@ class MainScene : ApplicationListener {
     }
 
     fun showPopup(coordX: Int, coordY: Int, building: GraphicalBuilding) {
-        if(popup?.isVisible == true || settingsPage?.isVisible == true) return
+        if(popup?.isVisible == true || settingsPage?.isVisible == true || simuDialog?.isVisible == true) return
         val menuBounds = menu?.getBoundaries()
         //if click is within menu boundary, ignore as the building is covered
         menuBounds?.let {
@@ -383,6 +391,12 @@ class MainScene : ApplicationListener {
         if(settingsPage?.isVisible == true) return
         settingsPage = SettingsPage(stage, skin)
         settingsPage!!.show()
+    }
+
+    fun showSimulationDialog() {
+        if(simuDialog?.isVisible == true) return
+        simuDialog = SimulationDialog(stage, skin)
+        simuDialog!!.show()
     }
 
     private fun ModelInstance.getTransformedBoundingBox(): BoundingBox {

@@ -22,8 +22,8 @@ import kotlin.system.exitProcess
 class GameMenu(
     private val stage: Stage,
     private val skin: Skin,
-    private val stageWidth: Float,
-    private val stageHeight: Float,
+    private var stageWidth: Float,
+    private var stageHeight: Float,
     private val instance: InstanceData,
     private val scene: MainScene
 ) : Group() {
@@ -42,6 +42,14 @@ class GameMenu(
 
 
         val buttons = arrayOf(
+            createImageButton(
+                upColor = Color(0.2f, 0.6f, 0.2f, 1f),
+                downColor = Color(0.1f, 0.4f, 0.1f, 1f),
+                hoverColor = Color(0.3f, 0.7f, 0.3f, 1f),
+                iconDrawable = loadAsset("play.png")
+            ) {
+                scene.showSimulationDialog()
+            },
             createImageButton(
                 upColor = Color(0.2f, 0.6f, 0.2f, 1f),
                 downColor = Color(0.1f, 0.4f, 0.1f, 1f),
@@ -179,6 +187,19 @@ class GameMenu(
 
     fun dispose() {
         clear()
+    }
+
+    fun screenResized(width: Float, height: Float) {
+        stageWidth = width
+        stageHeight = height
+        menuBar.setPosition(
+            stageWidth - menuBar.width,
+            stageHeight - menuBar.height
+        )
+        loadingBar.setPosition(
+            stageWidth - loadingBar.width,
+            stageHeight - menuBar.height - loadingBar.height
+        )
     }
 
     private fun createSegmentedLoader(size: Int): Texture {

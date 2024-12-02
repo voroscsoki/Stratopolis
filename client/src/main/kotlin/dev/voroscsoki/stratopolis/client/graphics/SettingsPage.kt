@@ -45,11 +45,11 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
             }
         }
         val loadServer = createTextButton("Load server", skin) { button ->
-            runBlocking {
+            CoroutineScope(Dispatchers.IO).launch {
                 val soc = SocketClient(Main.socket.incomingHandler, addressField.text)
                 if(soc.isWebSocketAvailable(soc.targetAddress)) soc.initializeWebSocket()
                 Main.socket = soc
-                Main.instanceData.setupGame()
+                Main.instanceData.setupGame(false)
             }
         }
         settingsTable.add(addressCheck).padLeft(10f)

@@ -120,19 +120,20 @@ class InstanceData(val scene: MainScene) {
         }
     }
 
-    fun setupGame() {
+    fun setupGame(initial: Boolean) {
         baselineCoord = null
-        clearGraphics()
+        clearGraphics(initial)
         scene.menu?.loadingBar?.fadeIn()
         setupJob?.cancel()
         runBlocking { Main.socket.sendSocketMessage(EstablishBearingRequest()) }
         runBlocking { requestBuildings() }
     }
 
-    fun clearGraphics() {
+    fun clearGraphics(initial: Boolean) {
         buildings.clear()
         nodes.clear()
         scene.clearGraphicalData()
+        if(!initial) scene.clearHeatmap()
         scene.cam.position.x = 0f
         scene.cam.position.z = 0f
         scene.cam.update()

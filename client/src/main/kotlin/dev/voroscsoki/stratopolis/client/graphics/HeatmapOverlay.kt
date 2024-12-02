@@ -17,7 +17,6 @@ class HeatmapOverlay(
     private val grid = Array(gridSize) { IntArray(gridSize) } // Frequency grid
     private val meshes = mutableListOf<Mesh>()               // List of sub-meshes
     private var needsUpdate = true                           // Whether meshes need to be updated
-    private val absoluteMax = 100
 
     private val vertexShader = """
         #version 330 core
