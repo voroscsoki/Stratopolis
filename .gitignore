@@ -18,9 +18,10 @@
 *.toc
 *.pdf
 *_latexmk
-*.fls
-*.synctex.gz
-*.pbf
+docs/latex/thesis.fdb_latexmk
+docs/latex/thesis.fls
+docs/latex/thesis.synctex.gz
 
 #database
 *.db
+*.pbf
