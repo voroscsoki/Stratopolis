@@ -40,7 +40,6 @@ The language's dialects are similar to regional accents, in a linguistic sense; 
 
 Portability is endorsed with database-agnosticism. Switching between supported database engines only requires changing a few configuration values -- this allows releasing apps with one of many implementations, from SQLite (popular on mobile) to Oracle Database (intended for multiple tenants and a highly distributed workflow).
 
-% TODO
 \section{Ktor {\hspace{1cm}\includegraphics[height=8mm, keepaspectratio]{images/ktor_logo.png}}}
 
 Ktor is a Kotlin-based framework for creating asynchronous web applications or services. JetBrains is the primary developer since 2018, with community contributions encouraged. The bulk of this library is the recreation of HTTP and Representational State Transfer (REST) concepts in a Kotlin environment, strongly leveraging coroutines and the language's own syntax.~\cite{KtorDocs} The latest main version is 3.x.x, released in 2024. Its dependencies include the Netty non-blocking I/O server, which works well with asynchronous operations. Jetty or other compliant hosts may also be used. At minimum Java 8 is required to use it, and all major operating systems are supported; this means a mobile app may use this code to access any RESTful resource over the internet.

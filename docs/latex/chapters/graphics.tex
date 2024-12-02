@@ -81,6 +81,8 @@ The basis of libGDX are Nodes, a combination of geometry and a material. Nodes m
 
 Location data is contained in the message the backend sends. For a building based on a single OSM node, I used a common model, created by the ModelBuilder class' createBox convenience method. For structures represented by a way or relation, the geometry is determined by the outermost way; for these I made three NodeParts, called "top", "bottom", and "sides". The bottom layer is set by unpacking the list of nodes contained in the way. The resulting polygon is sectioned by triangulation and covered by individual triangles, facing the ground. The height is determined by the same tags as used at the database level, the top layer is a copy of the bottom with up-facing normals and the Y-coordinate\footnote{In libGDX, X and Z coordinates use the two axes of the Cartesian coordinate system, with Y representing height} set to the height. Side faces are also added using triangles, with each rectangle (formed by two adjacents columns of top and bottom vertices) covered using two of them.
 
+I initially used a simple render loop, but that slowed down after about twenty thousand buildings, which is far less than what a typical metropolitan area has. Since frame creation is single-threaded without using complex shader code, rendering $n$ objects has a slightly worse than $\mathcal{O}(n)$ time complexity. Instead, I split the playfield into relatively large chunks of 5000$\times$5000 units. When new data is received, each chunk is transformed into a single ModelCache object. Rendering these is much faster, as they're considered static and their contained models are merged and optimised upon creation.\cite{LibgdxModelCache} It makes sense to make them ahead of time; I initialise the caches when building data is received, as part of the loading process.
+
 \subsection{Custom camera control}
 
 For libGDX scenes, it is possible to inject a single input processing adapter object, or a combination of multiple objects known as a multiplexer. In the recommended starter 3D program\cite{basic3DlibGDX}, the library's creators added the CameraInputController class; this event handler provides mouse-controlled rotation and zooming for its containing scene.
@@ -91,8 +93,12 @@ This results in smooth speed handling, which avoids robotic, sudden direction ch
 
 \subsection{The menu and popups}
 
-\begin{wrapfigure}{r}{5.5cm}
-    \includegraphics[width=5.5cm]{images/menu_buttons.png}
-    \caption{A wrapped figure going nicely inside the text.}\label{wrap-fig:1}
+\begin{wrapfigure}{r}{4cm}
+    \includegraphics[width=4cm]{images/menu-buttons.png}
+    \caption{}
 \end{wrapfigure} 
 The rest of the rather simple user interface consists of three buttons: one to reload buildings in the current area (in case communication breaks), one to open the settings, and a third to gracefully quit the client. The elements are grouped into the GameMenu class and rendered on top the main scene; they each have different colours for inactive, hovered, and pressed states to give feedback. The icons are from Google's Material library\footnote{https://fonts.google.com/icons}, saved as .png assets in the client's folder.
+
+%TODO: SETTINGS and skinning
+
+When clicking on the screen, the camera casts a ray towards the selected pixel. After picking the correct cached chunk from the list, all buildings inside that chunk are collision checked. The first hit causes a popup to appear, with all OSM tags of the building presented neatly. This screen is just for debugging or trivia purposes. If the ray does not contact anything, no window is shown.
