@@ -16,7 +16,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
-import kotlin.random.Random
 import kotlin.sequences.Sequence
 
 class DatabaseAccess {
@@ -123,25 +122,41 @@ class DatabaseAccess {
         fun getAverageCoords(): Vec3 {
             val count = 100
             return transaction {
-                val res = Buildings.select(Buildings.coords).sortedBy { Random.nextFloat() }.map { it[Buildings.coords] }.take(count)
+                val res = Buildings.select(Buildings.coords).shuffled().map { it[Buildings.coords] }.take(count)
                 return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()
             }
         }
 
-        fun getRandomBuildings(count: Int, origin: Vec3? = null): List<Building> {
+        fun getRandomBuildings(count: Int, origin: Vec3? = null, type: String? = null): List<Building> {
             return transaction {
-                val ids = Buildings.selectAll().map { it[Buildings.id].value }.shuffled().take(count)
-                return@transaction Buildings.selectAll().where { Buildings.id inList ids }.map { row ->
+                // Generate the base query
+                val query = if (type != null) {
+                    // Filter by type in the database (assuming tags is stored as JSON or text)
+                    // Adjust for your DB syntax
+                    Buildings.selectAll().where { // Adjust for your DB syntax
+                        (Buildings.tags like "%\"building\":\"$type\"%") // Adjust for your DB syntax
+                    }
+                } else {
+                    Buildings.selectAll()
+                }
+
+                // Randomize and limit the result in the database
+                val randomizedRows = query.shuffled().take(count).toList()
+
+                // Decode and map only the rows needed
+                randomizedRows.map { row ->
                     Building(
                         row[Buildings.id].value,
                         Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         osmType = row[Buildings.type],
                         coords = row[Buildings.coords],
-                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways])
                     )
                 }
             }
         }
+
+
 
         fun getBuildingsByType(type: String, location: Vec3): List<Building> {
             return transaction {

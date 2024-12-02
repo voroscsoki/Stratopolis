@@ -31,5 +31,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+    implementation("org.slf4j:slf4j-simple:2.0.16")
 
 }

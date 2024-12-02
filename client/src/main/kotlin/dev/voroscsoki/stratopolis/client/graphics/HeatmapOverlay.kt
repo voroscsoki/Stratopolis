@@ -65,7 +65,7 @@ class HeatmapOverlay(
         meshes.forEach { it.dispose() }
         meshes.clear()
 
-        val maxFrequency = grid.maxOfOrNull { it.maxOrNull() ?: 0 } ?: 1
+        val maxFrequency = grid.maxOf { it.maxOrNull() ?: 0 }
 
         val chunksPerRow = ceil(gridSize / chunkSize.toFloat()).toInt()
         for (chunkX in 0 until chunksPerRow) {
@@ -83,11 +83,13 @@ class HeatmapOverlay(
 
                         val freq = grid[globalX][globalZ]
                         if(freq == 0) continue
-                        val opacity = (freq.toFloat() / maxFrequency.coerceAtMost(absoluteMax)).coerceIn(0f, 1f)
+                        val strength = (freq.toFloat() / maxFrequency).coerceIn(0f, 1f)
 
                         val worldX = (globalX - gridSize / 2) * cellSize
                         val worldZ = (globalZ - gridSize / 2) * cellSize
-                        val color = listOf(opacity, 1-opacity, 0f, 0.5f) // Red with varying opacity
+                        val red = (strength / 0.5f).coerceAtMost(1f)
+                        val green = ((1 - strength) / 0.5f).coerceAtMost(1f)
+                        val color = listOf(red, green, 0f, 0.5f)
 
                         //build quad
                         vertices.addAll(

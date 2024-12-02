@@ -14,7 +14,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             DatabaseAccess.connect()
-            reinitalizeDB()
+            //reinitalizeDB()
             simu = Simulation()
             System.gc()
             println("Hello from the server!")

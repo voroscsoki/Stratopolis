@@ -2,6 +2,7 @@ package dev.voroscsoki.stratopolis.common.util
 
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 @Serializable
@@ -42,5 +43,12 @@ data class Vec3(val x: Double, val y: Double, val z: Double) {
 
     infix operator fun div(amount: Number): Vec3 {
         return Vec3(this.x / amount.toDouble(), this.y / amount.toDouble(), this.z / amount.toDouble())
+    }
+
+    fun roundToNearestInt(): Vec3 {
+        val x = this.x.roundToInt()
+        val y = this.y.roundToInt()
+        val z = this.z.roundToInt()
+        return Vec3(x.toDouble(), y.toDouble(), z.toDouble())
     }
 }

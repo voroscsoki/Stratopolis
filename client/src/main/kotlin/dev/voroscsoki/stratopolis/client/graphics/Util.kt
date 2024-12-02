@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import dev.voroscsoki.stratopolis.common.util.Vec3
-import kotlin.math.roundToInt
 
 
 fun Vec3.toSceneCoords(baselineCoord: Vec3, scaleOnly: Boolean = false): Vec3 {
@@ -28,20 +27,6 @@ fun Vector3.toWorldCoords(baselineCoord: Vec3): Vec3 {
     val y = this.y + baselineCoord.y
     val z = this.z / 100000 + baselineCoord.z
     return Vec3(x, y, z)
-}
-
-fun Vec3.toWorldCoords(baselineCoord: Vec3): Vec3 {
-    val x = this.x / 100000 + baselineCoord.x
-    val y = this.y + baselineCoord.y
-    val z = this.z / 100000 + baselineCoord.z
-    return Vec3(x, y, z)
-}
-
-fun Vec3.roundToNearestInt(): Vec3 {
-    val x = this.x.roundToInt()
-    val y = this.y.roundToInt()
-    val z = this.z.roundToInt()
-    return Vec3(x.toDouble(), y.toDouble(), z.toDouble())
 }
 
 fun createColoredDrawable(color: Color): TextureRegionDrawable {

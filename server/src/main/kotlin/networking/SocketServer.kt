@@ -9,8 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 
 class SocketServer {
+    private val logger = LoggerFactory.getLogger(this::class.java)
     private val handlerFunctions: Map<Class<out ControlMessage>, (ControlMessage) -> Unit> = mapOf(
         SimulationRequest::class.java to { msg -> Main.simu.startSimulation((msg as SimulationRequest).starterData) },
         EstablishBearingRequest::class.java to { msg -> runBlocking {
@@ -50,12 +52,12 @@ class SocketServer {
     val connections = ConcurrentSet<DefaultWebSocketServerSession>()
 
     fun handleIncomingMessage(msg: ControlMessage) {
-        println("Received message: $msg")
+        logger.info("Received message: $msg")
         handlerFunctions[msg::class.java]?.invoke(msg)
     }
 
     fun sendSocketMessage(msg: ControlMessage) {
-        println("Sending message: $msg")
+        logger.info("Sending message: $msg")
         CoroutineScope(Dispatchers.IO).launch {
             connections.forEach { it.sendSerialized(msg) }
         }

@@ -23,7 +23,7 @@ data class Building(
     //https://rosettacode.org/wiki/Shoelace_formula_for_polygonal_area#Kotlin
     private fun area(): Double {
         val allPoints = ways.flatMap { it.nodes }.map { it.coords }
-        if(allPoints.isEmpty()) return 10.0.pow(-8)
+        if(allPoints.isEmpty()) return 10.0.pow(-8.0)
         var area = 0f
         for (i in 0 until allPoints.size - 1) {
             area += (allPoints[i].x * allPoints[i + 1].z - allPoints[i + 1].x * allPoints[i].z).toFloat()
