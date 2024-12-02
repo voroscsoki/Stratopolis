@@ -135,7 +135,7 @@ class MainScene : ApplicationListener {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.width, Gdx.graphics.height)
         Gdx.gl.glClear(GL40.GL_COLOR_BUFFER_BIT or GL40.GL_DEPTH_BUFFER_BIT)
 
-        val isKeyframe = (keyframeCounter++ == 20).also {
+        val isKeyframe = (keyframeCounter++ == 5).also {
             if(it) keyframeCounter = 0
         }
 
