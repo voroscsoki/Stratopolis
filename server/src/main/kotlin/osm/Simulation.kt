@@ -84,12 +84,12 @@ class Simulation {
     fun tick(callback: (List<Vec3>) -> Unit) {
         logger.info("Simulation tick at $clock")
         clock += 1.minutes
+        val movesPerMinute = 15
         val needNewBuilding = mutableListOf<Agent>()
         agents.map { ag ->
             val locations = mutableListOf<Vec3>()
-            repeat(60) {
-                if(ag.id == 1L) println((ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat())))
-                ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * (ag.speed.coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
+            repeat(movesPerMinute) {
+                ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * ((ag.speed/movesPerMinute).coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
                 if (ag.location dist ag.targetBuilding.coords < 0.00000001) {
                     ag.atBuilding = ag.targetBuilding.also { ag.targetBuilding = ag.atBuilding }
                     ag.location = ag.atBuilding.coords

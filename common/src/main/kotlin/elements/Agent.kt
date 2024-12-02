@@ -13,7 +13,7 @@ data class Agent(
     var atBuilding: Building,
     var targetBuilding: Building,
     var location: Vec3,
-    val speed: Float = 0.000033f,
+    val speed: Float = 0.002f,
     val ageGroup: AgeGroup = AgeGroup.ADULT
 ) {
 }
