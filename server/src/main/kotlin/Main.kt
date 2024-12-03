@@ -1,6 +1,5 @@
 package dev.voroscsoki.stratopolis.server
 
-import dev.voroscsoki.stratopolis.server.DatabaseAccess.Companion.reinitalizeDB
 import dev.voroscsoki.stratopolis.server.networking.SocketServer
 import dev.voroscsoki.stratopolis.server.networking.configureRouting
 import dev.voroscsoki.stratopolis.server.osm.Simulation
@@ -24,7 +23,7 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             DatabaseAccess.connect()
-            reinitalizeDB(File("Wien.osm.pbf").readBytes())
+            //reinitalizeDB(File("Wien.osm.pbf").readBytes())
             simu = Simulation()
             System.gc()
             println("Hello from the server!")

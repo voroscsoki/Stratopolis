@@ -28,11 +28,10 @@ class SocketServer {
         scope.launch {
             sendSocketMessage(BuildingResponse(ResultType.START))
             DatabaseAccess.getBuildings(msg.baseCoord, msg.radius)
-                .chunked(50000)
+                .chunked(10000)
                 .forEach { chunk ->
-                    launch {
-                        sendSocketMessage(BuildingResponse(ResultType.PROGRESS, chunk))
-                    }
+                    sendSocketMessage(BuildingResponse(ResultType.PROGRESS, chunk))
+                    Thread.sleep(300)
                 }
             sendSocketMessage(BuildingResponse(ResultType.DONE))
         }
