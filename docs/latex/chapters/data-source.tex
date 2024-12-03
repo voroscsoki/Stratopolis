@@ -1,6 +1,4 @@
-\chapter{Data sources} %TODO rename
-
-\section{OpenStreetMap}
+\chapter{OpenStreetMap, the data source} %TODO rename
 
 OpenStreetMap (OSM) is a collaborative community project to create a full, editable representation of our world. The project was founded in 2004 by Steve Coast, and now boasts over ten million registered volunteer users providing data from around the globe. Unlike proprietary services (such as Google Maps or Apple Maps), OSM data is open and freely available to build on or modify.\cite{osmHistory}
 
@@ -33,7 +31,4 @@ Relations are catch-all elements and may represent anything more complex than a 
 Live online data is most easily queried throught the Overpass API\footnote{\url{https://wiki.openstreetmap.org/wiki/Overpass_API}}. It provides read-only access to OSM elements and accepts a wide variety of filters. The returned information is JSON-convertible, making it ideal for apps that require more control than what pre-made webmap plugins can provide. Queries use a custom language that simplifies searching by key and supports recursion well. The Overpass Turbo\footnote{\url{https://overpass-turbo.eu}} app has a wizard that aids the creation of Overpass requests.
 
 Data may also be distributed in a heavily compressed Protocolbuffer Binary Format (PBF\footnote{\url{https://wiki.openstreetmap.org/wiki/PBF_Format}}) file. BBBike\footnote{\url{https://download.bbbike.org/osm}} provides exports of many large cities, as well as the ability to download a file containing information on a zone up to 6000 by 4000 kilometers large. On the scale of the entire planet, PBF saves over 96\% of space usage when compared to regular XML. PBF files utilise Google's Protocol Buffer\footnote{\url{https://github.com/protocolbuffers/protobuf}} interchange format. Based on a schema specification (not unlike one made for databases), a protocol buffer compiler can create low-level, efficient code for serialisation into said schema. Each .pbf file is a series of binary blobs and their headers, ultimately encoding key-value pairs in a string format. The obvious downside is that reading this data now requires specialised libraries or custom classes that can decode and uncompress it. I depended on osm4j\footnote{\url{https://github.com/topobyte/osm4j}} for this task, as it has a simple iterator to unpack elements sequentially.
-It's worth noting that PBF files store elements in the order of Node, Way, Relation. Relations and ways use foreign keys with a number format to connect to their child nodes. Earlier reads should thus be cached for later reference, only throwing away unneeded nodes as it becomes clear they're not part of any required relation -- this is analogous to how a garbage collector works.
-
-
-\subsection{Examples and Visualizations}
+It's worth noting that PBF files store elements in the order of Node, Way, Relation. Relations and ways use foreign keys with a number format to connect to their child nodes. The element groups may be sorted by ID, but this is not required; parsers can interpret either version.
