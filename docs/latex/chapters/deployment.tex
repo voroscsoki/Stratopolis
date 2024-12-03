@@ -1,5 +1,9 @@
 \chapter{Testing and deployment}
 
+As the app's communication does not follow typical REST patterns, I used a combination of end-to-end\footnote{real use cases are performed in the app and the output is checked} and performance tests.
+Machine 1 is a Windows 11 desktop computer with an AMD Ryzen 5 7600X processor, 32GB of RAM and an AMD Radeon RX 6750 XT GPU. It is connected to the internet via 1Gbps Ethernet. Machine 2 is a laptop running Arch Linux with an AMD Ryzen 5 7520U CPU, 16GB of memory, and integrated AMD Radeon graphics. During the tests, the laptop used 5GHz Wi-Fi with an approximate speed of x/y Mbps (download/upload). In all instances, the program was started using Gradle and Oracle OpenJDK version 23.x.x. Containerisation was not used during testing.
+
+\section{End-to-end testing}
 %TODO: runtime comparisons with few or many agents
 %TODO: testing of correctness: distribution should match expectation
 %TODO: docker container
