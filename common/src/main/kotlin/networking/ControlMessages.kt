@@ -5,10 +5,10 @@ import dev.voroscsoki.stratopolis.common.elements.Road
 import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.serialization.Serializable
 
-enum class ControlResult {
-    OK,
-    WARN,
-    ERROR
+enum class ResultType {
+    START,
+    PROGRESS,
+    DONE,
 }
 
 @Serializable
@@ -21,13 +21,13 @@ class OsmLoadRequest(val file: ByteArray) : ControlMessage()
 class BuildingRequest(val baseCoord: Vec3?, val radius: Double? = null) : ControlMessage()
 
 @Serializable
-class BuildingResponse(val res: ControlResult, val buildings: List<Building> = emptyList()) : ControlMessage()
+class BuildingResponse(val res: ResultType, val buildings: List<Building> = emptyList()) : ControlMessage()
 
 @Serializable
 class RoadRequest(val baseCoord: Vec3?, val radius: Double? = null) : ControlMessage()
 
 @Serializable
-class RoadResponse(val res: ControlResult, val roads: List<Road> = emptyList()) : ControlMessage()
+class RoadResponse(val res: ResultType, val roads: List<Road> = emptyList()) : ControlMessage()
 
 @Serializable
 class SimulationRequest(val starterData: SimulationData) : ControlMessage()
@@ -39,4 +39,4 @@ class SimulationResult(val data: SimulationData) : ControlMessage()
 class EstablishBearingRequest : ControlMessage()
 
 @Serializable
-class EstablishBearingResponse(val res: ControlResult, val baselineCoord: Vec3) : ControlMessage()
+class EstablishBearingResponse(val baselineCoord: Vec3) : ControlMessage()

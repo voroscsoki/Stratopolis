@@ -36,7 +36,7 @@ class InstanceData(val scene: MainScene) {
     private val roads = ObservableMap<Long, Road>()
     private val agents = ObservableMap<Long, Agent>()
     private var setupJob: Job? = null
-    private var graphicsLoading: Boolean = false
+    var graphicsLoading: Boolean = false
         set(value) = run {
             if(value) {
                 scene.menu?.loadingBar?.fadeIn()
@@ -77,6 +77,7 @@ class InstanceData(val scene: MainScene) {
             println(vec)
             scene.heatmap.updateFrequency(vec, freq.value.toInt())
         }
+        graphicsLoading = false
     }
 
     private fun upsertBuilding(data: Building) {
@@ -129,10 +130,12 @@ class InstanceData(val scene: MainScene) {
 
     fun setupGame() {
         baselineCoord = null
-        graphicsLoading = true
         setupJob?.cancel()
-        runBlocking { Main.socket.sendSocketMessage(EstablishBearingRequest()) }
-        runBlocking { requestBuildings() }
+        runBlocking { if(!Main.socket.isWebSocketAvailable(Main.socket.targetAddress)) return@runBlocking
+            graphicsLoading = true
+            Main.socket.sendSocketMessage(EstablishBearingRequest())
+            requestBuildings()
+        }
     }
 
     fun clearGraphics() {
@@ -150,9 +153,10 @@ class InstanceData(val scene: MainScene) {
     }
 
     private fun handleBuildings(msg: BuildingResponse) {
+        if(msg.res == ResultType.START) clearGraphics()
         msg.buildings.map { buildings.putIfAbsent(it.id, it)}
 
-        throttleRequest {
+        if(msg.res == ResultType.DONE) {
             scene.updateCaches()
             graphicsLoading = false
         }

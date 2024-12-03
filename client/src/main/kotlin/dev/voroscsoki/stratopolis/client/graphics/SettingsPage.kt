@@ -1,22 +1,17 @@
 package dev.voroscsoki.stratopolis.client.graphics
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import dev.voroscsoki.stratopolis.client.Main
+import dev.voroscsoki.stratopolis.client.networking.HttpAccessor
 import dev.voroscsoki.stratopolis.client.networking.SocketClient
-import dev.voroscsoki.stratopolis.common.networking.OsmLoadRequest
-import games.spooky.gdx.nativefilechooser.NativeFileChooserCallback
-import games.spooky.gdx.nativefilechooser.NativeFileChooserConfiguration
-import games.spooky.gdx.nativefilechooser.desktop.DesktopFileChooser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.io.FilenameFilter
+import java.io.File
 
 
 class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
@@ -32,7 +27,7 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
         val label = Label("Server address: ", skin)
         settingsTable.add(label).left().top().fillY().row()
 
-        val addressField = TextField(Main.socket.targetAddress, skin)
+        val addressField = TextField(Main.socket.basePath, skin)
         settingsTable.add(addressField).width(400f).expandX().fillX().left().padBottom(20f).padTop(5f)
 
         val addressCheck = createTextButton("Check", skin) { button ->
@@ -59,7 +54,7 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
 
         val fileOpenButton = createTextButton("Open file", skin) { button ->
             runBlocking {
-                val fileChooser = DesktopFileChooser()
+                /*val fileChooser = DesktopFileChooser()
 
                 // Configure
                 val conf = NativeFileChooserConfiguration()
@@ -80,7 +75,8 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
                     override fun onError(exception: Exception) {
                         // Handle error (hint: use exception type)
                     }
-                })
+                })*/
+                HttpAccessor.sendPbfFile(File("budapest.osm.pbf"))
             }
         }
         settingsTable.add(fileOpenButton).padTop(20f).padBottom(20f).left()

@@ -1,0 +1,32 @@
+{
+    "ageToType": {
+        "ADULT": {
+            "residential": 0.8,
+            "apartments": 0.8,
+            "commercial": 0.2
+        }
+    },
+    "typeToTime": {
+        "residential": [
+            {
+                "start": 20,
+                "end": 4,
+                "chance": 0.9
+            }
+        ],
+        "apartments": [
+            {
+                "start": 20,
+                "end": 4,
+                "chance": 0.9
+            }
+        ],
+        "commercial": [
+            {
+                "start": 8,
+                "end": 18,
+                "chance": 0.9
+            }
+        ]
+    }
+}

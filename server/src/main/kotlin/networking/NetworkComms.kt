@@ -1,13 +1,18 @@
 package dev.voroscsoki.stratopolis.server.networking
 
 import dev.voroscsoki.stratopolis.common.networking.ControlMessage
+import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.Main
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.minutes
@@ -27,10 +32,18 @@ fun Application.configureRouting() {
     }
 
     routing {
-        get("/health-check") {
-            call.respond("OK")
-        }
 
+        post("/pbf_file") {
+            call.respond("OK")
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val file = call.receiveStream().readBytes()
+                    DatabaseAccess.reinitalizeDB(file)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
 
         webSocket("/control") {
             Main.socketServer.connections += this

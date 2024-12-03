@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class SocketClient(
     val incomingHandler: (ControlMessage) -> Unit,
-    val targetAddress: String = "ws://localhost:8085/control"
+    val basePath: String = "ws://localhost:8085"
 ) {
     private val client: HttpClient = HttpClient {
         install(WebSockets) {
@@ -28,11 +28,13 @@ class SocketClient(
     private val sendQueue = Channel<ControlMessage>(Channel.UNLIMITED)
     private val _isConnected = MutableStateFlow(false)
     private val socketScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val subPath = "/control"
+    val targetAddress = basePath + subPath
 
     private suspend fun listen() {
         try {
             if (!isWebSocketAvailable(targetAddress)) {
-                delay(5.seconds)
+                delay(1.seconds)
             }
 
             client.webSocket(targetAddress) {
@@ -111,7 +113,4 @@ class SocketClient(
         }
     }
 
-    fun copy(targetAddress: String?): SocketClient {
-        return SocketClient(incomingHandler, targetAddress ?: this.targetAddress)
-    }
 }

@@ -33,6 +33,12 @@ class DatabaseAccess {
                 )
             }
         }
+
+        fun reinitalizeDB(file: ByteArray) {
+            val storage = OsmStorage(file)
+            loadFromOsm(storage)
+        }
+
         fun loadFromOsm(storage: OsmStorage) {
             transaction {
                 logger.warn("Wiping old data")

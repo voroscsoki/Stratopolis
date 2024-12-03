@@ -17,7 +17,7 @@ class SocketServer {
         SimulationRequest::class.java to { msg -> Main.simu.startSimulation((msg as SimulationRequest).starterData) },
         EstablishBearingRequest::class.java to { msg -> runBlocking {
             val res = DatabaseAccess.getAverageCoords()
-            sendSocketMessage(EstablishBearingResponse(ControlResult.OK, res)) }},
+            sendSocketMessage(EstablishBearingResponse(res)) }},
         BuildingRequest::class.java to { msg -> runBlocking { handleBuildingRequest(msg as BuildingRequest) } },
         RoadRequest::class.java to { msg -> runBlocking { handleRoadRequest(msg as RoadRequest) } },
     )
@@ -26,13 +26,15 @@ class SocketServer {
 
     private fun handleBuildingRequest(msg: BuildingRequest) {
         scope.launch {
+            sendSocketMessage(BuildingResponse(ResultType.START))
             DatabaseAccess.getBuildings(msg.baseCoord, msg.radius)
-                .chunked(30000)
+                .chunked(50000)
                 .forEach { chunk ->
                     launch {
-                        sendSocketMessage(BuildingResponse(ControlResult.OK, chunk))
+                        sendSocketMessage(BuildingResponse(ResultType.PROGRESS, chunk))
                     }
                 }
+            sendSocketMessage(BuildingResponse(ResultType.DONE))
         }
     }
 
@@ -42,7 +44,7 @@ class SocketServer {
                 .chunked(30000)
                 .forEach { chunk ->
                     launch {
-                        sendSocketMessage(RoadResponse(ControlResult.OK, chunk))
+                        sendSocketMessage(RoadResponse(ResultType.PROGRESS, chunk))
                     }
                 }
         }

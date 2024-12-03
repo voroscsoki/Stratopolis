@@ -52,13 +52,22 @@ class SimulationDialog(stage: Stage, skin: CustomSkin) : Window("Simulation star
         settingsTable.add(endHour).width(200f).expandX().fillX().left().padBottom(10f).padTop(5f)
         settingsTable.add(endMinute).width(200f).expandX().fillX().left().padBottom(10f).padTop(5f).row()
 
+        val agentLabel = Label("Agent count: ", skin)
+        val agentCount = TextField("20000", skin)
+        agentCount.textFieldFilter = TextField.TextFieldFilter{ _, char ->
+            char.isDigit()
+        }
+        settingsTable.add(agentLabel).left().top().fillY().row()
+        settingsTable.add(agentCount).width(200f).expandX().fillX().left().padBottom(10f).padTop(5f).row()
+
         val sendButton = createTextButton("Send request", skin) { button ->
             val date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val startTime = LocalDateTime(date, LocalTime.parse("${startHour.text}:${startMinute.text}")).toInstant(UtcOffset.ZERO)
             val endTime = LocalDateTime(date, LocalTime.parse("${endHour.text}:${endMinute.text}")).toInstant(UtcOffset.ZERO)
             val simulationData = SimulationData(
-                startTime, endTime, 50000, Main.instanceData.baselineCoord!!, Main.appScene.heatmap.cellSize / 100000.0)
+                startTime, endTime, agentCount.text.toInt(), Main.instanceData.baselineCoord!!, Main.appScene.heatmap.cellSize / 100000.0)
             Main.instanceData.reset(startTime)
+            Main.instanceData.graphicsLoading = true
             runBlocking { Main.socket.sendSocketMessage(SimulationRequest(simulationData)) }
             hide()
         }

@@ -10,7 +10,7 @@ class Main {
     companion object {
         val appScene = MainScene()
         val instanceData = InstanceData(appScene)
-        var socket = SocketClient(instanceData::handleIncomingMessage, "ws://localhost:8085/control")
+        var socket = SocketClient(instanceData::handleIncomingMessage)
 
         @JvmStatic
         fun main(args: Array<String>) {

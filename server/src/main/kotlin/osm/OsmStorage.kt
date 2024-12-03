@@ -27,6 +27,14 @@ class OsmStorage(
         calculateCapacities()
     }
 
+    constructor(source: ByteArray) : this(mutableMapOf(), mutableMapOf(), mutableMapOf()) {
+        val iter: Iterator<EntityContainer> = PbfIterator(source.inputStream(), true).iterator()
+        processOsmEntities(iter)
+        buildings = createBuildingSet()
+        roads = createRoadSet()
+        calculateCapacities()
+    }
+
     private fun createBuildingSet(): HashSet<Building> {
         val default = nodes.filter { it.value.isBuilding() }
         val wayRelated = ways.filter { it.value.isBuilding() }
