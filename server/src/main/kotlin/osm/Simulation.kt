@@ -49,7 +49,7 @@ class Simulation {
     var clock = Clock.System.now()
     val agents = mutableListOf<Agent>()
     val logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var buildingCache: MutableMap<String, MutableList<Building>>
+    lateinit var buildingCache: MutableMap<String, List<Building>>
     val distributions = File("distributions.json").let {
         if (it.exists())
             try {
@@ -65,7 +65,7 @@ class Simulation {
         logger.info("Setting up simulation with $count agents")
         agents.clear()
         val starters = DatabaseAccess.getBuildingsByType("residential", count)
-        buildingCache = pickBuildingsWeighted(DatabaseAccess.getRandomBuildings(count * 2), count*2).associateBy { it.buildingType }.toMutableMap() //TODO: correct
+        buildingCache = pickBuildingsWeighted(DatabaseAccess.getRandomBuildings(count * 2), count*2).groupBy { it.buildingType }.toMutableMap()
         for (i in 0..<count) {
             val from = starters[i % starters.size]
             agents += Agent(
@@ -114,7 +114,7 @@ class Simulation {
             //val type = distribution.toList().shuffled().firstOrNull { Random.nextDouble() < it.second }?.first
             //if(type == ag.atBuilding.buildingType) return
             if(Random.nextDouble() > 0.5) {
-                buildingCache["commercial"]?.random()?.let { ag.targetBuilding = it; buildingCache["commercial"]?.remove(it) }
+                buildingCache["commercial"]?.random()?.let { ag.targetBuilding = it; /*buildingCache["commercial"]?.remove(it)*/ }
                     ?: run { moreBuildingsNeeded = true }
             }
         }
