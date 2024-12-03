@@ -14,6 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
 import dev.voroscsoki.stratopolis.client.InstanceData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.system.exitProcess
@@ -56,7 +59,7 @@ class GameMenu(
                 hoverColor = Color(0.3f, 0.7f, 0.3f, 1f),
                 iconDrawable = loadDrawable
             ) {
-                instance.requestBuildings()
+                CoroutineScope(Dispatchers.IO).launch { scene.updateCaches() }
             },
             createImageButton(
                 upColor = Color(0.2f, 0.2f, 0.6f, 1f),

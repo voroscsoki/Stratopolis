@@ -155,7 +155,7 @@ class InstanceData(val scene: MainScene) {
     private fun handleBuildings(msg: BuildingResponse) {
         if(msg.res == ResultType.START) clearGraphics()
         msg.buildings.map { buildings.putIfAbsent(it.id, it)}
-
+        println("Buildings: ${buildings.size}")
         if(msg.res == ResultType.DONE) {
             scene.updateCaches()
             graphicsLoading = false

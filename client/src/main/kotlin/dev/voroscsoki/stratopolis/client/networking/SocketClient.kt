@@ -26,6 +26,7 @@ class SocketClient(
         }
     }
     private val sendQueue = Channel<ControlMessage>(Channel.UNLIMITED)
+    private val incomingQueue = Channel<ControlMessage>(Channel.UNLIMITED)
     private val _isConnected = MutableStateFlow(false)
     private val socketScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val subPath = "/control"
@@ -47,10 +48,17 @@ class SocketClient(
                                 val msg = try {
                                     Json.decodeFromString<ControlMessage>(frame.readText())
                                 } catch (e: SerializationException) {
+                                    println("Error decoding message: ${e.message}")
                                     null
                                 }
-                                msg?.let { incomingHandler.invoke(it) }
+                                msg?.let { incomingQueue.send(it) }
                             }
+                        }
+                    }
+
+                    val processIncomingJob = launch {
+                        for (msg in incomingQueue) {
+                            incomingHandler.invoke(msg)
                         }
                     }
 
@@ -61,13 +69,12 @@ class SocketClient(
                         }
                     }
 
-                    joinAll(receiveJob, sendJob)
+                    joinAll(receiveJob, sendJob, processIncomingJob)
                 }
 
                 _isConnected.value = false
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             println("WebSocket connection error: ${e.message}")
         } finally {
             _isConnected.value = false
@@ -95,7 +102,7 @@ class SocketClient(
 
     suspend fun initializeWebSocket() {
         socketScope.launch { listen() }
-        withTimeout(10.seconds) {
+        withTimeout(30.seconds) {
             _isConnected.first { it }
         }
     }

@@ -32,7 +32,7 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
 
         val addressCheck = createTextButton("Check", skin) { button ->
             runBlocking {
-                if(Main.socket.isWebSocketAvailable(addressField.text)) {
+                if(Main.socket.isWebSocketAvailable(addressField.text + "/control")) {
                     button.setText("Check: OK")
                 } else {
                     button.setText("Check: Failed")
