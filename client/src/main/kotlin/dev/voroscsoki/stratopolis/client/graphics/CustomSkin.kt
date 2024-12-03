@@ -90,6 +90,11 @@ class CustomSkin : Skin() {
         this.background.rightWidth = 8f
         this.background.topHeight = 8f
         this.background.bottomHeight = 8f
+
+        this.focusedBackground.leftWidth = 8f
+        this.focusedBackground.rightWidth = 8f
+        this.focusedBackground.topHeight = 8f
+        this.focusedBackground.bottomHeight = 8f
     }
 
     init {

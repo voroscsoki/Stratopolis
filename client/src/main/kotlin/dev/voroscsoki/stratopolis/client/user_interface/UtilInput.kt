@@ -4,14 +4,9 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.graphics.MainScene
-import dev.voroscsoki.stratopolis.common.SimulationData
 import dev.voroscsoki.stratopolis.common.networking.RoadRequest
-import dev.voroscsoki.stratopolis.common.networking.SimulationRequest
 import dev.voroscsoki.stratopolis.common.util.getMemoryUsage
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinInstant
-import java.time.Clock
-import kotlin.time.Duration.Companion.minutes
 
 class UtilInput(val scene: MainScene) : InputAdapter() {
     override fun keyDown(keycode: Int): Boolean {
@@ -20,18 +15,6 @@ class UtilInput(val scene: MainScene) : InputAdapter() {
         if (keycode == 132) {
             runBlocking {
                 Main.socket.sendSocketMessage(RoadRequest(Main.instanceData.baselineCoord)) }
-        }
-        //F3
-        if (keycode == 133) {
-            runBlocking {
-                Main.appScene.clearHeatmap()
-                val startTime = Clock.systemDefaultZone().instant().toKotlinInstant()
-                val endTime = startTime + 60.minutes
-                val simulationData = SimulationData(
-                    startTime, endTime, 50000, Main.instanceData.baselineCoord!!, Main.appScene.heatmap.cellSize / 100000.0)
-                Main.instanceData.reset(startTime)
-                Main.socket.sendSocketMessage(SimulationRequest(simulationData))
-            }
         }
 
         //print app memory usage

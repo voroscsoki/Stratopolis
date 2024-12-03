@@ -14,6 +14,7 @@ class PopupWindow(stage: Stage, skin: Skin, building: Building) : Window("Popup"
         building.tags.map { "${it.key}: ${it.value}" }.forEach {
             add(Label(it, skin)).row()
         }
+        add(Label("Capacity: " + building.capacity.toString(), skin)).row()
         val closeButton = TextButton("Close", skin)
         closeButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {

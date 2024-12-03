@@ -49,7 +49,7 @@ class Simulation {
     var clock = Clock.System.now()
     val agents = mutableListOf<Agent>()
     val logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var buildingCache: MutableList<Building>
+    lateinit var buildingCache: MutableMap<String, MutableList<Building>>
     val distributions = File("distributions.json").let {
         if (it.exists())
             try {
@@ -64,17 +64,16 @@ class Simulation {
     private fun setup(count: Int) {
         logger.info("Setting up simulation with $count agents")
         agents.clear()
-        val bldg = DatabaseAccess.getRandomBuildings(count * 3)
-        val randoms = pickBuildingsWeighted(bldg.subList(0, count), count)
+        val starters = DatabaseAccess.getBuildingsByType("residential", count)
+        buildingCache = pickBuildingsWeighted(DatabaseAccess.getRandomBuildings(count * 2), count*2).associateBy { it.buildingType }.toMutableMap() //TODO: correct
         for (i in 0..<count) {
-            val from = randoms[i]
+            val from = starters[i % starters.size]
             agents += Agent(
                 Random.nextLong().absoluteValue,
                 from,
                 from,
                 from.coords)
         }
-        buildingCache = bldg.subList(count*2, count*3).toMutableList()
         pickNextBuilding(agents)
         logger.info("Setup complete")
     }
@@ -115,12 +114,12 @@ class Simulation {
             //val type = distribution.toList().shuffled().firstOrNull { Random.nextDouble() < it.second }?.first
             //if(type == ag.atBuilding.buildingType) return
             if(Random.nextDouble() > 0.5) {
-                buildingCache.firstOrNull { true /*it.buildingType == type*/ }?.let { ag.targetBuilding = it; buildingCache.remove(it) }
+                buildingCache["commercial"]?.random()?.let { ag.targetBuilding = it; buildingCache["commercial"]?.remove(it) }
                     ?: run { moreBuildingsNeeded = true }
             }
         }
         if(moreBuildingsNeeded) {
-            buildingCache.addAll(DatabaseAccess.getRandomBuildings(agents.count()))
+            //buildingCache.addAll(DatabaseAccess.getRandomBuildings(agents.count()))
         }
     }
 

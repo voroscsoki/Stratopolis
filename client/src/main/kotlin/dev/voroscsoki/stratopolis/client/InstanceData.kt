@@ -35,9 +35,16 @@ class InstanceData(val scene: MainScene) {
     private val buildings = ObservableMap<Long, Building>()
     private val roads = ObservableMap<Long, Road>()
     private val agents = ObservableMap<Long, Agent>()
-    private val simulationQueue = mutableMapOf<Int, SimulationResult>()
     private var setupJob: Job? = null
-    private val coroScope = CoroutineScope(Dispatchers.IO)
+    private var graphicsLoading: Boolean = false
+        set(value) = run {
+            if(value) {
+                scene.menu?.loadingBar?.fadeIn()
+            } else {
+                scene.menu?.loadingBar?.fadeOut()
+            }
+            field = value
+        }
     var sequence = 0
 
     init {
@@ -64,7 +71,6 @@ class InstanceData(val scene: MainScene) {
 
 
     private fun setupHeatmap(data: SimulationData) {
-        //scene.clearHeatmap()
         data.frequencies.forEach { freq ->
             val vec = freq.key.split(",").let { Vec3(it[0].toDouble(), 0.0, it[1].toDouble()) }
                 .toSceneCoords(baselineCoord!!).roundToNearestInt()
@@ -113,7 +119,7 @@ class InstanceData(val scene: MainScene) {
     fun requestBuildings() {
         baselineCoord?.let {
             val source = scene.cam.position?.toWorldCoords(it)!!.copy(y = 0.0)
-            scene.menu?.loadingBar?.fadeIn()
+            graphicsLoading = true
             runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.3)) }
         } ?: run {
             Thread.sleep(500)
@@ -123,7 +129,7 @@ class InstanceData(val scene: MainScene) {
 
     fun setupGame() {
         baselineCoord = null
-        scene.menu?.loadingBar?.fadeIn()
+        graphicsLoading = true
         setupJob?.cancel()
         runBlocking { Main.socket.sendSocketMessage(EstablishBearingRequest()) }
         runBlocking { requestBuildings() }
@@ -148,7 +154,7 @@ class InstanceData(val scene: MainScene) {
 
         throttleRequest {
             scene.updateCaches()
-            scene.menu?.loadingBar?.fadeOut()
+            graphicsLoading = false
         }
     }
 

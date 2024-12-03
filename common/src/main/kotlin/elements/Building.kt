@@ -12,9 +12,11 @@ data class Building(
     val osmType: EntityType,
     val coords: Vec3 = Vec3(0.0,0.0,0.0),
     val ways: List<SerializableWay>,
-    val buildingType: String? = tags.firstOrNull { it.key == "building" }?.value,
     var capacity: UInt = 0u
 ) {
+    val buildingType: String by lazy {
+        tags.firstOrNull { it.key == "building" }!!.value
+    }
 
     fun height(): Float {
         return tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
