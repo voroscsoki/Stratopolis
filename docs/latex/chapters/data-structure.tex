@@ -10,7 +10,7 @@ The database is created when loading a new PBF dataset, and can be read unlimite
 
 I ended up going with a very simple data structure of just two tables, Buildings and Roads. Both tables have osm\_id, tags and ways columns, and buildings include additional information about their location, OSM element type, as well as a capacity, calculated as a function of their area and height. Some buildings have a "height" tag that's specified in meters, or a "levels" tag counting its floors. If none of these is present, I calculate the value as if there was only one floor. Capacity is used by the random selection algorithm while simulating to weigh the options.
 
-The OSM tags take up the most space in the database, as they're simple strings that can't meaningfully be encoded. Since the key-value pairs are unique most of the time, I found no real gains in creating a foreign key structure for them. I used a YAML serialiser, which saves a few characters per record over JSON. Later editions of the software could have a hybrid solution: a lookup table for common values, and simple string storage for all others.
+The OSM tags take up the most space in the database, as they're simple strings that can't meaningfully be encoded. Since the key-value pairs are unique most of the time, I found no real gains in creating a foreign key structure for them and instead used a JSON serialiser. Later editions of the software could have a hybrid solution: a lookup table for common values, and simple string storage for all others.
 
 
 
