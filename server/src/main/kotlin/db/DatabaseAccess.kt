@@ -133,6 +133,7 @@ class DatabaseAccess {
             val count = 100
             return transaction {
                 val res = Buildings.select(Buildings.coords).shuffled().map { it[Buildings.coords] }.take(count)
+                if(res.isEmpty()) return@transaction Vec3(0.0, 0.0, 0.0)
                 return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()
             }
         }

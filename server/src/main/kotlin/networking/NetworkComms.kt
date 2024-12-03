@@ -3,6 +3,8 @@ package dev.voroscsoki.stratopolis.server.networking
 import dev.voroscsoki.stratopolis.common.networking.ControlMessage
 import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.Main
+import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -10,11 +12,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -32,17 +32,26 @@ fun Application.configureRouting() {
     }
 
     routing {
-
         post("/pbf_file") {
-            call.respond("OK")
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val file = call.receiveStream().readBytes()
-                    DatabaseAccess.reinitalizeDB(file)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            val multipart = call.receiveMultipart()
+            var fileBytes: ByteArray? = null
+
+            call.respond(HttpStatusCode.OK)
+            multipart.forEachPart { part ->
+                when (part) {
+                    is PartData.FileItem -> {
+                        val byteArrayStream = ByteArrayOutputStream()
+                        part.streamProvider().use { input ->
+                            input.copyTo(byteArrayStream)
+                        }
+                        fileBytes = byteArrayStream.toByteArray()
+                    }
+                    else -> Unit
                 }
+                part.dispose()
             }
+
+            if (fileBytes != null) DatabaseAccess.reinitalizeDB(fileBytes!!)
         }
 
         webSocket("/control") {
