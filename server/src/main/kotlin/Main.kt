@@ -1,7 +1,6 @@
 package dev.voroscsoki.stratopolis.server
 
 import dev.voroscsoki.stratopolis.server.DatabaseAccess.Companion.reinitalizeDB
-import dev.voroscsoki.stratopolis.server.dev.voroscsoki.stratopolis.server.Config
 import dev.voroscsoki.stratopolis.server.networking.SocketServer
 import dev.voroscsoki.stratopolis.server.networking.configureRouting
 import dev.voroscsoki.stratopolis.server.osm.Simulation
