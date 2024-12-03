@@ -67,7 +67,6 @@ class SocketClient(
         }
         catch (e: Exception) {
             println("WebSocket connection error: ${e.message}")
-            delay(5.seconds)
         } finally {
             _isConnected.value = false
             disconnect()

@@ -12,8 +12,10 @@ data class Building(
     val osmType: EntityType,
     val coords: Vec3 = Vec3(0.0,0.0,0.0),
     val ways: List<SerializableWay>,
-    val buildingType: String? = tags.firstOrNull { it.key == "building" }?.value
+    val buildingType: String? = tags.firstOrNull { it.key == "building" }?.value,
+    var capacity: UInt = 0u
 ) {
+
     fun height(): Float {
         return tags.firstOrNull { it.key == "height" }?.value?.toFloatOrNull()
             ?: tags.firstOrNull { it.key == "building:levels" }?.value?.toFloatOrNull()
@@ -31,7 +33,7 @@ data class Building(
         return abs(area + allPoints[allPoints.size - 1].x * allPoints[0].z - allPoints[0].x * allPoints[allPoints.size -1].z) / 2.0
     }
 
-    fun capacity(): UInt {
+    fun calculateCapacity(): UInt {
         return (area() * height() * 1.5 * 10.0.pow(8)).toUInt()
     }
 }

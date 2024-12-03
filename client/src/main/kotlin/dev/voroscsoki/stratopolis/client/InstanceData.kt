@@ -113,27 +113,27 @@ class InstanceData(val scene: MainScene) {
     fun requestBuildings() {
         baselineCoord?.let {
             val source = scene.cam.position?.toWorldCoords(it)!!.copy(y = 0.0)
-            runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.15)) }
+            scene.menu?.loadingBar?.fadeIn()
+            runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.3)) }
         } ?: run {
             Thread.sleep(500)
             requestBuildings()
         }
     }
 
-    fun setupGame(initial: Boolean) {
+    fun setupGame() {
         baselineCoord = null
-        clearGraphics(initial)
         scene.menu?.loadingBar?.fadeIn()
         setupJob?.cancel()
         runBlocking { Main.socket.sendSocketMessage(EstablishBearingRequest()) }
         runBlocking { requestBuildings() }
     }
 
-    fun clearGraphics(initial: Boolean) {
+    fun clearGraphics() {
         buildings.clear()
         nodes.clear()
         scene.clearGraphicalData()
-        if(!initial) scene.clearHeatmap()
+        scene.clearHeatmap()
         scene.cam.position.x = 0f
         scene.cam.position.z = 0f
         scene.cam.update()

@@ -49,7 +49,8 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
                 val soc = SocketClient(Main.socket.incomingHandler, addressField.text)
                 if(soc.isWebSocketAvailable(soc.targetAddress)) soc.initializeWebSocket()
                 Main.socket = soc
-                Main.instanceData.setupGame(false)
+                Main.instanceData.clearGraphics()
+                Main.instanceData.setupGame()
             }
         }
         settingsTable.add(addressCheck).padLeft(10f)

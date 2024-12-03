@@ -8,7 +8,6 @@ import dev.voroscsoki.stratopolis.common.elements.SerializableTag
 import dev.voroscsoki.stratopolis.common.elements.SerializableWay
 import dev.voroscsoki.stratopolis.common.util.*
 import java.io.File
-import kotlin.math.pow
 
 
 class OsmStorage(
@@ -25,6 +24,7 @@ class OsmStorage(
         processOsmEntities(iter)
         buildings = createBuildingSet()
         roads = createRoadSet()
+        calculateCapacities()
     }
 
     private fun createBuildingSet(): HashSet<Building> {
@@ -62,6 +62,10 @@ class OsmStorage(
             )
         }
         return output.toHashSet()
+    }
+
+    private fun calculateCapacities() {
+        buildings.forEach { it.capacity = it.calculateCapacity() }
     }
 
     private fun processOsmEntities(iter: Iterator<EntityContainer>) {

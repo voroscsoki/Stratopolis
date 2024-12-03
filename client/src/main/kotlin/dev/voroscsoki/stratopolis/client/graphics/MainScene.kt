@@ -128,7 +128,7 @@ class MainScene : ApplicationListener {
         spriteBatch = SpriteBatch()
         font = BitmapFont()
         this.showMenu()
-        CoroutineScope(Dispatchers.IO).launch { Main.instanceData.setupGame(true) }
+        CoroutineScope(Dispatchers.IO).launch { Main.instanceData.setupGame() }
     }
 
     override fun render() {
@@ -232,8 +232,7 @@ class MainScene : ApplicationListener {
     }
 
     fun clearHeatmap() {
-        heatmap.dispose()
-        heatmap = HeatmapOverlay(1000, heatmapCellSize)
+        heatmap.clear()
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {

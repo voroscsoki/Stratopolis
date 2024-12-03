@@ -9,17 +9,19 @@ import dev.voroscsoki.stratopolis.common.util.getNodeAverage
 import dev.voroscsoki.stratopolis.server.db.Buildings
 import dev.voroscsoki.stratopolis.server.db.Roads
 import dev.voroscsoki.stratopolis.server.osm.OsmStorage
-import kotlinx.serialization.decodeFromString
-import net.mamoe.yamlkt.Yaml
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import kotlin.sequences.Sequence
 
 class DatabaseAccess {
     companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
         private const val DATABASE_URL = "jdbc:sqlite:test.db"
         fun connect() {
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
@@ -33,32 +35,32 @@ class DatabaseAccess {
         }
         fun loadFromOsm(storage: OsmStorage) {
             transaction {
-                println("Wiping old data")
+                logger.warn("Wiping old data")
                 Buildings.deleteAll()
                 Roads.deleteAll()
             }
 
             transaction {
-                //TODO: logger
-                println("Seeding buildings")
+                logger.info("Seeding buildings")
                 Buildings.batchUpsert(storage.buildings, Buildings.id) { building ->
                     this[Buildings.id] = building.id
                     this[Buildings.coords] = building.coords
                     this[Buildings.type] = building.osmType
-                    this[Buildings.tags] = Yaml.encodeToString(building.tags)
-                    this[Buildings.ways] = Yaml.encodeToString(building.ways)
-                    this[Buildings.capacity] = building.capacity()
+                    this[Buildings.tags] = Json.encodeToString(building.tags)
+                    this[Buildings.ways] = Json.encodeToString(building.ways)
+                    this[Buildings.capacity] = building.capacity
                 }
             }
 
             transaction {
-                println("Seeding roads")
+                logger.info("Seeding roads")
                 Roads.batchUpsert(storage.roads, Roads.id) { road ->
                     this[Roads.id] = road.id
-                    this[Roads.tags] = Yaml.encodeToString(road.tags)
-                    this[Roads.ways] = Yaml.encodeToString(road.ways)
+                    this[Roads.tags] = Json.encodeToString(road.tags)
+                    this[Roads.ways] = Json.encodeToString(road.ways)
                 }
             }
+            logger.info("DB rebuilt")
         }
 
         fun getBuildings(baseCoord: Vec3? = null, range: Double? = null): Sequence<Building> {
@@ -74,10 +76,11 @@ class DatabaseAccess {
                     //TODO: use .toBuilding() (issue is the transaction scope)
                     Building(
                         row[Buildings.id].value,
-                        Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         osmType = row[Buildings.type],
                         coords = buildingCoords,
-                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        capacity = row[Buildings.capacity]
                     )
                 } else null
             }
@@ -92,8 +95,8 @@ class DatabaseAccess {
                 val output = row.let {
                     Road(
                         it[Roads.id].value,
-                        Yaml.decodeFromString<List<SerializableTag>>(it[Roads.tags]),
-                        Yaml.decodeFromString<List<SerializableWay>>(it[Roads.ways])
+                        Json.decodeFromString<List<SerializableTag>>(it[Roads.tags]),
+                        Json.decodeFromString<List<SerializableWay>>(it[Roads.ways])
                     )
                 }
                 val coords = output.ways.flatMap { it.nodes }.getNodeAverage()
@@ -110,10 +113,11 @@ class DatabaseAccess {
                 Buildings.selectAll().where(Buildings.id eq id).map { row ->
                     Building(
                         row[Buildings.id].value,
-                        Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         osmType = row[Buildings.type],
                         coords = row[Buildings.coords],
-                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        capacity = row[Buildings.capacity]
                     )
                 }.firstOrNull()
             }
@@ -147,10 +151,11 @@ class DatabaseAccess {
                 randomizedRows.map { row ->
                     Building(
                         row[Buildings.id].value,
-                        Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         osmType = row[Buildings.type],
                         coords = row[Buildings.coords],
-                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways])
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        capacity = row[Buildings.capacity]
                     )
                 }
             }
@@ -163,10 +168,10 @@ class DatabaseAccess {
                 Buildings.selectAll().where { Buildings.tags like "%$type%" }.map { row ->
                     Building(
                         row[Buildings.id].value,
-                        Yaml.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
+                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
                         osmType = row[Buildings.type],
                         coords = row[Buildings.coords],
-                        ways = Yaml.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
+                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
                     )
                 }
             }
