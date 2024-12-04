@@ -6,4 +6,29 @@ Machine 1 is a Windows 11 desktop computer with an AMD Ryzen 5 7600X processor, 
 \section{End-to-end testing}
 %TODO: runtime comparisons with few or many agents
 %TODO: testing of correctness: distribution should match expectation
-%TODO: docker container
+
+\section{Performance testing}
+
+I performed load time tests using both machines and three PBF files: the cities of Vienna and Budapest, as well as a chunk of Hungarian countryside with low building density, taken from BBBike. \verb|Cold boot| means the server was already running and the client requested all data from the database -- the time displayed is in real-time seconds (not processor time) and is counted from pressing the \verb|Load server| button to the point the \verb|Loading| banner message disappears. \verb|Reload| also adds file upload and database insertion times, the duration is calculated from pressing \verb|Select| in the file upload dialog to the \verb|Loading| banner disappearing.
+
+\begin{center}
+    \begin{tabular}{l|cc|cc|cc}
+        \multicolumn{1}{c}{} & \multicolumn{2}{c}{Vienna} & \multicolumn{2}{c}{Budapest} & \multicolumn{2}{c}{Countryside} \\
+        \hline
+        Server & CB & R & CB & R & CB & R \\
+        \hline
+        Machine 1 &  &  &  &  &  &  \\
+        Machine 2 &  &  &  &  &  &  \\
+        \end{tabular}
+\end{center}
+%TODO FILL WITH DATA
+
+    
+
+
+I also tested the scalability of the simulation, with 1000, 20000, and 50000 agents.
+
+\section{Containerised deployment}
+It's common practice to package dependencies and runtimes along with an app, to ensure consistency in how it runs on different operating systems and environments, with Kubernetes and Docker being the two most popular options; I chose the latter. A Docker container is lightweight, portable and can function on its own. Its structure is described using a Dockerfile, placed in a project's root folder; the process is usually based on a pre-existing image, such as a the minimalist Alpine Linux image, only 5 megabytes in size. Contained instructions are executed in order, and the resulting image can then be run on any machine with Docker installed. The program is isolated from the host when run in this way, but can access specified resources near-natively.
+
+I used the newest gradle:8.11.1-jdk23 image for the build stage of the app. The code is copied into the container, then built using Gradle. The runtime stage then uses openjdk:23-slim (based on Debian 12 Bookworm), copies the compiled .jar file and runs it. Networking and persistent storage could be added as command line options, but I instead used Docker Compose, a tool that allows the declaration of layered apps, made up of services provided by containers. As well as exposing the server's default port, a volume is added that covers the entirety of the app root. This means the created database file stay on the disk between runs, but rebuilding the container still deletes it as expected. A Docker volume can also be bound to a folder on the host, making the database file readily inspectable and modifiable without entering the container.

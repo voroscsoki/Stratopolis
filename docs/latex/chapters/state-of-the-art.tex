@@ -1,7 +1,7 @@
 \chapter{The current state of the transit modelling industry}
 The purpose of modelling public transit systems is two-fold: evaluating current service patterns and discovering new routes are equally as important. The overall task is usually treated as a datamining exercise. As such, data collection is paramount, with presentation being of secondary concern. Just like in politics, a smaller but well-rounded dataset can allow us to make predictions and conclusions about the whole of a system.
 
-Throughout this section, I'll introduce state of the art data collection and modelling solutions. Wherever appropriate, I will also show examples pertaining to my home city, Budapest.
+Throughout this section, I'll introduce data collection and modelling solutions. Wherever appropriate, I will also show examples pertaining to my home city, Budapest.
 
 \section{Data collection}
 \subsection{Traditional, in-person method}
@@ -14,16 +14,16 @@ The downsides however, are easy to see. The ongoing costs may be high due to emp
 
 \subsection{Physical counting}
 
-In 1983, the Budapest Transport Privately Held Corporation (BKV Zrt.) purchased simple computers from the Austrian Knorr-Bremse company, capable of measuring and interpreting the pressure placed on a bus' hydraulic system.\cite{ik260_article} With known standard values, the current passenger count could be guessed with decent precision when travelling between any two stops. The numbers could then be used when planning new timetable assignments -- to increase or decrease headway between subsequent vehicles. The computers have mostly gone, as a result of local modernisation efforts.
+In 1983, the Budapest Transport Privately Held Corporation (BKV Zrt.) purchased simple computers from the Austrian Knorr-Bremse company, capable of measuring and interpreting the pressure placed on a vehicle's hydraulic system.\cite{ik260_article} With known standard values, the current passenger count could be guessed with decent precision when travelling between any two stops. The numbers could then be used when planning new timetable assignments -- to increase or decrease headway between subsequent vehicles. The computers have mostly gone, as a result of local modernisation efforts.
 
 Road vehicles, including cars and bicycles can be tallied using traffic induction loops.\cite{fhwaLoop} In use since the 1960s, these are simple circuits including an insulated wire placed into the road surface by sawing or otherwise cutting the asphalt. Whenever a vehicle drives over the wire, the inductivity changes. By attaching a simple processor, the frequency and length of signals can be mapped to different vehicle classes -- a semi truck and family sedan have entirely different signatures.
 
-Budapest has around seven hundred induction loops that give a comprehensive, near-realtime picture of the city's traffic. Around fifty cameras provide a visual aid.\cite{BkkDataCollection}
+Budapest has around seven hundred induction loops that give a comprehensive, near real-time picture of the city's traffic. Around fifty cameras provide a visual aid.\cite{BkkDataCollection}
 
 \subsection{Digital counting}
-Camera picture analysis reveals a lot about an junction's dominant flow direction. Accurate numbers exist on a per-lane basis. This field is exciting in its own right, as data sanitisation, object detection and machine inference is highly applicable here.
+Camera picture analysis reveals a lot about a junction's dominant flow direction. Accurate numbers exist on a per-lane basis. This field is exciting in its own right, as data sanitisation, object detection and machine inference is highly applicable here.
 
-Many cities around the world currently use automated passenger counting to inform decisions. Examples include London (TfL), Berlin (BVG) and Chicage (CTA). The usual solution includes infrared sensors mounted above the doors of certain vehicles. These detectors can count boarding and disembarking people in real time, and upload this information to a central database.
+Many cities around the world currently use automated passenger counting to inform decisions. Examples include London (TfL), Berlin (BVG) and Chicago (CTA). The usual solution includes infrared sensors mounted above the doors of certain vehicles. These detectors can count boarding and disembarking people in real time, and upload this information to a central database.
 
 Aside from the already mentioned purpose of timetable planning, this data can be used to handle overcrowding events -- such as a football match or live show -- by deploying more vehicles to increase capacity. As the devices are hooked into the vehicle's onboard computer, the numbers can be correlated with the location and time. CCTV cameras often act as a secondary source or means of verification for these schemes.
 
@@ -37,7 +37,7 @@ Cities Skylines is a single-player city-builder game developed by Colossal Order
 
 While not intended for professional use, the simulation system, coupled with countless available community mods make it a strong contender for quick iterations on real life cities. Each member of the population constantly makes decisions on travelling and their living situation, moving homes when it's advisable. Traffic management is very important, as commercial buildings require lots of freight trucks in order to get goods. This mirrors real-life zoning concepts and forces a hierarchical road system to be built. Since I've played the game for over 100 hours, it's what influenced the project the most. I made use of the zoning colours and incorporated individual building information pages, as well as a version of the game's camera system. Initially, it was a full recreation of the smoothened three-dimensional camera, but I ended up going for a top-down view, as this looked much better with the final heatmap.
 
-PTV Visum is a more involved, planning-focused software used by transit agencies, such as the Swiss Federal Railways. The app merges real socio-economic data and highly detailed transit models to predict trends. Cost analysis and fleet planning is also supported. It's well known for a very high level of detail, but this means sacrifices in performance and the user interface, which mostly reminds me of the 2012 version of Microsoft's Visual Studio. The maps are nevertheless highly detailed, with nodes and links that act similarly to OpenStreetMap's data. Visum places a strong emphasis on traffic simulation, with custom scenarios that can be compared to real trends easily. Multimodal (such as park and ride) travel is also supported. The main idea I used was the non-realtime evaluation of assignments; my heatmaps are calculated similarly, with only the result being shown.
+PTV Visum is a more involved, planning-focused software used by transit agencies, such as the Swiss Federal Railways. The app merges real socio-economic data and highly detailed transit models to predict trends. Cost analysis and fleet planning is also supported. It's well known for a very high level of detail, but this means sacrifices in performance and the user interface, which mostly reminds me of the 2012 version of Microsoft's Visual Studio. The maps are nevertheless highly detailed, with nodes and links that act similarly to OpenStreetMap's data. Visum places a strong emphasis on traffic simulation, with custom scenarios that can be compared to real trends easily. Multimodal (such as park and ride) travel is also supported. The main idea I used was the deferred evaluation of assignments; my heatmaps are calculated similarly, with only the result being shown.
 
 \subsection{This program}
 

@@ -22,10 +22,10 @@ Database communication is handled by the DatabaseAccess singleton. All methods a
 \section{Common classes}
 
 I made the following utility classes in the common project. \begin{itemize}
-    \item \textbf{SerializeableNode/Way/Tag} -- Data classes explicitly annotated as @Serializable for Ktor, they wrap the respective osm4j types. Tags are serialised as "key=value" strings.
+    \item \textbf{SerializeableNode/Way/Tag} -- Data classes explicitly annotated as @Serializable for Ktor, they wrap the respective osm4j types. Tags are expressed as "key=value" strings.
     \item \textbf{Vec3} -- A three-dimensional vector class with Doubles instead of Floats and basic arithmetic methods. These are used throughout the program to maintain higher precision when using real-world coordinates.
     \item \textbf{Building, Road} -- The runtime equivalents of the database tables of the same name. The frontend can't see the database structure, only these representations. They also function as Data Access Objects (DAOs) for Exposed.
-    \item \textbf{Agent} -- A person in the city and simulation. They have a preset speed and age group, as well as location information.
+    \item \textbf{Agent} -- A person in the city and simulation. They have a pre-set speed and age group, as well as location information.
     \item \textbf{ObservableMap} -- A typical Kotlin MutableMap, extended with callbacks for any changes that occur (for example, adding an item).
     \item \textbf{ControlMessage (and inheriting classes)} -- A simple explicitly serialisable class with predefined fields; this is how I ensured that every websocket message contained the expected data
 \end{itemize}
