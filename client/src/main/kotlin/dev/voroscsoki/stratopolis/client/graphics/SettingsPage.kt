@@ -1,5 +1,7 @@
 package dev.voroscsoki.stratopolis.client.graphics
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
@@ -7,14 +9,18 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.networking.HttpAccessor
 import dev.voroscsoki.stratopolis.client.networking.SocketClient
+import games.spooky.gdx.nativefilechooser.NativeFileChooser
+import games.spooky.gdx.nativefilechooser.NativeFileChooserCallback
+import games.spooky.gdx.nativefilechooser.NativeFileChooserConfiguration
+import games.spooky.gdx.nativefilechooser.desktop.DesktopFileChooser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 
 class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
+    var fileChooser: NativeFileChooser = DesktopFileChooser()
     init {
         setSize(stage.viewport.worldWidth * 0.6f, stage.viewport.worldHeight * 0.4f)
 
@@ -53,10 +59,24 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
         settingsTable.row()
 
         val fileOpenButton = createTextButton("Open file", skin) { button ->
-            runBlocking {
-                Main.instanceData.graphicsLoading = true
-                HttpAccessor.sendPbfFile(File("budapest.osm.pbf"))
-            }
+            val conf = NativeFileChooserConfiguration()
+            conf.directory = Gdx.files.absolute(System.getProperty("user.home"))
+            conf.title = "Choose a PBF binary"
+
+            fileChooser.chooseFile(conf, object : NativeFileChooserCallback {
+                override fun onFileChosen(file: FileHandle?) {
+                    runBlocking {
+                        file?.let {
+                            Main.instanceData.graphicsLoading = true
+                            HttpAccessor.sendPbfFile(it.file())
+                        }
+                    }
+                }
+
+                override fun onCancellation() {}
+
+                override fun onError(exception: Exception) {}
+            })
         }
         settingsTable.add(fileOpenButton).padTop(20f).padBottom(20f).left()
 

@@ -101,8 +101,9 @@ class InstanceData(val scene: MainScene) {
             inst.materials.forEach { material ->
                 material.set(
                     ColorAttribute.createDiffuse(
-                        when (data.tags.find { it.key == "building" }?.value) {
+                        when (data.buildingType) {
                             "commercial" -> Color.BLUE
+                            "retail" -> Color.BLUE
                             "house" -> Color.GREEN
                             "apartments" -> Color.GREEN
                             "industrial" -> Color.YELLOW
@@ -121,7 +122,7 @@ class InstanceData(val scene: MainScene) {
         baselineCoord?.let {
             val source = scene.cam.position?.toWorldCoords(it)!!.copy(y = 0.0)
             graphicsLoading = true
-            runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.1)) }
+            runBlocking { Main.socket.sendSocketMessage(BuildingRequest(source, 0.3)) }
         } ?: run {
             Thread.sleep(500)
             requestBuildings()

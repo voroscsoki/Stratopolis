@@ -64,7 +64,7 @@ class HeatmapOverlay(
         meshes.forEach { it.dispose() }
         meshes.clear()
         val sorted = grid.map { it.maxOrNull() ?: 0 }.sortedDescending()
-        val maxFrequency = sorted[sorted.size / 5]
+        val maxFrequency = sorted[sorted.size / 10]
 
         val chunksPerRow = ceil(gridSize / chunkSize.toFloat()).toInt()
         for (chunkX in 0 until chunksPerRow) {

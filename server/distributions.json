@@ -1,31 +1,113 @@
 {
     "ageToType": {
         "ADULT": {
+            "apartments": 0.8,
+            "commercial": 0.4,
+            "house": 0.8,
+            "industrial": 0.5,
+            "office": 0.5,
+            "public": 0.2,
+            "retail": 0.4
+        },
+        "ELDERLY": {
+            "residential": 0.8,
+            "apartments": 0.8,
+            "commercial": 0.2
+        },
+        "TEEN": {
+            "residential": 0.8,
+            "apartments": 0.8,
+            "commercial": 0.2
+        },
+        "CHILD": {
             "residential": 0.8,
             "apartments": 0.8,
             "commercial": 0.2
         }
     },
     "typeToTime": {
-        "residential": [
-            {
-                "start": 20,
-                "end": 4,
-                "chance": 0.9
-            }
-        ],
         "apartments": [
             {
-                "start": 20,
-                "end": 4,
+                "start": 18,
+                "end": 7,
                 "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
             }
         ],
         "commercial": [
             {
-                "start": 8,
-                "end": 18,
+                "start": 18,
+                "end": 7,
                 "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
+            }
+        ],
+        "house": [
+            {
+                "start": 18,
+                "end": 7,
+                "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
+            }
+        ],
+        "industrial": [
+            {
+                "start": 18,
+                "end": 7,
+                "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
+            }
+        ],
+        "office": [
+            {
+                "start": 18,
+                "end": 7,
+                "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
+            }
+        ],
+        "public": [
+            {
+                "start": 18,
+                "end": 7,
+                "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
+            }
+        ],
+        "retail": [
+            {
+                "start": 18,
+                "end": 7,
+                "chance": 0.9
+            },
+            {
+                "start": 7,
+                "end": 18,
+                "chance": 0.2
             }
         ]
     }

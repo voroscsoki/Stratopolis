@@ -53,7 +53,7 @@ class Simulation {
     val distributions = File("distributions.json").let {
         if (it.exists())
             try {
-                Json {allowStructuredMapKeys = true}.decodeFromString(Distributions.serializer(), it.readText())
+                return@let Json {allowStructuredMapKeys = true}.decodeFromString<Distributions>(it.readText())
             } catch (e: Exception) {
                 logger.warn("Distributions file could not be loaded, starting empty")
                 Distributions()
@@ -64,7 +64,7 @@ class Simulation {
     private fun setup(count: Int) {
         logger.info("Setting up simulation with $count agents")
         agents.clear()
-        val starters = DatabaseAccess.getBuildingsByType("residential", count)
+        val starters = DatabaseAccess.getBuildingsByType("apartments", count*4)
         buildingCache = pickBuildingsWeighted(DatabaseAccess.getRandomBuildings(count * 2), count*2).groupBy { it.buildingType }.mapValues { entry -> entry.value.toMutableList() }.toMutableMap()
         for (i in 0..<count) {
             val from = starters[i % starters.size]
@@ -130,12 +130,13 @@ class Simulation {
         agents.map { ag ->
             val locations = mutableListOf<Vec3>()
             repeat(movesPerMinute) {
+                val prevLoc = ag.location
                 if (ag.location dist ag.targetBuilding.coords < 0.00000001) {
                     ag.atBuilding = ag.targetBuilding
                     ag.location = ag.atBuilding.coords
                 }
                 else ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * ((ag.speed/movesPerMinute).coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
-                locations += ag.location
+                if(prevLoc != ag.location) locations += ag.location
             }
             if(ag.atBuilding == ag.targetBuilding) needNewBuilding += ag
             callback(locations)
