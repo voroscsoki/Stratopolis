@@ -54,28 +54,7 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
 
         val fileOpenButton = createTextButton("Open file", skin) { button ->
             runBlocking {
-                /*val fileChooser = DesktopFileChooser()
-
-                // Configure
-                val conf = NativeFileChooserConfiguration()
-                conf.directory = Gdx.files.absolute(System.getProperty("user.home"))
-                conf.nameFilter = FilenameFilter { dir, name -> name.endsWith("pbf") }
-                conf.title = "Choose audio file"
-
-                fileChooser.chooseFile(conf, object : NativeFileChooserCallback {
-                    override fun onFileChosen(p0: FileHandle?) {
-                        val file = p0?.file()
-                        file?.let { runBlocking { Main.socket.sendSocketMessage(OsmLoadRequest(ByteArray(10))) } }
-                    }
-
-                    override fun onCancellation() {
-                        // Warn user how rude it can be to cancel developer's effort
-                    }
-
-                    override fun onError(exception: Exception) {
-                        // Handle error (hint: use exception type)
-                    }
-                })*/
+                Main.instanceData.graphicsLoading = true
                 HttpAccessor.sendPbfFile(File("budapest.osm.pbf"))
             }
         }

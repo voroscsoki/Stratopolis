@@ -2,6 +2,7 @@ package dev.voroscsoki.stratopolis.client.networking
 
 import dev.voroscsoki.stratopolis.common.networking.ControlMessage
 import io.ktor.client.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.websocket.*
@@ -23,6 +24,10 @@ class SocketClient(
             contentConverter = KotlinxWebsocketSerializationConverter(Json {
                 classDiscriminator = "type"
             })
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60000
+            socketTimeoutMillis = 60000
         }
     }
     private val sendQueue = Channel<ControlMessage>(Channel.UNLIMITED)
