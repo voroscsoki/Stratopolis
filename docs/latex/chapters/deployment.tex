@@ -22,11 +22,11 @@ I performed load time tests using two PBF files: the cities of Budapest (39,3 MB
         Machine 2 & 39.91s & 52.31s & 2.18s & 5.02s \\
         \end{tabular}
 \end{center}
-It's clear that the main bottleneck on performance is the amount of raw data contained in the processed file. Since Budapest has around 400,000 buildings and the Szeged chunk consists of less than 20,000, the load process scales better than expected, which would be linear complexity. Current performance is regardless not ideal, as the initialisation overhead is quite large. PBF file transfer to the host increased runtime by about 1.5--2$\times$. It's interesting to note that the difference between cold boot and reload times has a rough linear correlation to the source file size.
+It's clear that the main bottleneck on performance is the amount of raw data contained in the processed file. Since Budapest has around 400,000 buildings and the Szeged chunk consists of less than 20,000, the load process scales better than expected, which would be linear complexity. The base performance is mostly impacted by database access in the initialisation step. PBF file transfer to the host increased runtime by about 1.5--2$\times$. It's interesting to note that the difference between cold boot and reload times has a roughly linear correlation to the source file size.
 The outlying value of 46.18 seconds is due to the overuse of just one physical disk. Even though network transfers generally slow things down, the Szeged test results highlight the advantage of separating the two projects as more processing power could be utilised overall. In Budapest's case, the slower transfer rates removed this advantage; an adequately equipped server would likely make the app faster in such a distributed configuration when compared to a single consumer-grade machine.
 
-
-I also tested the time complexity of the simulation. For this, a scenario was run on the Budapest dataset with time constraints of 08:00--09:00, and agent counts of 1000, 5000, 10000, 20000 and 50000. This test was conducted on machine 1 entirely. As expected, the increase in runtime is almost exactly linear. A comparison of the resulting heatmaps can be seen in the appendix, at \ref{heatmap_comparison}. Based on this, it's generally useful to add at least 20000 agents for a more statistically significant result.
+\label{perftesting-heatmap}
+I also tested the time complexity of the simulation. For this, a scenario was run on the Budapest dataset with time constraints of 08:00--09:00, and agent counts of 1000, 5000, 10000, 20000 and 50000. This test was conducted on machine 1 entirely. As expected, the increase in runtime is almost exactly linear. A comparison of the resulting heatmaps can be seen in the appendix, at \ref{comparison_heatmap}. Based on this, it's generally useful to add at least 20000 agents for a more statistically significant result.
 
 \begin{figure}[h!]
     \centering

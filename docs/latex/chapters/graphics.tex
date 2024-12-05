@@ -40,7 +40,7 @@ In the case of libGDX, the EarClippingTriangulator class takes care of this comm
 
 \subsection{Winding order}
 
-Many graphical effects - including lighting - require knowledge of the affected faces' normal vectors; a direction that is perpendicular to the whole surface.
+Many graphical effects -- including lighting -- require knowledge of the affected faces' normal vectors; a direction that is perpendicular to the whole surface.
 When observing the side from this particular direction (the vector between the camera and a given point of the face can be represented as a multiple of the normal), the apparent size is at its largest -- in layman's terms, we're seeing the front without any rotations around axes that don't match the normal.
 
 The visibility of a polygon can technically also be treated as an effect. To reduce the number of draw calls, it's advisable to only handle faces that have their intended front side visible from the camera's perspective. By default, OpenGL utilises "back-face culling": the spectator can only see shapes where the order of vertices is counter-clockwise (when plotted in relation to the vector connecting the viewpoint and the weighted centre of the polygon). This behaviour is modifiable as follows.
@@ -55,7 +55,7 @@ The visibility of a polygon can technically also be treated as an effect. To red
 
 In contrast to the project's simulation module, the user interface is difficult to parallelise. OpenGL functions are usually not thread-safe, requesting and modifying a single graphical context from multiple areas of code is dangerous and will often lead to crashes.
 
-The graphics library abstracts communication with the operating system and GPU as much as possible. In return, it's the developer's responsibility to reduce GPU calls to the absolutely necessary amount, as previously mentioned. Aside from frame construction, the program only uses the main graphical thread for creating unique models for each building, as this can't reasonably be done on the CPU.\@I decided against a complex thread-scheduling solution, as the GPU only receives a heavy workload when creating a new save, or loading an OSM buffer file. When programming, I only had to build on available tools; I used a simple lambda function to obtain the main thread context when needed.
+The graphics library abstracts communication with the operating system and GPU as much as possible. In return, it's the developer's responsibility to reduce GPU calls to the absolutely necessary amount. Aside from frame construction, the program only uses the main graphical thread for creating unique models for each building, as this can't reasonably be done on the CPU.\@I decided against a complex thread-scheduling solution, as the GPU only receives a heavy workload when creating a new save, or loading an OSM buffer file. When programming, I only had to build on available tools; I used a simple lambda function to obtain the main thread context when needed.
 
 \begin{lstlisting}[caption=Helper function for getting the draw thread]
 private suspend fun <T> runOnRenderThread(block: () -> T): T {
@@ -95,6 +95,8 @@ For libGDX scenes, it is possible to inject a single input processing adapter ob
 
 I created my own camera based on the public InputAdapter interface. The viewing direction is locked for a fixed top-down perspective. The \verb|SmoothMoveHandler| class takes a camera and callback function as input, and can then receive movement commands which are added together. As long as the sum is non-zero, the function is continuously called with a percentage of the current value which is then subtracted. This results in an easing effect, avoiding robotic, sudden direction changes. Since multiple commands may be executed at once, every function that changes the camera's position must be under a mutex (mutually exclusive) lock. Without this, multiple camera location changes cause the currently rendered frame to flicker. The vertical (used keys: W-S), horizontal (A-D) and rotation (Q-E) axes all have dedicated handlers.
 
+Holding the left ALT key and pressing numbers 1--5, the light illuminating the buildings is reduced and the latest heatmap is compiled and displayed over the city. Each button corresponds to one of the simulation's age groups (displayed in the top left corner), with the fifth showing a combination of all maps.
+
 
 \subsection{The menu and popups}
 
@@ -107,6 +109,12 @@ The rest of the rather simple user interface consists of four buttons. The "play
 
 LibGDX has a mature Scene2D module that helps create two-dimensional overlays and menus on top of existing content. All elements, such as buttons and titles need to be rendered using a skin. Open-sourced examples exist\footnote{https://github.com/czyzby/gdx-skins}, but I decided to create my own in-code. I defined a single basic style for every element. All popups use the resulting Skin, so the entire app's common style can be changed at once in code. The colours are made from a simple tileable 1$\times$1 texture. The icons and fonts are from Google's Material library\footnote{https://fonts.google.com}, packaged with the program.
 
-In the settings, the backend's network address can be set, and the \verb|Check| button can initiate a dummy connection to it. If the handshake fails, the button says \verb|Check: Failed|, or \verb|Check: OK| otherwise. \verb|Load server| queries the selected address for building data.
+In the settings popup, the backend's network address can be set, and the \verb|Check| button can initiate a dummy connection to it. If the handshake fails, the button says \verb|Check: Failed|, or \verb|Check: OK| otherwise. A successful check sets the frontend's target to the given address. \verb|Load server| queries the target websocket for map building. \verb|Open file| creates the current system's native file dialog and sends the file selected in it to the database (see \ref{file-upload}). The menu also describes the basic controls and current version of the program. %TODO: IMPLEMENT, IMAGE
 
-When clicking on the screen, the camera casts a ray towards the selected pixel. After picking the correct cached chunk from the list, all buildings inside that chunk are collision checked. The first hit causes a popup to appear, with all OSM tags of the building presented neatly. This screen is just for debugging or trivia purposes. If the ray does not contact anything, no window is shown.
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{images/settings.png}
+    \caption{The settings page, a popup opened by the "gear" button}
+\end{figure}
+
+When clicking on the city view, the camera casts a ray towards the selected pixel. After picking the correct cached chunk from the list, all buildings inside that chunk are collision checked. The first hit causes a popup to appear, with all OSM tags of the building, as well as the calculated capacity listed. This screen is mainly for debugging or trivia purposes as of now. If the ray does not contact anything or another popup is currently open, no window is shown.

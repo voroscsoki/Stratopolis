@@ -17,7 +17,7 @@ The OSM tags take up the most space in the database, as they're simple strings t
 
 \subsection{Data access}
 
-Database communication is handled by the DatabaseAccess singleton. All methods are independent of the engine being used, so the database string could be swapped for any other scheme supported by Exposed. Queries are serialisable transactions, which mostly prevents reading incomplete buildings or roads. There is a simple helper function to take an in-memory storage object and simply overwrite the database with it, to be used when a new PBF file is loaded. Kotlin natively supports Sequences, a list type that can produce items while it's being iterated. I made use of this to send building data to the socket in smaller chunks, before the whole transaction is done. If the transaction block would ever freeze, incomplete data may be sent, but the program does not crash.
+Database communication is handled by the DatabaseAccess singleton. All methods are independent of the engine being used, so the database string could be swapped for any other scheme supported by Exposed. Queries are serialisable transactions, which mostly prevents reading incomplete buildings or roads. Kotlin natively supports Sequences, a list type that can produce items while it's being iterated. I made use of this to send building data to the socket in smaller chunks, before the whole transaction is done. If the transaction block would ever freeze, incomplete data may be sent, but the program does not crash.
 
 \section{Common classes}
 
