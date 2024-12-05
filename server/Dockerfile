@@ -14,6 +14,8 @@ FROM openjdk:21-slim
 WORKDIR /app
 
 COPY --from=build /app/server/build/libs/server-all.jar server-all.jar
+COPY --from=build /app/server/config.json config.json
+COPY --from=build /app/server/distributions.json distributions.json
 
 EXPOSE 8085
 
