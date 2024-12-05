@@ -43,6 +43,7 @@ class InstanceData(val scene: MainScene) {
             } else {
                 scene.menu?.loadingBar?.fadeOut()
             }
+            scene.menu?.disableButtons(value)
             field = value
         }
     var sequence = 0

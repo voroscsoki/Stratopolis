@@ -22,7 +22,7 @@ import kotlin.time.toJavaDuration
 fun Application.configureRouting() {
     install(WebSockets) {
         pingPeriod = 10.seconds.toJavaDuration()
-        timeout = 60.seconds.toJavaDuration()
+        timeout = 240.seconds.toJavaDuration()
         maxFrameSize = Long.MAX_VALUE
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(Json {

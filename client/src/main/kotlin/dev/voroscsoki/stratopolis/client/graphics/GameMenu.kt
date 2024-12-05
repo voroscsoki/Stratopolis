@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Group
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
@@ -87,6 +88,15 @@ class GameMenu(
         addActor(loadingBar)
 
         stage.addActor(this)
+    }
+
+    fun disableButtons(value: Boolean) {
+        val cells = (menuBar.children[0] as Table).cells
+        cells.forEachIndexed { index, it ->
+            if(index == cells.size-1) return@forEachIndexed
+            (it.actor as ImageButton).touchable = if(value) Touchable.disabled else Touchable.enabled
+            (it.actor as ImageButton).color.a = if(value) 0.5f else 1f
+        }
     }
 
     private fun loadAsset(filename: String) =

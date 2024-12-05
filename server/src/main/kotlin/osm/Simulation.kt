@@ -99,8 +99,7 @@ class Simulation {
             }
         }
         moreBuildingsNeeded.forEach {
-            println(it)
-            buildingCache[it]?.addAll(DatabaseAccess.getBuildingsByType(it, 100))
+            buildingCache[it]?.addAll(DatabaseAccess.getBuildingsByType(it, 500))
         }
     }
 
