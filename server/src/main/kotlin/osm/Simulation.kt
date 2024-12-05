@@ -16,9 +16,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
+import kotlin.math.sqrt
 import kotlin.random.Random
-import kotlin.random.nextUInt
 import kotlin.time.Duration.Companion.minutes
 
 @Serializable
@@ -49,7 +50,7 @@ class Simulation {
     var clock = Clock.System.now()
     val agents = mutableListOf<Agent>()
     val logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var buildingCache: MutableMap<String, MutableList<Building>>
+    lateinit var buildingCache: ConcurrentHashMap<String, MutableSet<Building>>
     val distributions = File("distributions.json").let {
         if (it.exists())
             try {
@@ -64,71 +65,52 @@ class Simulation {
     private fun setup(count: Int) {
         logger.info("Setting up simulation with $count agents")
         agents.clear()
-        val starters = DatabaseAccess.getBuildingsByType("apartments", count*4)
-        buildingCache = pickBuildingsWeighted(DatabaseAccess.getRandomBuildings(count * 2), count*2).groupBy { it.buildingType }.mapValues { entry -> entry.value.toMutableList() }.toMutableMap()
+        val starters = DatabaseAccess.getBuildingsByType("apartments", count/2) + DatabaseAccess.getBuildingsByType("residential", count/2)
+        buildingCache = ConcurrentHashMap(
+            distributions.ageToType[AgeGroup.ADULT]!!.keys.associateWith { type ->
+                DatabaseAccess.getBuildingsByType(type, count/10).toMutableSet()
+            })
         for (i in 0..<count) {
             val from = starters[i % starters.size]
             agents += Agent(
                 Random.nextLong().absoluteValue,
                 from,
                 from,
-                from.coords)
+                from.coords,
+                ageGroup = AgeGroup.entries.random())
         }
         pickNextBuilding(agents)
         logger.info("Setup complete")
     }
 
-
-    private fun pickBuildingsWeighted(buildings: List<Building>, count: Int): List<Building> {
-        if (count <= 0 || buildings.isEmpty()) return emptyList()
-
-        // Precompute cumulative weights
-        val cumulativeWeights = buildings.map { it.capacity }.runningReduce { acc, capacity -> acc + capacity }
-        val totalWeight = cumulativeWeights.last()
-
-        // Generate random numbers for selection
-        val randomValues = List(count) { Random.nextUInt(totalWeight) }.sorted()
-
-        val selectedBuildings = mutableListOf<Building>()
-        var buildingIndex = 0
-        for (random in randomValues) {
-            // Find the corresponding building for each random value
-            while (random >= cumulativeWeights[buildingIndex]) {
-                buildingIndex++
-            }
-            selectedBuildings.add(buildings[buildingIndex])
-        }
-
-        return selectedBuildings
-    }
-
     private fun pickNextBuilding(agents: List<Agent>) {
         logger.info("${agents.count()} agents are picking next building")
-        var moreBuildingsNeeded = false
+        val moreBuildingsNeeded: MutableSet<String> = mutableSetOf()
         //val buildings = DatabaseAccess.getRandomBuildings(agents.count())
         agents.forEach { ag ->
             //wants to leave at all?
             if(Random.nextBoolean()) return@forEach
             val distribution = distributions.getDistribution(ag.ageGroup, clock.toLocalDateTime(TimeZone.currentSystemDefault()))
             val type = distribution.toList().shuffled().firstOrNull { Random.nextDouble() < it.second }?.first
-            if(type == ag.atBuilding.buildingType) return@forEach
+            if(type == ag.atBuilding.buildingType || type == null) return@forEach
             if(Random.nextDouble() > 0.5) {
-                buildingCache[type]?.randomOrNull()?.let { ag.targetBuilding = it; buildingCache[type]?.remove(it) }
-                    ?: run { moreBuildingsNeeded = true }
+                buildingCache[type]?.weightedRandom(ag.location)?.let { ag.targetBuilding = it; buildingCache[type]?.remove(it) }
+                    ?: run { type.let { moreBuildingsNeeded.add(it) } }
             }
         }
-        if(moreBuildingsNeeded) {
-            //buildingCache.addAll(DatabaseAccess.getRandomBuildings(agents.count()))
+        moreBuildingsNeeded.forEach {
+            println(it)
+            buildingCache[it]?.addAll(DatabaseAccess.getBuildingsByType(it, 100))
         }
     }
 
-    private fun tick(callback: (List<Vec3>) -> Unit) {
+    private fun tick(callback: (List<Pair<AgeGroup, Vec3>>) -> Unit) {
         logger.info("Simulation tick at $clock")
         clock += 1.minutes
-        val movesPerMinute = 15
+        val movesPerMinute = 8
         val needNewBuilding = mutableListOf<Agent>()
         agents.map { ag ->
-            val locations = mutableListOf<Vec3>()
+            val locations = mutableListOf<Pair<AgeGroup, Vec3>>()
             repeat(movesPerMinute) {
                 val prevLoc = ag.location
                 if (ag.location dist ag.targetBuilding.coords < 0.00000001) {
@@ -136,7 +118,7 @@ class Simulation {
                     ag.location = ag.atBuilding.coords
                 }
                 else ag.location += (ag.targetBuilding.coords - ag.atBuilding.coords).normalize() * ((ag.speed/movesPerMinute).coerceAtMost((ag.targetBuilding.coords dist ag.location).toFloat()))
-                if(prevLoc != ag.location) locations += ag.location
+                if(prevLoc != ag.location) locations += ag.ageGroup to ag.location
             }
             if(ag.atBuilding == ag.targetBuilding) needNewBuilding += ag
             callback(locations)
@@ -157,4 +139,41 @@ class Simulation {
         logger.info("Sending simulation result")
         Main.socketServer.sendSocketMessage(SimulationResult(res))
     }
+}
+
+private fun Collection<Building>?.weightedRandom(source: Vec3): Building? {
+    // If the collection is null or empty, return null
+    if (this.isNullOrEmpty()) return null
+
+    // Calculate total weight for normalization
+    val totalWeight = this.sumOf { building ->
+        // Distance weight - linearly decreasing with distance
+        val distanceWeight = 1.0 / (1 + source.dist(building.coords) * 1000)
+
+        // Capacity weight - quadratic scaling
+        val capacityWeight = sqrt(sqrt(building.capacity.toDouble()))
+
+        distanceWeight
+    }
+
+    // Generate a random point in the total weight range
+    val randomPoint = Random.nextDouble(totalWeight)
+
+    // Accumulate weights to select the building
+    var currentWeight = 0.0
+    for (building in this.shuffled()) {
+        // Calculate individual building's weight components
+        val distanceWeight = 1.0 / (1 + source.dist(building.coords))
+        val capacityWeight = sqrt(sqrt(building.capacity.toDouble()))
+        val buildingWeight = distanceWeight
+
+        // Accumulate weight and check if we've passed the random point
+        currentWeight += buildingWeight
+        if (currentWeight >= randomPoint) {
+            return building
+        }
+    }
+
+    // Fallback to returning the last building if something goes wrong
+    return this.last()
 }

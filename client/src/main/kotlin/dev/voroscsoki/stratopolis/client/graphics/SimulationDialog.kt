@@ -62,10 +62,10 @@ class SimulationDialog(stage: Stage, skin: CustomSkin) : Window("Simulation star
 
         val sendButton = createTextButton("Send request", skin) { button ->
             val date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            val startTime = LocalDateTime(date, LocalTime.parse("${startHour.text}:${startMinute.text}")).toInstant(UtcOffset.ZERO)
-            val endTime = LocalDateTime(date, LocalTime.parse("${endHour.text}:${endMinute.text}")).toInstant(UtcOffset.ZERO)
+            val startTime = LocalDateTime(date, LocalTime.parse("${startHour.text.padStart(2, '0')}:${startMinute.text.padStart(2, '0')}")).toInstant(UtcOffset.ZERO)
+            val endTime = LocalDateTime(date, LocalTime.parse("${endHour.text.padStart(2, '0')}:${endMinute.text.padStart(2, '0')}")).toInstant(UtcOffset.ZERO)
             val simulationData = SimulationData(
-                startTime, endTime, agentCount.text.toInt(), Main.instanceData.baselineCoord!!, Main.appScene.heatmap.cellSize / 100000.0)
+                startTime, endTime, agentCount.text.toInt(), Main.instanceData.baselineCoord!!, Main.appScene.heatmaps.values.first().cellSize / 100000.0)
             Main.instanceData.reset(startTime)
             Main.instanceData.graphicsLoading = true
             runBlocking { Main.socket.sendSocketMessage(SimulationRequest(simulationData)) }

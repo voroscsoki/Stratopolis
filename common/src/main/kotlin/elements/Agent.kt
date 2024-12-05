@@ -4,7 +4,7 @@ import dev.voroscsoki.stratopolis.common.util.Vec3
 import kotlinx.serialization.Serializable
 
 enum class AgeGroup {
-    CHILD, TEEN, ADULT, ELDERLY
+    CHILD, TEEN, ADULT, SENIOR
 }
 
 @Serializable

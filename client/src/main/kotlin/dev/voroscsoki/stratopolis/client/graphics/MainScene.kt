@@ -25,6 +25,7 @@ import com.badlogic.gdx.utils.ShortArray
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import dev.voroscsoki.stratopolis.client.Main
 import dev.voroscsoki.stratopolis.client.user_interface.UtilInput
+import dev.voroscsoki.stratopolis.common.elements.AgeGroup
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.Road
@@ -53,7 +54,7 @@ class MainScene : ApplicationListener {
 
     private lateinit var stage: Stage
     private lateinit var skin: CustomSkin
-    lateinit var heatmap: HeatmapOverlay
+    lateinit var heatmaps: Map<AgeGroup?, HeatmapOverlay>
     private var popup: PopupWindow? = null
     var menu: GameMenu? = null
     private var settingsPage: SettingsPage? = null
@@ -72,6 +73,7 @@ class MainScene : ApplicationListener {
     private val agents = ConcurrentHashMap<Long, Agent>()
     var isAltPressed = false
     var forceHeatmap = false
+    var selectedAgeGroup: AgeGroup? = null
 
     //helper
     private var keyframeCounter = 0
@@ -115,7 +117,9 @@ class MainScene : ApplicationListener {
             addProcessor(UtilInput(this@MainScene))
             addProcessor(stage)
         }
-        heatmap = HeatmapOverlay(1000, heatmapCellSize)
+        heatmaps = (AgeGroup.entries + null).associateWith {
+            HeatmapOverlay(1000, heatmapCellSize)
+        }
         Gdx.input.inputProcessor = multiplexer
         Gdx.gl.glEnable(GL40.GL_CULL_FACE)
         Gdx.gl.glCullFace(GL40.GL_BACK)
@@ -155,14 +159,14 @@ class MainScene : ApplicationListener {
         }
         modelBatch.end()
         if(isAltPressed) {
-            if(isKeyframe) heatmap.compile()
-            heatmap.render(cam.combined)
+            if(isKeyframe) heatmaps.values.forEach { it.compile() }
+            heatmaps[selectedAgeGroup]?.render(cam.combined)
         }
         forceHeatmap = false
         // Render FPS counter
         spriteBatch.begin()
         font.draw(spriteBatch, "FPS: ${Gdx.graphics.framesPerSecond}", 10f, Gdx.graphics.height - 10f)
-        //font.draw(spriteBatch, "Time: ${Main.instanceData.currentTime}", 10f, Gdx.graphics.height - 30f)
+        font.draw(spriteBatch, "Age group: ${selectedAgeGroup?.name ?: "ALL"}", 10f, Gdx.graphics.height - 30f)
         spriteBatch.end()
 
         // Render UI
@@ -232,7 +236,7 @@ class MainScene : ApplicationListener {
     }
 
     fun clearHeatmap() {
-        heatmap.clear()
+        heatmaps.values.forEach { it.clear() }
     }
 
     private suspend fun <T> runOnRenderThread(block: () -> T): T {

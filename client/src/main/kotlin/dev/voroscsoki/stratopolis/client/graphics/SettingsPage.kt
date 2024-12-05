@@ -40,6 +40,8 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
             runBlocking {
                 if(Main.socket.isWebSocketAvailable(addressField.text + "/control")) {
                     button.setText("Check: OK")
+                    Main.socket = SocketClient(Main.socket.incomingHandler, addressField.text)
+                    Main.socket.initializeWebSocket()
                 } else {
                     button.setText("Check: Failed")
                 }

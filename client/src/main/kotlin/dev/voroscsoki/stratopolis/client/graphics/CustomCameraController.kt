@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input.Keys
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.math.Vector3
+import dev.voroscsoki.stratopolis.common.elements.AgeGroup
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -91,7 +92,6 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
                 jobs.forEach {
                     if(it.value?.isActive == true) cancelMove(it.key)
                 }
-                //TODO: janky
             }
 
             Keys.E -> continuousMove(0.5f * multiplier, "rotate")
@@ -100,6 +100,12 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
             Keys.D -> continuousMove(4f * multiplier, "sideways")
             Keys.W -> continuousMove(-4f * multiplier, "linear")
             Keys.S -> continuousMove(4f * multiplier, "linear")
+            Keys.NUM_1 -> scene.selectedAgeGroup = AgeGroup.CHILD
+            Keys.NUM_2 -> scene.selectedAgeGroup = AgeGroup.TEEN
+            Keys.NUM_3 -> scene.selectedAgeGroup = AgeGroup.ADULT
+            Keys.NUM_4 -> scene.selectedAgeGroup = AgeGroup.SENIOR
+            Keys.NUM_5 -> scene.selectedAgeGroup = null
+            else -> return false
         }
         return super.keyDown(p0)
     }

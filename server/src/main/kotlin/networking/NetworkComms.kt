@@ -16,14 +16,13 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 fun Application.configureRouting() {
     install(WebSockets) {
-        pingPeriod = 1.minutes.toJavaDuration()
-        timeout = 15.seconds.toJavaDuration()
+        pingPeriod = 10.seconds.toJavaDuration()
+        timeout = 60.seconds.toJavaDuration()
         maxFrameSize = Long.MAX_VALUE
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(Json {

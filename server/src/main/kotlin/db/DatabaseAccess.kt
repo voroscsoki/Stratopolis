@@ -170,9 +170,9 @@ class DatabaseAccess {
 
 
 
-        fun getBuildingsByType(type: String, count: Int, location: Vec3? = null): List<Building> {
+        fun getBuildingsByType(type: String, count: Int): List<Building> {
             return transaction {
-                Buildings.selectAll().where { Buildings.tags like "%$type%" }.take(count).map { row ->
+                Buildings.selectAll().where { Buildings.tags like "%$type%" }.shuffled().take(count).map { row ->
                     Building(
                         row[Buildings.id].value,
                         Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
