@@ -1,49 +1,147 @@
 {
     "ageToType": {
         "CHILD": {
-            "school": 0.5,
-            "playground": 0.5
+            "apartments": 1,
+            "residential": 1,
+            "commercial": 0.4,
+            "industrial": 0.05,
+            "office": 0.05,
+            "public": 0.1,
+            "school": 1,
+            "university": 0
         },
         "TEEN": {
-            "school": 0.5,
-            "playground": 0.5
+            "apartments": 1,
+            "residential": 1,
+            "commercial": 0.7,
+            "industrial": 0.15,
+            "office": 0.15,
+            "public": 0.4,
+            "school": 0.8,
+            "university": 0.2
         },
         "ADULT": {
-            "work": 0.5,
-            "restaurant": 0.5
+            "apartments": 1,
+            "residential": 1,
+            "commercial": 0.7,
+            "industrial": 0.8,
+            "office": 0.8,
+            "public": 0.6,
+            "school": 0,
+            "university": 0.8
         },
-        "ELDERLY": {
-            "hospital": 0.5,
-            "park": 0.5
+        "SENIOR": {
+            "apartments": 1,
+            "residential": 1,
+            "commercial": 0.9,
+            "industrial": 0.2,
+            "office": 0.2,
+            "public": 0.6,
+            "school": 0,
+            "university": 0
         }
     },
     "typeToTime": {
         "apartments": [
             {
+                "start": 7,
+                "end": 17,
+                "chance": 0.2
+            },
+            {
+                "start": 17,
+                "end": 7,
+                "chance": 0.9
+            }
+        ],
+        "residential": [
+            {
+                "start": 7,
+                "end": 17,
+                "chance": 0.2
+            },
+            {
+                "start": 17,
+                "end": 7,
+                "chance": 0.9
+            }
+        ],
+        "commercial": [
+            {
+                "start": 7,
+                "end": 17,
+                "chance": 0.2
+            },
+            {
+                "start": 17,
+                "end": 7,
+                "chance": 0.9
+            }
+        ],
+        "industrial": [
+            {
+                "start": 7,
+                "end": 17,
+                "chance": 0.05
+            },
+            {
+                "start": 17,
+                "end": 7,
+                "chance": 0.95
+            }
+        ],
+        "office": [
+            {
+                "start": 7,
+                "end": 17,
+                "chance": 0.05
+            },
+            {
+                "start": 17,
+                "end": 7,
+                "chance": 0.95
+            }
+        ],
+        "public": [
+            {
                 "start": 8,
+                "end": 11,
+                "chance": 0.8
+            },
+            {
+                "start": 11,
                 "end": 16,
-                "chance": 0.5
+                "chance": 0.3
             },
             {
                 "start": 16,
                 "end": 8,
-                "chance": 0.5
+                "chance": 0.03
             }
         ],
-        "residential": [
-
+        "school": [
+            {
+                "start": 8,
+                "end": 15,
+                "chance": 1
+            },
+            {
+                "start": 15,
+                "end": 8,
+                "chance": 0
+            }
         ],
-        "commercial": [
-
-        ],
-        "industrial": [
-
-        ],
-        "office": [
-
-        ],
-        "public": [
-
+        "university": [
+            {
+                "start": 8,
+                "end": 15,
+                "chance": 1
+            },
+            {
+                "start": 15,
+                "end": 8,
+                "chance": 0
+            }
         ]
     }
 }

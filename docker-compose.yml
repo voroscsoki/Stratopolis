@@ -1,0 +1,16 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "8085:8085"
+    volumes:
+      - app-data:/app/server
+    environment:
+      APP_ENV: production
+    restart: unless-stopped
+
+volumes:
+  app-data:
+    driver: local
