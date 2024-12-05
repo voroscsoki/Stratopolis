@@ -46,6 +46,7 @@ class SocketServer {
                         sendSocketMessage(RoadResponse(ResultType.PROGRESS, chunk))
                     }
                 }
+            sendSocketMessage(RoadResponse(ResultType.DONE))
         }
     }
 
