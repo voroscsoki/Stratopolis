@@ -1,34 +1,63 @@
 \chapter{Testing and deployment}
 
-As the app's communication does not follow typical REST patterns, I used a combination of end-to-end\footnote{real use cases are performed in the app and the output is checked} and performance tests.
-Machine 1 is a Windows 11 desktop computer with an AMD Ryzen 5 7600X processor, 32GB of RAM and an AMD Radeon RX 6750 XT GPU. It is connected to the internet via 1Gbps Ethernet. Machine 2 is a laptop running Arch Linux with an AMD Ryzen 5 7520U CPU, 16GB of memory, and integrated AMD Radeon graphics. During the tests, the laptop used 5GHz Wi-Fi with an approximate speed of x/y Mbps (download/upload). In all instances, the program was started using Gradle and Oracle OpenJDK version 23.x.x. Containerisation was not used during testing.
-
-\section{End-to-end testing}
-%TODO: runtime comparisons with few or many agents
-%TODO: testing of correctness: distribution should match expectation
-
-\section{Performance testing}
-
-I performed load time tests using both machines and three PBF files: the cities of Vienna and Budapest, as well as a chunk of Hungarian countryside with low building density, taken from BBBike. \verb|Cold boot| means the server was already running and the client requested all data from the database -- the time displayed is in real-time seconds (not processor time) and is counted from pressing the \verb|Load server| button to the point the \verb|Loading| banner message disappears. \verb|Reload| also adds file upload and database insertion times, the duration is calculated from pressing \verb|Select| in the file upload dialog to the \verb|Loading| banner disappearing.
-
-\begin{center}
-    \begin{tabular}{l|cc|cc|cc}
-        \multicolumn{1}{c}{} & \multicolumn{2}{c}{Vienna} & \multicolumn{2}{c}{Budapest} & \multicolumn{2}{c}{Countryside} \\
-        \hline
-        Server & CB & R & CB & R & CB & R \\
-        \hline
-        Machine 1 &  &  &  &  &  &  \\
-        Machine 2 &  &  &  &  &  &  \\
-        \end{tabular}
-\end{center}
-%TODO FILL WITH DATA
-
-    
-
-
-I also tested the scalability of the simulation, with 1000, 20000, and 50000 agents.
-
 \section{Containerised deployment}
 It's common practice to package dependencies and runtimes along with an app, to ensure consistency in how it runs on different operating systems and environments, with Kubernetes and Docker being the two most popular options; I chose the latter. A Docker container is lightweight, portable and can function on its own. Its structure is described using a Dockerfile, placed in a project's root folder; the process is usually based on a pre-existing image, such as a the minimalist Alpine Linux image, only 5 megabytes in size. Contained instructions are executed in order, and the resulting image can then be run on any machine with Docker installed. The program is isolated from the host when run in this way, but can access specified resources near-natively.
 
-I used the newest gradle:8.11.1-jdk23 image for the build stage of the app. The code is copied into the container, then built using Gradle. The runtime stage then uses openjdk:23-slim (based on Debian 12 Bookworm), copies the compiled .jar file and runs it. Networking and persistent storage could be added as command line options, but I instead used Docker Compose, a tool that allows the declaration of layered apps, made up of services provided by containers. As well as exposing the server's default port, a volume is added that covers the entirety of the app root. This means the created database file stay on the disk between runs, but rebuilding the container still deletes it as expected. A Docker volume can also be bound to a folder on the host, making the database file readily inspectable and modifiable without entering the container.
+I used the newest at the time newest gradle:8.11.1-jdk21 image for the build stage of the app. The code is copied into the container, then built using Gradle. The runtime stage then uses openjdk:21-slim (based on Debian 12 Bookworm), copies the compiled .jar file and runs it. Networking and persistent storage could be added as command line options, but I instead used Docker Compose, a tool that allows the declaration of layered apps, made up of services provided by containers. As well as exposing the server's default port, a volume is added that covers the entirety of the app root. This means the created database file stay on the disk between runs, but rebuilding the container still deletes it as expected. A Docker volume can also be bound to a folder on the host, making the database file readily inspectable and modifiable without entering the container.
+
+\section{Performance testing}
+
+As the app's communication does not follow typical REST patterns, and the correctness of the created map is best checked visually, I tested the app's runtime performance and scalability.
+Machine 1 is a Windows 11 desktop computer with an AMD Ryzen 5 7600X processor, 32GB of RAM and an AMD Radeon RX 6750 XT GPU. It is connected to the internet via 1Gbps Ethernet. Machine 2 is a laptop running Arch Linux with an AMD Ryzen 5 7520U CPU, 16GB of memory, and integrated AMD Radeon graphics. During the tests, the laptop used 5GHz Wi-Fi with a measured speed of 84.5/171 Mbps (download/upload). In all instances, the program was started using Gradle and Oracle OpenJDK version 21.0.5 (instead of JDK version 23, to ensure compatibility). 
+
+I performed load time tests using two PBF files: the cities of Budapest (39,3 MB) and Szeged (6 MB), taken from BBBike. \verb|Cold boot| means the server was already running and the client requested all data from the database -- the time displayed is in real-time seconds (not processor time) and is counted from pressing the \verb|Load server| button to the point the \verb|Loading| banner message disappears. \verb|Reload| also adds file upload and database insertion times, the duration is calculated from pressing \verb|Open| in the file upload dialog to the \verb|Loading| banner disappearing. The client was ran on machine 1, with the server project containerised on either of the machines. The graphics capabilities of machine 2 proved insufficient for the Budapest scene to be rendered consistently, and so was not used for frontend testing.
+
+\begin{center}
+    \begin{tabular}{l|cc|cc}
+        \multicolumn{1}{c}{} & \multicolumn{2}{c}{Budapest} & \multicolumn{2}{c}{Szeged} \\
+        \hline
+        Server & CB & R & CB & R \\
+        \hline
+        Machine 1 & 17.86s & 46.18s & 6.67s & 9.29s \\
+        Machine 2 & 39.91s & 52.31s & 2.18s & 5.02s \\
+        \end{tabular}
+\end{center}
+It's clear that the main bottleneck on performance is the amount of raw data contained in the processed file. Since Budapest has around 400,000 buildings and the Szeged chunk consists of less than 20,000, the load process scales better than expected, which would be linear complexity. Current performance is regardless not ideal, as the initialisation overhead is quite large. PBF file transfer to the host increased runtime by about 1.5--2$\times$. It's interesting to note that the difference between cold boot and reload times has a rough linear correlation to the source file size.
+The outlying value of 46.18 seconds is due to the overuse of just one physical disk. Even though network transfers generally slow things down, the Szeged test results highlight the advantage of separating the two projects as more processing power could be utilised overall. In Budapest's case, the slower transfer rates removed this advantage; an adequately equipped server would likely make the app faster in such a distributed configuration when compared to a single consumer-grade machine.
+
+
+I also tested the time complexity of the simulation. For this, a scenario was run on the Budapest dataset with time constraints of 08:00--09:00, and agent counts of 1000, 5000, 10000, 20000 and 50000. This test was conducted on machine 1 entirely. As expected, the increase in runtime is almost exactly linear. A comparison of the resulting heatmaps can be seen in the appendix, at \ref{heatmap_comparison}. Based on this, it's generally useful to add at least 20000 agents for a more statistically significant result.
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Agent count},
+        ylabel={Runtime in seconds},
+        xmode=linear,
+        grid=major
+    ]
+    
+    \addplot[
+        color=blue,
+        mark=*,
+        only marks
+    ] coordinates {
+        (1000, 3.64)
+        (5000, 6.20)
+        (10000, 9.47)
+        (20000, 16.6)
+        (50000, 34.91)
+    };
+    
+    \addplot[
+        color=red,
+        domain=1000:50000,
+        samples=100,
+        smooth
+    ] {0.0006392139 * x + 3.169522};
+    
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Plot of simulation scalability}
+\end{figure}
