@@ -15,7 +15,6 @@ import dev.voroscsoki.stratopolis.common.networking.*
 import dev.voroscsoki.stratopolis.common.util.MapChange
 import dev.voroscsoki.stratopolis.common.util.ObservableMap
 import dev.voroscsoki.stratopolis.common.util.Vec3
-import dev.voroscsoki.stratopolis.common.util.getWayAverage
 import kotlinx.coroutines.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
@@ -28,7 +27,7 @@ class InstanceData(val scene: MainScene) {
             baselineCoord = (msg as EstablishBearingResponse).baselineCoord
         },
         SimulationResult::class.java to { msg -> runBlocking { setupHeatmap((msg as SimulationResult).data) } },
-        RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) },
+        /*RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) }*/
     )
 
     private val nodes = ObservableMap<Long, SerializableNode>()
@@ -166,7 +165,7 @@ class InstanceData(val scene: MainScene) {
         }
     }
 
-    private fun handleRoads(msg: RoadResponse) {
+    /*private fun handleRoads(msg: RoadResponse) {
         roads.putAll(msg.roads.map { it.id to it })
         msg.roads.forEach { road ->
             CoroutineScope(Dispatchers.IO).launch {
@@ -183,7 +182,7 @@ class InstanceData(val scene: MainScene) {
             scene.updateCaches()
             scene.menu?.loadingBar?.fadeOut()
         }*/
-    }
+    }*/
 
     fun reset(startTime: Instant) {
         currentTime = startTime
