@@ -1,4 +1,4 @@
-FROM gradle:8.11.1-jdk23 AS build
+FROM gradle:8.11.1-jdk21 AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ WORKDIR /app/server
 RUN gradle build --no-daemon
 
 # Create a second stage for a lighter runtime
-FROM openjdk:23-slim
+FROM openjdk:21-slim
 
 WORKDIR /app
 
