@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
-class SmoothMoveHandler(val camera: PerspectiveCamera, private val translateFun: (PerspectiveCamera, Float) -> Unit) {
+class SmoothMoveHandler(private val camera: PerspectiveCamera, private val translateFun: (PerspectiveCamera, Float) -> Unit) {
     data class MoveState(
         val isMoving: Boolean = false,
         val remainingAmount: Float = 0f,

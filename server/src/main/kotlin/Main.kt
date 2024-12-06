@@ -1,5 +1,6 @@
 package dev.voroscsoki.stratopolis.server
 
+import db.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.networking.SocketServer
 import dev.voroscsoki.stratopolis.server.networking.configureRouting
 import dev.voroscsoki.stratopolis.server.osm.Simulation

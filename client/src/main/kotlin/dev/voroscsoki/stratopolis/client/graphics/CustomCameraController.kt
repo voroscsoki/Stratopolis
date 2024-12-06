@@ -9,9 +9,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class CustomCameraController(val scene: MainScene) : InputAdapter() {
-    val invertedZoom = false
-    var ctrlModifier = false
+class CustomCameraController(private val scene: MainScene) : InputAdapter() {
+    private val invertedZoom = false
+    private var ctrlModifier = false
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val mutex = Mutex()
@@ -50,7 +50,7 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
             }
         }
     }
-    var jobs = mutableMapOf<String, Job?>(
+    private var jobs = mutableMapOf<String, Job?>(
         "linear" to null,
         "rotate" to null,
         "sideways" to null
@@ -122,30 +122,6 @@ class CustomCameraController(val scene: MainScene) : InputAdapter() {
         if(p0 == Keys.W || p0 == Keys.S) cancelMove("linear")
         if(p0 == Keys.A || p0 == Keys.D) cancelMove("sideways")
         return super.keyUp(p0)
-    }
-
-    override fun keyTyped(p0: Char): Boolean {
-        return super.keyTyped(p0)
-    }
-
-    override fun touchDown(p0: Int, p1: Int, p2: Int, p3: Int): Boolean {
-        return super.touchDown(p0, p1, p2, p3)
-    }
-
-    override fun touchUp(p0: Int, p1: Int, p2: Int, p3: Int): Boolean {
-        return super.touchUp(p0, p1, p2, p3)
-    }
-
-    override fun touchCancelled(p0: Int, p1: Int, p2: Int, p3: Int): Boolean {
-        return super.touchCancelled(p0, p1, p2, p3)
-    }
-
-    override fun touchDragged(p0: Int, p1: Int, p2: Int): Boolean {
-        return super.touchDragged(p0, p1, p2)
-    }
-
-    override fun mouseMoved(p0: Int, p1: Int): Boolean {
-        return super.mouseMoved(p0, p1)
     }
 
     override fun scrolled(amountX: Float, amountY: Float): Boolean {

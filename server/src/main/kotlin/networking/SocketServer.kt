@@ -1,7 +1,7 @@
 package dev.voroscsoki.stratopolis.server.networking
 
 import dev.voroscsoki.stratopolis.common.networking.*
-import dev.voroscsoki.stratopolis.server.DatabaseAccess
+import db.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.Main
 import io.ktor.server.websocket.*
 import io.ktor.util.collections.*

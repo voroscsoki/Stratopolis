@@ -39,19 +39,9 @@ fun List<OsmNode>.nodeAverage() : Vec3 {
     return Vec3(avgLat,0.0,avgLon)
 }
 
-fun List<OsmWay>.wayAverage(nodes: Map<Long, OsmNode>) : Vec3 {
-    val coords = this.map { way -> way.nodeIds.map { nodes[it]!! } }.flatten().map { it.latitude to it.longitude }
-    val avgLat = coords.map { it.first }.average()
-    val avgLon = coords.map { it.second }.average()
-    return Vec3(avgLat,0.0,avgLon)
-}
-
 fun List<SerializableWay>.getWayAverage() : Vec3 {
     val allNodes = this.flatMap { it.nodes }
     val sum = allNodes.fold(Pair(0.0, 0.0)) { acc, node -> Pair(acc.first + node.coords.x, acc.second + node.coords.z) }
     return Vec3(sum.first / allNodes.size,0.0, sum.second / allNodes.size)
 }
 
-fun getMemoryUsage(): Long {
-    return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024
-}

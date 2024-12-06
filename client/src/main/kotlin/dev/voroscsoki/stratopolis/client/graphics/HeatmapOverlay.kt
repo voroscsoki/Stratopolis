@@ -1,4 +1,4 @@
-
+package dev.voroscsoki.stratopolis.client.graphics
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Mesh
@@ -147,11 +147,6 @@ class HeatmapOverlay(
         }
 
         Gdx.gl.glDisable(GL20.GL_BLEND)
-    }
-
-    fun dispose() {
-        meshes.forEach { it.dispose() }
-        shader.dispose()
     }
 
     fun clear() {

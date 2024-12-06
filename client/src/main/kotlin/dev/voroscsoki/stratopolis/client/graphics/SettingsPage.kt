@@ -20,7 +20,7 @@ import kotlinx.coroutines.runBlocking
 
 
 class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
-    var fileChooser: NativeFileChooser = DesktopFileChooser()
+    private var fileChooser: NativeFileChooser = DesktopFileChooser()
     init {
         setSize(stage.viewport.worldWidth * 0.5f, stage.viewport.worldHeight * 0.5f)
 

@@ -1,12 +1,12 @@
 package dev.voroscsoki.stratopolis.server.osm
 
+import db.DatabaseAccess
 import dev.voroscsoki.stratopolis.common.SimulationData
 import dev.voroscsoki.stratopolis.common.elements.AgeGroup
 import dev.voroscsoki.stratopolis.common.elements.Agent
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.networking.SimulationResult
 import dev.voroscsoki.stratopolis.common.util.Vec3
-import dev.voroscsoki.stratopolis.server.DatabaseAccess
 import dev.voroscsoki.stratopolis.server.Main
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
@@ -18,14 +18,13 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.absoluteValue
-import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
 
 @Serializable
 class Distributions {
     var ageToType: MutableMap<AgeGroup, MutableMap<String, Double>> = mutableMapOf()
-    var typeToTime: MutableMap<String, MutableList<ChanceInterval>> = mutableMapOf()
+    private var typeToTime: MutableMap<String, MutableList<ChanceInterval>> = mutableMapOf()
 
     fun getDistribution(age: AgeGroup, time: LocalDateTime): Map<String, Double> {
         val type = ageToType[age]
@@ -47,11 +46,11 @@ class Distributions {
 data class ChanceInterval(val start: Int, val end: Int, val chance: Double)
 
 class Simulation {
-    var clock = Clock.System.now()
-    val agents = mutableListOf<Agent>()
-    val logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var buildingCache: ConcurrentHashMap<String, MutableSet<Building>>
-    val distributions = File("distributions.json").let {
+    private var clock = Clock.System.now()
+    private val agents = mutableListOf<Agent>()
+    private val logger = LoggerFactory.getLogger(this::class.java)
+    private lateinit var buildingCache: ConcurrentHashMap<String, MutableSet<Building>>
+    private val distributions = File("distributions.json").let {
         if (it.exists())
             try {
                 return@let Json {allowStructuredMapKeys = true}.decodeFromString<Distributions>(it.readText())
@@ -141,38 +140,23 @@ class Simulation {
 }
 
 private fun Collection<Building>?.weightedRandom(source: Vec3): Building? {
-    // If the collection is null or empty, return null
     if (this.isNullOrEmpty()) return null
 
-    // Calculate total weight for normalization
     val totalWeight = this.sumOf { building ->
-        // Distance weight - linearly decreasing with distance
-        val distanceWeight = 1.0 / (1 + source.dist(building.coords) * 1000)
-
-        // Capacity weight - quadratic scaling
-        val capacityWeight = sqrt(sqrt(building.capacity.toDouble()))
-
-        distanceWeight
+        1.0 / (1 + source.dist(building.coords) * 1000)
     }
 
-    // Generate a random point in the total weight range
     val randomPoint = Random.nextDouble(totalWeight)
 
-    // Accumulate weights to select the building
     var currentWeight = 0.0
     for (building in this.shuffled()) {
-        // Calculate individual building's weight components
         val distanceWeight = 1.0 / (1 + source.dist(building.coords))
-        val capacityWeight = sqrt(sqrt(building.capacity.toDouble()))
-        val buildingWeight = distanceWeight
 
-        // Accumulate weight and check if we've passed the random point
-        currentWeight += buildingWeight
+        currentWeight += distanceWeight
         if (currentWeight >= randomPoint) {
             return building
         }
     }
 
-    // Fallback to returning the last building if something goes wrong
     return this.last()
 }

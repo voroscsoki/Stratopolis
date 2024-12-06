@@ -1,4 +1,4 @@
-package dev.voroscsoki.stratopolis.server
+package db
 
 import dev.voroscsoki.stratopolis.common.elements.Building
 import dev.voroscsoki.stratopolis.common.elements.Road
@@ -39,7 +39,7 @@ class DatabaseAccess {
             loadFromOsm(storage)
         }
 
-        fun loadFromOsm(storage: OsmStorage) {
+        private fun loadFromOsm(storage: OsmStorage) {
             transaction {
                 logger.warn("Wiping old data")
                 Buildings.deleteAll()
@@ -137,37 +137,6 @@ class DatabaseAccess {
                 return@transaction res.reduce { acc, vec3 -> acc + vec3 } / res.size.toFloat()
             }
         }
-
-        fun getRandomBuildings(count: Int, origin: Vec3? = null, type: String? = null): List<Building> {
-            return transaction {
-                // Generate the base query
-                val query = if (type != null) {
-                    // Filter by type in the database (assuming tags is stored as JSON or text)
-                    // Adjust for your DB syntax
-                    Buildings.selectAll().where { // Adjust for your DB syntax
-                        (Buildings.tags like "%\"building\":\"$type\"%") // Adjust for your DB syntax
-                    }
-                } else {
-                    Buildings.selectAll()
-                }
-
-                // Randomize and limit the result in the database
-                val randomizedRows = query.shuffled().take(count).toList()
-
-                // Decode and map only the rows needed
-                randomizedRows.map { row ->
-                    Building(
-                        row[Buildings.id].value,
-                        Json.decodeFromString<List<SerializableTag>>(row[Buildings.tags]),
-                        osmType = row[Buildings.type],
-                        coords = row[Buildings.coords],
-                        ways = Json.decodeFromString<List<SerializableWay>>(row[Buildings.ways]),
-                        capacity = row[Buildings.capacity]
-                    )
-                }
-            }
-        }
-
 
 
         fun getBuildingsByType(type: String, count: Int): List<Building> {

@@ -14,7 +14,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.Align
-import dev.voroscsoki.stratopolis.client.InstanceData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,11 +23,10 @@ import kotlin.system.exitProcess
 
 
 class GameMenu(
-    private val stage: Stage,
+    stage: Stage,
     private val skin: Skin,
     private var stageWidth: Float,
     private var stageHeight: Float,
-    private val instance: InstanceData,
     private val scene: MainScene
 ) : Group() {
     private val menuBar: Container<Table>

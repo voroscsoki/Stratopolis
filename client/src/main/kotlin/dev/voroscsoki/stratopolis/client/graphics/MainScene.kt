@@ -1,6 +1,5 @@
 package dev.voroscsoki.stratopolis.client.graphics
 
-import HeatmapOverlay
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
@@ -65,7 +64,7 @@ class MainScene : ApplicationListener {
 
     //constants
     private val chunkSize = 2000
-    val heatmapCellSize = 50f
+    private val heatmapCellSize = 50f
 
     //updatables
     private val chunks = ConcurrentHashMap<String, ConcurrentHashMap<Long, GraphicalObject>>()
@@ -386,7 +385,7 @@ class MainScene : ApplicationListener {
 
     private fun showMenu() {
         if(menu?.isVisible == true) return
-        menu = GameMenu(stage, skin, stage.width, stage.height, Main.instanceData,this)
+        menu = GameMenu(stage, skin, stage.width, stage.height, this)
         menu!!.show()
     }
 

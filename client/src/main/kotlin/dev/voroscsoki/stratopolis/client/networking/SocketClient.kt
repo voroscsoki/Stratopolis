@@ -87,7 +87,7 @@ class SocketClient(
         }
     }
 
-    fun disconnect() {
+    private fun disconnect() {
         socketScope.cancel()
         client.close()
         _isConnected.value = false
