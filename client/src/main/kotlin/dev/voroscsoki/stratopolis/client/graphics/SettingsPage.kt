@@ -22,7 +22,7 @@ import kotlinx.coroutines.runBlocking
 class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
     var fileChooser: NativeFileChooser = DesktopFileChooser()
     init {
-        setSize(stage.viewport.worldWidth * 0.6f, stage.viewport.worldHeight * 0.4f)
+        setSize(stage.viewport.worldWidth * 0.5f, stage.viewport.worldHeight * 0.5f)
 
         val mainTable = Table(skin)
         mainTable.setFillParent(true)
@@ -80,10 +80,19 @@ class SettingsPage(stage: Stage, skin: CustomSkin) : Window("Settings", skin) {
                 override fun onError(exception: Exception) {}
             })
         }
-        settingsTable.add(fileOpenButton).padTop(20f).padBottom(20f).left()
+        settingsTable.add(fileOpenButton).padTop(20f).padBottom(20f).left().row()
+        val controlsText = """
+            Camera controls: A-D, W-S, Q-E, mouse wheel, left click selects building
+            Left CTRL increases movement speed
+            Left ALT + 1-5 displays heatmaps
+        """.trimIndent()
+
+        val controlsLabel = Label(controlsText, skin)
+        settingsTable.add(controlsLabel).left()
 
         mainTable.add(settingsTable).expand().fill().pad(50f)
         mainTable.row()
+
 
         val closeButton = TextButton("Close", skin).apply {
             addListener(object : ClickListener() {

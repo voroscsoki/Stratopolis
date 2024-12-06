@@ -5,7 +5,7 @@ val ashleyVersion= "1.7.4"
 val gdxNativefilechooserVersion = "2.3.0"
 plugins {
     kotlin("jvm")
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.21"
     id("io.ktor.plugin") version "2.3.12"
     application
 }

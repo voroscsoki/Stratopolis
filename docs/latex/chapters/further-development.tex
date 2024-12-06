@@ -1,8 +1,17 @@
-\chapter{Further avenues of development}
+\chapter{Conclusion}
 
-Over the course of the semester, the graphical section far outweighed the program's other capabilities and required the most development time. If I would ever start a similar project from scratch, I'd make use of a game engine such as Unity or Godot to handle the OpenGL or Vulkan calls on my behalf. I find the experience valuable, however. I understand the basic computer graphics concepts better now, and during my reading, I learned a lot about shader programming as well.
+\label{licensing}
+\section{Licensing}
 
-While the program is already capable of providing good insights into many cities' basic travel patterns, it may be improved in the future in multiple ways. These include:
+I strongly believe in free and open source software, so I wanted to pick a distribution framework that would allow other programmers to use or modify the program if they wish to do so. Because of this, I chose to use the GNU General Public License v3. Created by the GNU Foundation on 2007, the license permits anyone to make changes to, distribute, or commercialise a product. All changes must be stated and redistributed under this same scheme or a related one. Any software made using this project must be public -- this prevents its inclusion in proprietary, closed company projects. As the creator, I'm not legally required to provide any warranty for the software.\cite{choose-gpl3} The license declaration document was part of the GitHub repository I created, from the very start. I intend to keep the program and thesis document public.
+
+The evident limitation caused by this choice is that the thesis project could not make use of any closed source library or tool. LibGDX is under Apache 2.0, which is entirely compatible with GPLv3. The fonts and icons used from Google's library\footnote{\url{https://fonts.google.com/}} use the SIL Open Font License, which permits anything short of taking ownership of and selling the work. OpenStreetMap data is distributed using the custom Open Data Commons Open Database License (ODbL). As long as credit is given (which the app's main scene provides), the data may be freely used or built upon.
+
+\section{Learnings}
+
+Over the course of the semester, the graphical section far outweighed the program's other capabilities and required the most development time. If I would ever start a similar project from scratch, I'd make use of a game engine such as Unity or Godot to handle the OpenGL or Vulkan calls on my behalf. I find the experience valuable, however. I understand basic computer graphics concepts better now, and during my reading, I learned a lot about shader programming as well.
+
+Overall, I'm happy with the heatmaps I ended up with. They show useful insight and agents in runs with different parameters exhibit entirely different behaviours, as real people do. Performance is adequate and the simulation can be tweaked easily enough to try out various scenarios. However, the project may still be improved in multiple ways. These include:
 \begin{itemize}
     \item a more robust networking system, capable of efficiently handling dropped packets and service disruptions -- this would require a medium-to-large scale refactoring of the code, and is feasible if any of the other features are implemented
     \item the addition of roads to the simulation model, making agents travel along these known good paths instead of the "as the crow flies" method

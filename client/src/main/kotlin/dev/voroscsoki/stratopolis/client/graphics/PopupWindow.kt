@@ -9,12 +9,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Window
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import dev.voroscsoki.stratopolis.common.elements.Building
 
-class PopupWindow(stage: Stage, skin: Skin, building: Building) : Window("Popup", skin) {
+class PopupWindow(stage: Stage, skin: Skin, building: Building) : Window("Building", skin) {
     init {
         building.tags.map { "${it.key}: ${it.value}" }.forEach {
             add(Label(it, skin)).row()
         }
-        add(Label("Capacity: " + building.capacity.toString(), skin)).row()
+        add(Label("capacity: " + building.capacity.toString(), skin)).row()
         val closeButton = TextButton("Close", skin)
         closeButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {

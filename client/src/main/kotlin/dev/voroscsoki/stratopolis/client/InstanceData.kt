@@ -27,7 +27,7 @@ class InstanceData(val scene: MainScene) {
             baselineCoord = (msg as EstablishBearingResponse).baselineCoord
         },
         SimulationResult::class.java to { msg -> runBlocking { setupHeatmap((msg as SimulationResult).data) } },
-        /*RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) }*/
+        RoadResponse::class.java to { msg -> handleRoads(msg as RoadResponse) }
     )
 
     private val nodes = ObservableMap<Long, SerializableNode>()
@@ -138,6 +138,7 @@ class InstanceData(val scene: MainScene) {
             graphicsLoading = true
             Main.socket.sendSocketMessage(EstablishBearingRequest())
             requestBuildings()
+            Main.socket.sendSocketMessage(RoadRequest(baselineCoord, null))
         }
     }
 
@@ -165,7 +166,11 @@ class InstanceData(val scene: MainScene) {
         }
     }
 
-    /*private fun handleRoads(msg: RoadResponse) {
+    private fun handleRoads(msg: RoadResponse) {
+        /*if(msg.res == ResultType.DONE) {
+            scene.updateCaches()
+            graphicsLoading = false
+        }
         roads.putAll(msg.roads.map { it.id to it })
         msg.roads.forEach { road ->
             CoroutineScope(Dispatchers.IO).launch {
@@ -174,15 +179,11 @@ class InstanceData(val scene: MainScene) {
                 inst.transform.setTranslation(road.ways.getWayAverage().toSceneCoords(baselineCoord!!).let {
                     Vector3(it.x.toFloat(), -0.05f, it.z.toFloat())
                 })
-                //scene.putRoad(road.ways.getWayAverage().toSceneCoords(baselineCoord!!), road, inst)
+                scene.putRoad(road.ways.getWayAverage().toSceneCoords(baselineCoord!!), road, inst)
             }
 
-        }
-        /*throttleRequest {
-            scene.updateCaches()
-            scene.menu?.loadingBar?.fadeOut()
         }*/
-    }*/
+    }
 
     fun reset(startTime: Instant) {
         currentTime = startTime

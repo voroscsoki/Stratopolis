@@ -1,7 +1,20 @@
-\chapter{Goals and requirements}
+\chapter{Preface}
 
-The goal of this project is to provide a three-dimensional map using open source data, and to create a visualisation tool on top of that. The city's buildings should be distinguishable, both with their shapes as well as available metadata, such as addresses or year of construction. The user should be able to move around the viewpoint, zoom in or out, and select buildings to inspect them. The software should be able to run a simulation of inhabitants and show the most popular areas in the city. It must be possible to load different cities, but only one needs to be active at a time.
+\section{Motivation}
 
-The app shall be divided into layers that resemble a usual server-client architecture. Communication should be done using standard public protocols, but data does not need to be published to arbitrary HTTP clients. The client should not hold more information than is required for the visualisation; computation-heavy tasks need to be offloaded to the server. The graphical capabilities of the app shall not have hardware-specific requirements, such as Nvidia's RTX. The layers should be able to run on the same computer, or entirely different machines too. The program should be able to run on the Windows, Linux and Mac desktop operating systems.
+The world these days is more urbanised than ever, and the trend of people moving to cities is expected to continue in the following decades. With individual car travel proving ever more wasteful -- both financially and environmentally -- as population density increases, policymakers and urban planners need to make public transport and bicycling more convenient for the average citizen. The needs of cities are ever-changing, and without sufficient data, this is an impossible task. Planners should have access to adequate tools to aid decision making.
+
+Personally, I've seen multiple enterprise programs in related fields that left me quite disappointed. User interfaces are typically clunky and remnants of early 2000s software. Automating even small tasks can be very difficult, and each action takes a long time to execute. In a way, they remind me of the old versions of word processors and spreadsheet editors.
+
+I wanted to try my hand at creating something in the transit analysis field that would improve on these issues. I didn't want to start with the expectation of replacing a popular software solution, so I intended to make something that would have entertainment value, while providing a platform for professional applications.
+
+
+\section{Goals and requirements}
+
+The aim of this project is to provide a three-dimensional map using open source data, and to create a visualisation tool on top of that. The city's buildings should be distinguishable, both with their shapes as well as available metadata, such as addresses or year of construction. The user should be able to move around the viewpoint, zoom in or out, and select buildings to inspect them. The software should be able to run a simulation of inhabitants and show the most popular areas in the city. It must be possible to load different cities from files encoded using a standard protocol, but only one city needs to be active at a time.
+
+The app shall be divided into layers that resemble a usual server-client architecture. Communication should be done using standard public protocols, but data does not need to be published to arbitrary HTTP clients. The client should not hold more information than is required for the visualisation; computation-heavy tasks need to be offloaded to the server. The graphical capabilities of the app shall not have hardware-specific requirements, such as Nvidia's RTX. The layers should be able to run on the same computer, or entirely different machines too. The program should be able to run on the Windows, Linux and Mac desktop operating systems. A single server should respond to multiple clients at once.
 
 The user interface must be understandable by people without a technical background, it should give feedback for actions taken. The technologies used should be maintainable and up to date. The software should also be distributable in a containerised form, for a zero-friction installation.
+
+Performance should be a priority and a city with two million real life inhabitants should be loadable and navigable on a consumer-grade computer. The number of supported agents should be enough to show statistical significance.

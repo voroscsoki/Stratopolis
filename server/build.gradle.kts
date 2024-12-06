@@ -2,7 +2,7 @@ val mainName = "dev.voroscsoki.stratopolis.server.Main"
 plugins {
     application
     id("io.ktor.plugin") version "2.3.12"
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.21"
 }
 
 application {
