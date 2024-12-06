@@ -33,7 +33,7 @@ The client may send a protocol buffer file through the \verb|/pbf_file| POST end
 
 \section{The database}
 
-I chose SQLite as my database engine. It's lightweight, decently fast, and self-contained. The theory is that the .db file may be used like a video game save if needed, since deep copies can be mode by duplicating the file. Most other database engines are unsuitable for this, because their data may span multiple files or even systems. SQLite has no automatic backups -- losing this program's database is not a concern, though, as it can be rebuilt in seconds. For transactions, the standard ACID (atomicity, consistency, isolation, durability) principles are followed.
+I chose SQLite as my database engine. It's lightweight, decently fast, and self-contained. The theory is that the \verb|.db| file may be used like a video game save if needed, since deep copies can be mode by duplicating the file. Most other database engines are unsuitable for this, because their data may span multiple files or even systems. SQLite has no automatic backups -- losing this program's database is not a concern, though, as it can be rebuilt in seconds. For transactions, the standard ACID (atomicity, consistency, isolation, durability) principles are followed.
 
 \label{pbf-loading}
 The database is created when loading a new PBF dataset, and can be read unlimited times until a new file is presented. The program spawns a PBF iterator from the osm4j library and reads every element into an OsmStorage object. Nodes and ways are read unconditionally, as relations must reference them to hold any meaningful data. Out of every category, elements with the \verb|highway| or \verb|building| tag are collected, their child elements retrieved and dumped into the database. After this process, the on-CPU storage object is purposefully thrown away and cleaned up due to the high number of unused nodes.
@@ -79,5 +79,3 @@ Exposed supports custom columns, which I used to convert each Vec3 instances to 
 The client project takes a slightly more centralised approach. It's a libGDX application, with a \verb|MainScene| class as the focus. Input controllers and other data are imported directly into this class. LibGDX variables utilise Kotlin's lateinit feature as they can only be assigned once there is a current graphics context, in the \verb|create()| function.
 
 The \verb|InstanceData| class handles everything not directly related to graphics and OpenGL functions; it orchestrates requests, handles incoming messages, gives commands to the main scene and its menus. All queried objects are put into an ObservableMap, and puts automatically trigger the corresponding function to insert the object into the scene.
-
-%TODO

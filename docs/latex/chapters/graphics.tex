@@ -89,6 +89,12 @@ I generalised the drawing process by creating a wrapper for instances, the Graph
 
 As a first step, the map needs to be loaded -- as well as the building data, the backend sends over a baseline coordinate pair, calculated as the average of a random sampling of buildings, that can be used as the origin of the graphics scene. This is important as the server should not have any knowledge of the display it's sending data to. Building location data is contained in a batch of BuildingResponse messages and is transformed to be relative to the baseline, then scaled by 100,000. For a building based on a single OSM node, I used a common model, created by the ModelBuilder class's createBox convenience method. For structures represented by a way or relation, the geometry is determined by the outermost way; for these I made three NodeParts, called "top", "bottom", and "sides". The bottom layer is set by unpacking the list of nodes contained in the way. The resulting polygon is sectioned by triangulation and covered by individual triangles, facing the ground. The height is determined by the tags that are also used at the database level. The top layer is a copy of the bottom one, with up-facing normals and the Y-coordinate\footnote{In libGDX, X and Z coordinates use the two axes of the Cartesian coordinate system, with Y representing height} set to the determined height. Side faces are also added using triangles, with each rectangle (formed by two adjacent columns of top and bottom vertices) covered using two of them.
 
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=120mm, keepaspectratio]{images/communication.png}
+    \caption{Communication between subprojects when loading a map; multiple building and road responses are sent and they may arrive out of order }
+\end{figure}
+
 I initially used a simple render loop, opening a ModelBatch and iterating the stored graphics objects; that slowed down after about twenty thousand of them, which is far less than what a typical metropolitan area has. Since frame creation is single-threaded, rendering $n$ objects has a slightly worse than $\mathcal{O}(n)$ time complexity. Instead, I split the playfield into relatively large chunks of 5000$\times$5000 units, which translates to 0.05 degrees of latitude and longitude in my coordinate system. When new data is received, each chunk is transformed into a custom CacheObject -- this wraps a libGDX ModelCache to provide culling and easy identification. Rendering these is much faster, as they're considered static and their contained models are merged and optimised upon creation.\cite{LibgdxModelCache} It makes sense to bake them ahead of time; I initialise the caches when building data is received, as part of the loading process.
 
 Roads are treated as uniform-width lines. Each road is stored as a list of tags and ways which make up the polyline. The points are unwrapped, then two new sets of coordinates are created on the left and right side with a fixed width of 3 units (0.00003 degrees). The resulting strip is then triangulated and added to the scene. All roads have the same light grey colour and are rendered alongside the buildings.
@@ -99,12 +105,32 @@ For libGDX scenes, it is possible to inject a single input processing adapter ob
 
 I created my own camera based on the public InputAdapter interface. The viewing direction is locked for a fixed top-down perspective. The \verb|SmoothMoveHandler| class takes a camera and callback function as input, and can then receive movement commands which are added together. As long as the sum is non-zero, the function is continuously called with a percentage of the current value which is then subtracted. This results in an easing effect, avoiding robotic, sudden direction changes. Since multiple commands may be executed at once, every function that changes the camera's position must be under a mutex (mutually exclusive) lock. Without this, multiple camera location changes cause the currently rendered frame to flicker. The vertical (used keys: W-S), horizontal (A-D) and rotation (Q-E) axes all have dedicated handlers.
 
-Holding the left ALT key and pressing numbers 1--5, the light illuminating the buildings is reduced and the latest heatmap is compiled and displayed over the city. Each button corresponds to one of the simulation's age groups (displayed in the top left corner), with the fifth showing a combination of all maps.
+Holding the left ALT key and pressing numbers 1--5, the light illuminating the buildings is reduced and the latest heatmap is compiled and displayed over the city. Each button corresponds to one of the simulation's age groups (displayed in the top left corner), with the fifth showing a combination of all maps. Heatmaps have tiles that are coloured by linearly scaling between fully green and fully red, all at half opacity. Tiles with no value are not displayed. The upper threshold is determined by the 95th percentile of all values on the grid to avoid extremely high values in city centres skewing the scale. The resulting float values are passed into a simple vertex shader program. The transformation matrix is set for each cell individually, this is optimised when the program is compiled.
+
+\begin{lstlisting}[caption=Cell colour calculation and the vertex shader program for heatmap cells]
+    val strength = (freq.toFloat() / maxFrequency).coerceIn(0f, 1f)
+    val red = (strength / 0.5f).coerceAtMost(1f)
+    val green = ((1 - strength) / 0.5f).coerceAtMost(1f)
+    val color = listOf(red, green, 0f, 0.5f)
+
+    #version 330 core
+    in vec3 a_position;
+    in vec4 a_color;
+    uniform mat4 u_projTrans;
+    out vec4 v_color;
+
+    void main() {
+        v_color = a_color;
+        gl_Position = u_projTrans * vec4(a_position, 1.0);
+    }
+\end{lstlisting}
+
+
 
 
 \subsection{The menu and popups}
 
-The rest of the rather simple user interface consists of four buttons. The "play" icon is the way to start a simulation, triggering a popup that asks for the required data in five text fields. The start and end times can only ever contain valid ISO format hour and minute values, any other input is ignored. Agent count only accepts numbers. Hitting the \verb|Start simulation| button sends a network message on the currently active websocket, and kicks off the process described in \ref{simulation-working}. The second, "reload" button is a backup measure to reload the graphics caches if they're in an incomplete state. The third button opens the settings, and the final one gracefully quits the client. The elements are grouped into the GameMenu class and rendered on top the main scene; they each have different colours for inactive, hovered, and pressed states to give feedback. I also made a simple "loading" dropdown that lets the user know they have to wait for some data. All buttons are disabled while loading, except the quit option.
+The rest of the rather simple user interface consists of four buttons. The "play" icon is the way to start a simulation, triggering a popup that asks for the required data in five text fields. The start and end times can only ever contain valid ISO format hour and minute values, any other input is ignored. Agent count only accepts numbers. Hitting the \verb|Start simulation| button sends a network message on the currently active websocket, and kicks off the process described in~\ref{simulation-working}. The second, "reload" button is a backup measure to reload the graphics caches if they're in an incomplete state. The third button opens the settings, and the final one gracefully quits the client. The elements are grouped into the GameMenu class and rendered on top the main scene; they each have different colours for inactive, hovered, and pressed states to give feedback. I also made a simple "loading" dropdown that lets the user know they have to wait for some data. All buttons are disabled while loading, except the quit option.
 
 \begin{figure}[!h]
     \centering
@@ -114,7 +140,7 @@ The rest of the rather simple user interface consists of four buttons. The "play
 
 LibGDX has a mature Scene2D module that helps create two-dimensional overlays and menus on top of existing content. All elements, such as buttons and titles need to be rendered using a skin. Open-sourced examples exist\footnote{https://github.com/czyzby/gdx-skins}, but I decided to create my own in-code. I defined a single basic style for every element. All popups use the resulting Skin, so the entire app's common style can be changed at once in code. The colours are made from a simple tileable 1$\times$1 texture. The icons and fonts are from Google's Material library\footnote{https://fonts.google.com}, packaged with the program.
 
-In the settings popup, the backend's network address can be set, and the \verb|Check| button can initiate a dummy connection to it. If the handshake fails, the button says \verb|Check: Failed|, or \verb|Check: OK| otherwise. A successful check sets the frontend's target to the given address. \verb|Load server| queries the target websocket for map building. \verb|Open file| creates the current system's native file dialog and sends the file selected in it to the database (see \ref{file-upload}). The menu also describes the basic controls of the program
+In the settings popup, the backend's network address can be set, and the \verb|Check| button can initiate a dummy connection to it. If the handshake fails, the button says \verb|Check: Failed|, or \verb|Check: OK| otherwise. A successful check sets the frontend's target to the given address. \verb|Load server| queries the target websocket for map building. \verb|Open file| creates the current system's native file dialog and sends the file selected in it to the database (see~\ref{file-upload}). The menu also describes the basic controls of the program
 
 \begin{figure}[!ht]
     \centering

@@ -143,16 +143,16 @@ private fun Collection<Building>?.weightedRandom(source: Vec3): Building? {
     if (this.isNullOrEmpty()) return null
 
     val totalWeight = this.sumOf { building ->
-        1.0 / (1 + source.dist(building.coords) * 1000)
+        (1.0 / (1 + source.dist(building.coords) * 1000)) * (building.capacity / 1000u).coerceAtLeast(1u).toDouble()
     }
 
     val randomPoint = Random.nextDouble(totalWeight)
 
     var currentWeight = 0.0
     for (building in this.shuffled()) {
-        val distanceWeight = 1.0 / (1 + source.dist(building.coords))
+        val weight = 1.0 / (1 + source.dist(building.coords)) * (building.capacity / 1000u).coerceAtLeast(1u).toDouble()
 
-        currentWeight += distanceWeight
+        currentWeight += weight
         if (currentWeight >= randomPoint) {
             return building
         }
